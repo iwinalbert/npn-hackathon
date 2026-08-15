@@ -416,3 +416,49 @@ export interface ErrorBand {
   n: number
   normalised_sd: number
 }
+
+// --------------------------------------------------------------------------
+// AI Forecast Assistant
+//
+// The assistant is an explanatory layer. `grounded` and `ungrounded_numbers`
+// are the anti-hallucination signal: the backend checks every figure in the
+// answer against the context it supplied, and the UI must surface a failure
+// rather than hide it.
+// --------------------------------------------------------------------------
+
+export interface GenAIStatus {
+  available: boolean
+  enabled: boolean
+  provider: string
+  model: string | null
+  reasons: string[]
+  key_configured: boolean
+  max_question_chars: number
+  guarantees: string[]
+  refusals: Record<string, string>
+}
+
+export interface GenAISuggestions {
+  context: string
+  suggestions: string[]
+}
+
+export interface AskRequest {
+  question: string
+  store_id?: string | null
+  item_id?: string | null
+  level?: string
+  node_id?: string
+}
+
+export interface AskResponse {
+  answer: string
+  intent: string
+  model: string
+  grounded: boolean
+  ungrounded_numbers: number[]
+  injection_suspected: boolean
+  context_keys: string[]
+  elapsed_ms: number
+  disclaimer: string
+}

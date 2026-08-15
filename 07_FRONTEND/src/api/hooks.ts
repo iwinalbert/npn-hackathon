@@ -10,12 +10,13 @@
  */
 import { useQuery, type UseQueryResult } from '@tanstack/react-query'
 
-import { apiFetch, post } from './client'
+import { API_BASE, ApiError, apiFetch, post } from './client'
 import type {
   AggregateBacktest, AggregateForecast, BacktestWindow, CapabilityMatrix,
   ErrorBand, HierarchyNode, HorizonPoint, InferenceJob, InferenceStatus,
   LevelAccuracy, LevelInfo, MemberComparison, ModelCard, Occurrence,
   PlanningSummary, PortfolioSummary, Provenance, Readiness, RegimeAccuracy,
+  AskRequest, AskResponse, GenAIStatus, GenAISuggestions,
   SeriesBacktest, SeriesDetail, SeriesForecast, SeriesHistory, SeriesSummary,
   TopMovers, VolumeTier,
 } from './types'
@@ -222,3 +223,48 @@ export const useInferenceJob = (jobId: string | null) =>
       return s === 'succeeded' || s === 'failed' ? false : 1500
     },
   })
+
+// --- AI assistant -----------------------------------------------------------
+
+export const useGenAIStatus = () =>
+  useQuery({
+    queryKey: ['genai-status'],
+    queryFn: () => apiFetch<GenAIStatus>('/genai/status'),
+    staleTime: 60_000,
+    retry: 1,
+  })
+
+export const useGenAISuggestions = (store?: string | null, item?: string | null) =>
+  useQuery({
+    queryKey: ['genai-suggestions', store ?? null, item ?? null],
+    queryFn: () => apiFetch<GenAISuggestions>('/genai/suggestions', {
+      store_id: store ?? undefined, item_id: item ?? undefined,
+    }),
+    staleTime: Infinity,
+  })
+
+/**
+ * Ask the assistant.
+ *
+ * A plain async function rather than a mutation hook: the page owns the
+ * conversation list, and TanStack's mutation state would duplicate it.
+ */
+export async function askAssistant(body: AskRequest): Promise<AskResponse> {
+  const res = await fetch(`${API_BASE}/genai/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    let parsed: Record<string, unknown> = {}
+    try { parsed = await res.json() } catch { /* non-JSON error body */ }
+    throw new ApiError(
+      res.status,
+      (parsed.error as string) ?? 'http_error',
+      (parsed.message as string) ?? res.statusText,
+      parsed.context as Record<string, unknown> | undefined,
+      parsed.request_id as string | undefined,
+    )
+  }
+  return (await res.json()) as AskResponse
+}

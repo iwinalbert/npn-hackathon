@@ -3,6 +3,10 @@
 #   python tasks.py build-db      # once: build the 130 MB product data layer
 #   docker compose up --build     # then: http://localhost:8080
 #
+# Optional AI assistant: put GEMINI_API_KEY in a .env file beside this compose
+# file, or export it in the shell. Compose substitutes it at run time; it is
+# never written into an image layer.
+#
 # The browser talks only to the frontend container. nginx proxies /api to the
 # API service on the internal network, so there is one origin, no CORS in play,
 # and no API host baked into the JavaScript bundle.
@@ -33,6 +37,11 @@ services:
       NPN_CORS_ORIGINS: "http://localhost:5173,http://localhost:4173,http://localhost:8080"
       NPN_LOG_LEVEL: INFO
       NPN_ENABLE_INFERENCE: "true"
+      # AI assistant. Injected at RUNTIME from the host environment or a .env
+      # file next to this compose file — never baked into the image, never sent
+      # to the browser. Leave unset to run without the assistant: every other
+      # feature works and /genai/status explains why it is unavailable.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       # product data layer (product.duckdb + the two parquet sidecars) — 130 MB
       - ./06_BACKEND/data:/data/product:ro

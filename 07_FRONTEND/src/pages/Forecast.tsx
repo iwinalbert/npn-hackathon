@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import {
   usePlanning, useSearch, useSeriesForecast, useSeriesHistory,
@@ -200,6 +200,15 @@ export function Forecast() {
                 : undefined
             }
             actions={
+              <div className="flex items-center gap-3">
+                <Link
+                  to={`/assistant?store=${store}&item=${item}`}
+                  className="rounded border border-forecast/50 bg-forecast/10 px-2.5 py-1
+                             text-[11px] font-medium text-forecast transition-colors
+                             hover:bg-forecast/20"
+                >
+                  Ask AI about this forecast
+                </Link>
               <div className="flex gap-1" role="group" aria-label="History range">
                 {HISTORY_OPTIONS.map((o) => (
                   <button
@@ -216,6 +225,7 @@ export function Forecast() {
                     {o.label}
                   </button>
                 ))}
+              </div>
               </div>
             }
           >

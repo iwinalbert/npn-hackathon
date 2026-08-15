@@ -17,6 +17,7 @@ const Validation = lazy(() => import('./pages/Validation').then((m) => ({ defaul
 const Insights = lazy(() => import('./pages/Insights').then((m) => ({ default: m.Insights })))
 const Model = lazy(() => import('./pages/Model').then((m) => ({ default: m.Model })))
 const Methodology = lazy(() => import('./pages/Methodology').then((m) => ({ default: m.Methodology })))
+const Assistant = lazy(() => import('./pages/Assistant').then((m) => ({ default: m.Assistant })))
 
 function NotFound() {
   return (
@@ -79,6 +80,14 @@ export default function App() {
           element={
             <Suspense fallback={<LoadingPanel height="h-96" label="Loading model" />}>
               <Model />
+            </Suspense>
+          }
+        />
+        <Route
+          path="assistant"
+          element={
+            <Suspense fallback={<LoadingPanel height="h-96" label="Loading assistant" />}>
+              <Assistant />
             </Suspense>
           }
         />

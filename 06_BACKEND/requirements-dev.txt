@@ -1,0 +1,6 @@
+# Development and testing. Install on top of requirements-inference.txt.
+
+-r requirements-inference.txt
+
+pytest==8.4.2
+httpx==0.28.1

@@ -136,7 +136,7 @@ def test_backtest_reproduces_the_published_champion_metrics(client):
     row = db.query_one(
         "SELECT sqrt(avg((y_true - p_blend) * (y_true - p_blend))) AS rmse, "
         "       avg(abs(y_true - p_blend)) AS mae, count(*) AS n "
-        "FROM backtest WHERE origin_idx = 1912")
+        f"FROM {db.backtest_source()} WHERE origin_idx = 1912")
     assert row["n"] == 853_720
     assert row["rmse"] == pytest.approx(2.0929, abs=5e-4)
     assert row["mae"] == pytest.approx(1.0395, abs=5e-4)
@@ -150,7 +150,7 @@ def test_blend_weight_is_still_0_60(client):
     from app import db
     row = db.query_one(
         "SELECT max(abs(p_blend - (0.60 * p_direct + 0.40 * p_recursive))) AS d "
-        "FROM backtest WHERE origin_idx = 1912")
+        f"FROM {db.backtest_source()} WHERE origin_idx = 1912")
     assert row["d"] < 1e-4, f"blend weight drift detected: max diff {row['d']}"
 
 
@@ -160,12 +160,12 @@ def test_error_bands_are_calibrated(client):
     coverage means the band is misleading planners about their risk.
     """
     from app import db
-    row = db.query_one("""
+    row = db.query_one(f"""
         SELECT avg(CASE WHEN b.y_true
                           BETWEEN greatest(0, b.p_blend + e.q05 * sqrt(greatest(b.p_blend, 1.0)))
                               AND b.p_blend + e.q95 * sqrt(greatest(b.p_blend, 1.0))
                         THEN 1.0 ELSE 0.0 END) AS coverage
-        FROM backtest b
+        FROM {db.backtest_source()} b
         JOIN series s USING (series_idx)
         JOIN error_bands e ON e.regime = s.regime AND e.horizon = b.horizon
         USING SAMPLE 300000 ROWS

@@ -19,7 +19,9 @@ is the approach the evidence selected.
 from __future__ import annotations
 
 from ..cache import ttl_cache
-from ..db import PANEL, SAFE_LEVELS, query, query_one, validate_level
+from ..config import settings
+from ..db import (SAFE_LEVELS, history_source, query, query_one,
+                  validate_level)
 from ..errors import BadRequest, NotFound
 
 LEVEL_LABELS = {
@@ -165,24 +167,33 @@ def aggregate_forecast(level: str, node_id: str) -> dict:
 
 @ttl_cache()
 def aggregate_history(level: str, node_id: str, days: int = 90) -> list[dict]:
-    """Daily actuals for one node over the trailing `days` before the origin."""
+    """
+    Daily actuals for one node over the trailing `days` before the origin.
+
+    Joins the history sidecar to `series` on series_idx, which is why the
+    sidecar carries no identifier columns: they live once in `series` instead of
+    being repeated across 59.2M rows.
+    """
     cols = validate_level(level)
     if cols:
         parts = node_id.split("|")
-        clause = " AND ".join(f"{c} = ?" for c in cols)
-        where = f"WHERE {clause}"
-        params = parts
+        where = "WHERE " + " AND ".join(f"s.{c} = ?" for c in cols)
+        params = list(parts)
     else:
         where, params = "", []
 
+    origin = settings.forecast_origin_idx
     return query(
         f"""
-        SELECT date::VARCHAR AS date, sum(sales) AS sales
-        FROM {PANEL}
+        SELECT c.date AS date, h.day_idx AS day_idx, sum(h.sales) AS sales
+        FROM {history_source()} h
+        JOIN series s USING (series_idx)
+        JOIN calendar c ON c.day_idx = h.day_idx
         {where}
-        GROUP BY 1 ORDER BY 1 DESC LIMIT ?
+        {"AND" if where else "WHERE"} h.day_idx > ? AND h.day_idx <= ?
+        GROUP BY 1, 2 ORDER BY 2
         """,
-        params + [days],
+        params + [origin - days, origin],
     )
 
 

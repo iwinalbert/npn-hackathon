@@ -10,15 +10,16 @@ ON THE ERROR BANDS
 backtest error quantiles**, not model output. The frozen model produces a point
 forecast and nothing else; inventing a distribution around it would be
 fabrication. What we can honestly say is: "on held-out windows, for series in
-this volume tier at this horizon, the model's actual error fell between these
-bounds 90% of the time". That is measured, useful for safety-stock decisions,
-and clearly labelled as such everywhere it surfaces.
+this demand regime at this horizon, the model's actual error fell inside these
+bounds 90% of the time" — and measured coverage is 90.0%. That is useful for
+safety-stock decisions and is labelled as measured error everywhere it surfaces.
 """
 
 from __future__ import annotations
 
 from ..cache import ttl_cache
-from ..db import PANEL, query, query_one
+from ..config import settings
+from ..db import history_source, query, query_one
 from ..errors import NotFound
 from . import calendar as cal
 
@@ -66,31 +67,32 @@ def history(store_id: str, item_id: str, days: int = 90) -> dict:
     """
     Daily actuals leading up to the forecast origin.
 
-    Reads the 59.2M-row panel parquet directly — DuckDB's predicate pushdown
-    answers this in ~0.16 s, so there is no reason to duplicate history into the
-    product database.
+    Reads the product-owned history sidecar (sorted by series, zstd parquet):
+    a single series' window resolves in ~8-13 ms because DuckDB's zone maps
+    prune all other row groups. See scripts/build_product_db.py for why this is
+    a sidecar rather than a view over the research parquet.
     """
     meta = _series_row(store_id, item_id)
+    origin = settings.forecast_origin_idx
+    state = meta["state_id"]
     rows = query(
         f"""
-        SELECT date::VARCHAR AS date, d, sales, sell_price,
-               event_name_1, snap_CA, snap_TX, snap_WI
-        FROM {PANEL}
-        WHERE store_id = ? AND item_id = ?
-        ORDER BY date DESC
-        LIMIT ?
+        SELECT c.date AS date, h.day_idx, h.sales, h.sell_price,
+               c.event_name_1, c.snap_CA, c.snap_TX, c.snap_WI
+        FROM {history_source()} h
+        JOIN calendar c ON c.day_idx = h.day_idx
+        WHERE h.series_idx = ? AND h.day_idx > ? AND h.day_idx <= ?
+        ORDER BY h.day_idx
         """,
-        [store_id, item_id, days],
+        [meta["series_idx"], origin - days, origin],
     )
-    rows.reverse()
-    state = meta["state_id"]
     points = []
     for r in rows:
         points.append({
-            "date": r["date"][:10],
-            "day_idx": int(r["d"][2:]) - 1,
+            "date": str(r["date"])[:10],
+            "day_idx": int(r["day_idx"]),
             "sales": int(r["sales"]),
-            "sell_price": (float(r["sell_price"])
+            "sell_price": (round(float(r["sell_price"]), 2)
                            if r["sell_price"] is not None else None),
             "event_name": r["event_name_1"] or None,
             "snap": int(r.get(f"snap_{state}", 0) or 0),

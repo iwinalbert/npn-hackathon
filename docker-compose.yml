@@ -1,0 +1,56 @@
+# NPN_HACKATHON — product stack
+#
+#   docker compose up --build
+#
+# Prerequisite: build the product data layer once on the host, so the container
+# mounts data rather than rebuilding it:
+#
+#   python tasks.py build-db
+#
+# The research tree is mounted READ-ONLY (:ro). The container runs as a non-root
+# user, so the frozen model artefacts cannot be modified even by accident.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: 06_BACKEND/Dockerfile
+      target: full          # use `api` for a lean build without live inference
+    image: npn-forecast-api:latest
+    container_name: npn-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      NPN_ENVIRONMENT: production
+      NPN_DATA_DIR: /data/product
+      NPN_PROJECT_ROOT: /research
+      NPN_CORS_ORIGINS: "http://localhost:5173,http://localhost:4173"
+      NPN_LOG_LEVEL: INFO
+      NPN_ENABLE_INFERENCE: "true"
+    volumes:
+      # product data layer (product.duckdb + the two parquet sidecars) — 130 MB
+      - ./06_BACKEND/data:/data/product:ro
+      # frozen model artefacts, read-only — needed only for live inference
+      - ./models/champion:/research/models/champion:ro
+      - ./predictions/final_forecast:/research/predictions/final_forecast:ro
+      # writable scratch: the research pipeline creates directories on import
+      - npn-scratch:/research/experiments
+      - npn-scratch-preds:/research/predictions/validation
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys,json;r=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready',timeout=4));sys.exit(0 if r.get('ready') else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          # Idle ~200 MB; a live inference job peaks near 1 GB because it loads
+          # the 59.2M-row panel to rebuild features.
+          memory: 2G
+
+volumes:
+  npn-scratch:
+  npn-scratch-preds:

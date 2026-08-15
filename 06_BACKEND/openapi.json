@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "NPN Demand Forecasting API",
-    "description": "Serves 28-day-ahead demand forecasts for 30,490 Walmart store-item series from a **frozen** LightGBM Tweedie blend (0.60 \u00d7 direct + 0.40 \u00d7 recursive; validation RMSE 2.0929 / MAE 1.0395).\n\n**Scientific honesty is part of the contract.** Error bands are empirical backtest error, never model-produced intervals; accuracy is always reported for the aggregation level being viewed; and no accuracy is claimed for the delivered forecast window, which has no ground truth. See `/meta/capabilities` for what is implemented, what research rejected, and what is not supported.",
-    "version": "1.0.0"
+    "description": "Serves 28-day-ahead demand forecasts for 30,490 Walmart store-item series from a **frozen** LightGBM Tweedie blend (0.60 \u00d7 direct + 0.40 \u00d7 recursive; validation RMSE 2.0929 / MAE 1.0395 on 853,720 held-out predictions).\n\n**Scientific honesty is part of the API contract.**\n\n* Error bands are *empirical backtest error*, never model-produced prediction intervals \u2014 the model emits point forecasts only.\n* Accuracy is always reported for the aggregation level being viewed, because the same forecast is ~28% accurate per store-item and ~97% chain-wide.\n* No accuracy is claimed for the delivered forecast window: it has no ground truth.\n\nSee `/api/v1/meta/capabilities` for what is implemented, what the research phase rejected on evidence, and what is not supported.",
+    "version": "2.0.0"
   },
   "paths": {
     "/api/v1/health": {
@@ -35,7 +35,7 @@
           "health"
         ],
         "summary": "Readiness \u2014 are the data artefacts usable?",
-        "description": "Readiness deliberately reports DEGRADED rather than failing outright when the\nhistory panel is missing: forecasts and backtests still work without it, and\na partially-useful API beats a dead one during a demo.",
+        "description": "Readiness reports DEGRADED rather than failing outright when a sidecar is\nmissing: the frozen forecast still serves without history or backtest data,\nand a partially-useful API beats a dead one. Orchestrators should treat\nready=false as unhealthy and degraded=true as a warning.",
         "operationId": "ready_api_v1_ready_get",
         "responses": {
           "200": {
@@ -698,6 +698,700 @@
                   "type": "object",
                   "additionalProperties": true,
                   "title": "Response Forecast Api V1 Series  Store Id   Item Id  Forecast Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/windows": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "Backtest windows where ground truth exists",
+        "description": "Only windows with real observed sales are listed. The delivered forecast\nwindow (d_1942-d_1969) is deliberately absent: it has no ground truth, so no\naccuracy figure can honestly be quoted against it.",
+        "operationId": "windows_api_v1_accuracy_windows_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "type": "array",
+                  "title": "Response Windows Api V1 Accuracy Windows Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/levels": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "Measured accuracy at each aggregation level",
+        "operationId": "levels_api_v1_accuracy_levels_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Levels Api V1 Accuracy Levels Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/horizon": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "How error grows across the 28-day horizon",
+        "operationId": "horizon_api_v1_accuracy_horizon_get",
+        "parameters": [
+          {
+            "name": "origin_idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1912,
+              "title": "Origin Idx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Horizon Api V1 Accuracy Horizon Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/regimes": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "Accuracy per Syntetos-Boylan demand regime",
+        "operationId": "regimes_api_v1_accuracy_regimes_get",
+        "parameters": [
+          {
+            "name": "origin_idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1912,
+              "title": "Origin Idx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Regimes Api V1 Accuracy Regimes Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/members": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "Direct vs recursive vs blend decomposition",
+        "operationId": "members_api_v1_accuracy_members_get",
+        "parameters": [
+          {
+            "name": "origin_idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1912,
+              "title": "Origin Idx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Members Api V1 Accuracy Members Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/error-bands": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "The empirical error-band table",
+        "operationId": "error_bands_api_v1_accuracy_error_bands_get",
+        "parameters": [
+          {
+            "name": "regime",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Regime"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Error Bands Api V1 Accuracy Error Bands Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/backtest/{store_id}/{item_id}": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "Predicted vs actual for one series",
+        "operationId": "series_backtest_api_v1_accuracy_backtest__store_id___item_id__get",
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Store Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
+            }
+          },
+          {
+            "name": "origin_idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1912,
+              "title": "Origin Idx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Series Backtest Api V1 Accuracy Backtest  Store Id   Item Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/backtest": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "Predicted vs actual for a hierarchy node",
+        "operationId": "aggregate_backtest_api_v1_accuracy_backtest_get",
+        "parameters": [
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "store",
+              "title": "Level"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "CA_1",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "origin_idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1912,
+              "title": "Origin Idx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Aggregate Backtest Api V1 Accuracy Backtest Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insights/top-movers": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Series rising or falling most against their recent run-rate",
+        "operationId": "top_movers_api_v1_insights_top_movers_get",
+        "parameters": [
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "total",
+              "title": "Level"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ALL",
+              "title": "Node Id"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^(both|up|down)$",
+              "default": "both",
+              "title": "Direction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Top Movers Api V1 Insights Top Movers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insights/summary": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "Headline planning numbers for a node",
+        "operationId": "summary_api_v1_insights_summary_get",
+        "parameters": [
+          {
+            "name": "level",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "total",
+              "title": "Level"
+            }
+          },
+          {
+            "name": "node_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "ALL",
+              "title": "Node Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Summary Api V1 Insights Summary Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/insights/planning/{store_id}/{item_id}": {
+      "get": {
+        "tags": [
+          "insights"
+        ],
+        "summary": "28-day planning view for one series",
+        "operationId": "planning_api_v1_insights_planning__store_id___item_id__get",
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Store Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Planning Api V1 Insights Planning  Store Id   Item Id  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inference/status": {
+      "get": {
+        "tags": [
+          "inference"
+        ],
+        "summary": "Can live inference run in this deployment?",
+        "operationId": "status_api_v1_inference_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Status Api V1 Inference Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inference/verify": {
+      "post": {
+        "tags": [
+          "inference"
+        ],
+        "summary": "Start a forecast verification run (~35 s)",
+        "description": "Re-runs the frozen model and compares it against the shipped artefact.\n\nReturns immediately with a job id; poll `/inference/jobs/{job_id}`.\nReturns 503 if inference is unavailable, 409 if one is already running.",
+        "operationId": "verify_api_v1_inference_verify_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Verify Api V1 Inference Verify Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inference/jobs": {
+      "get": {
+        "tags": [
+          "inference"
+        ],
+        "summary": "Recent inference jobs",
+        "operationId": "jobs_api_v1_inference_jobs_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Jobs Api V1 Inference Jobs Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inference/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "inference"
+        ],
+        "summary": "Poll one inference job",
+        "operationId": "job_api_v1_inference_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Job Api V1 Inference Jobs  Job Id  Get"
                 }
               }
             }

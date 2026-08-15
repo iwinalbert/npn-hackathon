@@ -16,7 +16,12 @@ def test_ready_reports_all_tables(client):
     tables = body["detail"]["tables"]
     assert tables["series"] == 30_490
     assert tables["forecast"] == 30_490 * 28
-    assert tables["backtest"] > 6_000_000
+    assert tables["calendar"] == 1_969
+    assert tables["window_metrics"] == 8
+    # sidecars are separate files, reported separately
+    assert body["detail"]["history_queryable"] is True
+    assert body["detail"]["backtest_queryable"] is True
+    assert not body["detail"]["errors"]
 
 
 def test_every_response_carries_a_request_id(client):

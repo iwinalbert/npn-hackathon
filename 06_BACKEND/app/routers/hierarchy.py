@@ -59,6 +59,8 @@ def aggregate(
     }
     if history_days:
         hist = svc.aggregate_history(level, node_id, history_days)
-        out["history"] = [{"date": h["date"][:10], "sales": int(h["sales"])}
-                          for h in reversed(hist)]
+        # the service already returns ascending day_idx
+        out["history"] = [{"date": str(h["date"])[:10],
+                           "day_idx": int(h["day_idx"]),
+                           "sales": int(h["sales"])} for h in hist]
     return out

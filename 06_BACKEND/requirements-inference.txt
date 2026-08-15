@@ -1,0 +1,16 @@
+# Live inference ONLY. Install on top of requirements.txt.
+#
+# These are the libraries the FROZEN research pipeline needs to rebuild features
+# and execute the two LightGBM boosters. Versions are pinned to exactly what the
+# model was trained and validated with — changing them risks changing the
+# forecast, which would violate the model freeze.
+#
+# A deployment that does not need the /inference/* endpoints can omit this file
+# entirely; the API degrades gracefully and reports why via /inference/status.
+
+-r requirements.txt
+
+lightgbm==4.7.0
+numpy==2.5.1
+pandas==3.0.5
+pyarrow==25.0.1

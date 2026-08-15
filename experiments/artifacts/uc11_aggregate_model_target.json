@@ -1,0 +1,198 @@
+{
+  "source_predictions": "exp_76_diversity_blend_validation.csv",
+  "base_RMSE": 2.0920004037475435,
+  "levels": {
+    "L9_store_dept": {
+      "n_groups": 70,
+      "n_group_days": 1960,
+      "bottom_up_aggregate_RMSE": 87.60212096419697,
+      "sum_cD": 93524.7661243001,
+      "sum_kD2": 108410.2841940283,
+      "sum_k": 16.24757524290601,
+      "oracle_alpha1_dSSE": -78639.24805457192,
+      "oracle_alpha1_bottom_RMSE": 2.0698676429797267,
+      "oracle_alphastar": 0.8626927493051609,
+      "oracle_alphastar_bottom_RMSE": 2.0692892405849275,
+      "breakeven_agg_RMSE_at_alpha1": 69.57054373389714,
+      "breakeven_vs_bottom_up_pct": -20.58349390612283,
+      "shrunk_gain_curve": [
+        {
+          "agg_RMSE": 87.60212096419697,
+          "vs_bottom_up_pct": 0.0,
+          "bottom_RMSE": 2.0814685404728728,
+          "bottom_dRMSE": -0.010531863274670705
+        },
+        {
+          "agg_RMSE": 83.22201491598712,
+          "vs_bottom_up_pct": -5.000000000000004,
+          "bottom_RMSE": 2.08088749199858,
+          "bottom_dRMSE": -0.011112911748963672
+        },
+        {
+          "agg_RMSE": 78.84190886777728,
+          "vs_bottom_up_pct": -9.999999999999998,
+          "bottom_RMSE": 2.0802737009949563,
+          "bottom_dRMSE": -0.011726702752587137
+        },
+        {
+          "agg_RMSE": 74.46180281956742,
+          "vs_bottom_up_pct": -15.000000000000002,
+          "bottom_RMSE": 2.079627243490873,
+          "bottom_dRMSE": -0.012373160256670346
+        },
+        {
+          "agg_RMSE": 70.08169677135758,
+          "vs_bottom_up_pct": -19.999999999999996,
+          "bottom_RMSE": 2.0789488649707817,
+          "bottom_dRMSE": -0.013051538776761795
+        },
+        {
+          "agg_RMSE": 61.32148467493788,
+          "vs_bottom_up_pct": -30.000000000000004,
+          "bottom_RMSE": 2.0775037691424645,
+          "bottom_dRMSE": -0.014496634605078995
+        },
+        {
+          "agg_RMSE": 52.56127257851818,
+          "vs_bottom_up_pct": -40.0,
+          "bottom_RMSE": 2.0759650214084098,
+          "bottom_dRMSE": -0.016035382339133708
+        },
+        {
+          "agg_RMSE": 43.801060482098485,
+          "vs_bottom_up_pct": -50.0,
+          "bottom_RMSE": 2.0743826782973693,
+          "bottom_dRMSE": -0.01761772545017415
+        }
+      ]
+    },
+    "L10_item": {
+      "n_groups": 3049,
+      "n_group_days": 85372,
+      "bottom_up_aggregate_RMSE": 8.565230751325693,
+      "sum_cD": 835688.1310464888,
+      "sum_kD2": 903755.0991541785,
+      "sum_k": 10592.101799754932,
+      "oracle_alpha1_dSSE": -767621.162938799,
+      "oracle_alpha1_bottom_RMSE": 1.8647565700865754,
+      "oracle_alphastar": 0.9246842776639452,
+      "oracle_alphastar_bottom_RMSE": 1.8631457684214212,
+      "breakeven_agg_RMSE_at_alpha1": 8.512995360699499,
+      "breakeven_vs_bottom_up_pct": -0.6098538631677752,
+      "shrunk_gain_curve": [
+        {
+          "agg_RMSE": 8.565230751325693,
+          "vs_bottom_up_pct": 0.0,
+          "bottom_RMSE": 1.9722519944279662,
+          "bottom_dRMSE": -0.11974840931957731
+        },
+        {
+          "agg_RMSE": 8.136969213759407,
+          "vs_bottom_up_pct": -5.000000000000004,
+          "bottom_RMSE": 1.9664192352158036,
+          "bottom_dRMSE": -0.12558116853173984
+        },
+        {
+          "agg_RMSE": 7.708707676193124,
+          "vs_bottom_up_pct": -9.999999999999998,
+          "bottom_RMSE": 1.960334297605734,
+          "bottom_dRMSE": -0.1316661061418094
+        },
+        {
+          "agg_RMSE": 7.280446138626838,
+          "vs_bottom_up_pct": -15.000000000000002,
+          "bottom_RMSE": 1.9540087913656365,
+          "bottom_dRMSE": -0.13799161238190694
+        },
+        {
+          "agg_RMSE": 6.8521846010605545,
+          "vs_bottom_up_pct": -19.999999999999996,
+          "bottom_RMSE": 1.9474608829365665,
+          "bottom_dRMSE": -0.14453952081097698
+        },
+        {
+          "agg_RMSE": 5.995661525927985,
+          "vs_bottom_up_pct": -30.000000000000004,
+          "bottom_RMSE": 1.9338104354165015,
+          "bottom_dRMSE": -0.15818996833104193
+        },
+        {
+          "agg_RMSE": 5.139138450795415,
+          "vs_bottom_up_pct": -40.0,
+          "bottom_RMSE": 1.9197042198055871,
+          "bottom_dRMSE": -0.17229618394195634
+        },
+        {
+          "agg_RMSE": 4.2826153756628464,
+          "vs_bottom_up_pct": -50.0,
+          "bottom_RMSE": 1.9056380462444387,
+          "bottom_dRMSE": -0.18636235750310481
+        }
+      ]
+    },
+    "L11_item_state": {
+      "n_groups": 9147,
+      "n_group_days": 256116,
+      "bottom_up_aggregate_RMSE": 4.202580501995815,
+      "sum_cD": 1619044.7972928025,
+      "sum_kD2": 1623756.0793447748,
+      "sum_k": 86392.5298496796,
+      "oracle_alpha1_dSSE": -1614333.5152408301,
+      "oracle_alpha1_bottom_RMSE": 1.5765549255926603,
+      "oracle_alphastar": 0.9970985284600915,
+      "oracle_alphastar_bottom_RMSE": 1.5765498474656092,
+      "breakeven_agg_RMSE_at_alpha1": 4.322734236717459,
+      "breakeven_vs_bottom_up_pct": 2.8590465944574373,
+      "shrunk_gain_curve": [
+        {
+          "agg_RMSE": 4.202580501995815,
+          "vs_bottom_up_pct": 0.0,
+          "bottom_RMSE": 1.8443408891404018,
+          "bottom_dRMSE": -0.24765951460714164
+        },
+        {
+          "agg_RMSE": 3.992451476896024,
+          "vs_bottom_up_pct": -5.000000000000004,
+          "bottom_RMSE": 1.831191675022246,
+          "bottom_dRMSE": -0.2608087287252976
+        },
+        {
+          "agg_RMSE": 3.7823224517962335,
+          "vs_bottom_up_pct": -9.999999999999998,
+          "bottom_RMSE": 1.8173504597062458,
+          "bottom_dRMSE": -0.2746499440412977
+        },
+        {
+          "agg_RMSE": 3.5721934266964426,
+          "vs_bottom_up_pct": -15.000000000000002,
+          "bottom_RMSE": 1.802825420738622,
+          "bottom_dRMSE": -0.2891749830089214
+        },
+        {
+          "agg_RMSE": 3.362064401596652,
+          "vs_bottom_up_pct": -19.999999999999996,
+          "bottom_RMSE": 1.787639604070206,
+          "bottom_dRMSE": -0.3043607996773374
+        },
+        {
+          "agg_RMSE": 2.9418063513970703,
+          "vs_bottom_up_pct": -30.000000000000004,
+          "bottom_RMSE": 1.755474368936528,
+          "bottom_dRMSE": -0.3365260348110155
+        },
+        {
+          "agg_RMSE": 2.521548301197489,
+          "vs_bottom_up_pct": -40.0,
+          "bottom_RMSE": 1.7214824606778238,
+          "bottom_dRMSE": -0.37051794306971964
+        },
+        {
+          "agg_RMSE": 2.1012902509979074,
+          "vs_bottom_up_pct": -50.0,
+          "bottom_RMSE": 1.686781803408112,
+          "bottom_dRMSE": -0.4052186003394316
+        }
+      ]
+    }
+  }
+}

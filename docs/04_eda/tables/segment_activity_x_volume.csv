@@ -1,0 +1,5 @@
+activity_class,Low-volume,Mid-volume,High-volume
+Extremely sparse,1534,0,0
+High-activity,0,149,7480
+Regular/intermittent,2760,9834,2673
+Sparse,5873,177,10

@@ -1,0 +1,37 @@
+{
+  "experiment_name": "model_00_baseline_seasonal_naive",
+  "started_at": "2026-08-14T14:47:00",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [],
+  "model_type": "naive baseline (no fitting)",
+  "objective": "n/a",
+  "feature_groups": [
+    "none \u2014 arithmetic rule only"
+  ],
+  "description": "Most recent SAME WEEKDAY on or before the origin",
+  "validation_origin_day": "d_1913",
+  "validation_dates": "2016-04-25 .. 2016-05-22",
+  "validation_days": "d_1914 .. d_1941",
+  "horizon": 28,
+  "n_series": 30490,
+  "validation_rows": 853720,
+  "metrics": {
+    "RMSE": 2.6768948977123297,
+    "MAE": 1.2439722625685237,
+    "WAPE": 0.8621813918900049,
+    "bias": -0.10618001218198005,
+    "n": 853720
+  },
+  "prediction_path": "predictions\\model_00_seasonal_naive_validation.csv",
+  "training_rows": 0,
+  "training_seconds": 0.0,
+  "finished_at": "2026-08-14T14:47:01",
+  "wall_seconds": 0.7
+}

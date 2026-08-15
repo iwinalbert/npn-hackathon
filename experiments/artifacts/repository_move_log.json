@@ -1,0 +1,1857 @@
+[
+  {
+    "action": "move",
+    "src": "raw_dataset/calendar.csv",
+    "dst": "data/raw/calendar.csv"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/sales_train_evaluation.csv",
+    "dst": "data/raw/sales_train_evaluation.csv"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/sales_train_validation.csv",
+    "dst": "data/raw/sales_train_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/sample_submission.csv",
+    "dst": "data/raw/sample_submission.csv"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/sell_prices.csv",
+    "dst": "data/raw/sell_prices.csv"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/Dataset_Explanation/Cognizant_M5_Problem_Approach_Algorithms_Hierarchical_Plan.pdf",
+    "dst": "docs/02_dataset/Cognizant_M5_Problem_Approach_Algorithms_Hierarchical_Plan.pdf"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/Dataset_Explanation/Cognizant_Walmart_M5_Dataset_Deep_Explanation.pdf",
+    "dst": "docs/02_dataset/Cognizant_Walmart_M5_Dataset_Deep_Explanation.pdf"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/Dataset_Explanation/DATASET_EXPLAINED.md",
+    "dst": "docs/02_dataset/DATASET_EXPLAINED.md"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/Dataset_Explanation/DATASET_EXPLAINED.pdf",
+    "dst": "docs/02_dataset/DATASET_EXPLAINED.pdf"
+  },
+  {
+    "action": "move",
+    "src": "raw_dataset/Dataset_Explanation/DATASET_SUMMARY.md",
+    "dst": "docs/02_dataset/DATASET_SUMMARY.md"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/_audit/build_stats.json",
+    "dst": "data/processed/_audit/build_stats.json"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/_audit/quality_audit.json",
+    "dst": "data/processed/_audit/quality_audit.json"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/_audit/sample_coverage.json",
+    "dst": "data/processed/_audit/sample_coverage.json"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/_audit/sample_validation_results.json",
+    "dst": "data/processed/_audit/sample_validation_results.json"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/_audit/validation_results.json",
+    "dst": "data/processed/_audit/validation_results.json"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/PROCESSING_REPORT.md",
+    "dst": "data/processed/PROCESSING_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/PROCESSING_REPORT.pdf",
+    "dst": "data/processed/PROCESSING_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/README.md",
+    "dst": "data/processed/README.md"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/sales_long_full.parquet",
+    "dst": "data/processed/sales_long_full.parquet"
+  },
+  {
+    "action": "move",
+    "src": "processed_dataset/sales_sample_50000.csv",
+    "dst": "data/processed/sales_sample_50000.csv"
+  },
+  {
+    "action": "move",
+    "src": "ProblemStatement_Walkthrough/PS11_Walkthrough_Simple_Updated.docx",
+    "dst": "docs/01_problem_statement/PS11_Walkthrough_Simple_Updated.docx"
+  },
+  {
+    "action": "move",
+    "src": "end_to_end_approach.md",
+    "dst": "docs/01_problem_statement/TEAM_end_to_end_approach.md"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/01_overall_sales_over_time.png",
+    "dst": "docs/03_exploratory_analysis/01_overall_sales_over_time.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/02_sales_distribution.png",
+    "dst": "docs/03_exploratory_analysis/02_sales_distribution.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/03_zero_sales_distribution.png",
+    "dst": "docs/03_exploratory_analysis/03_zero_sales_distribution.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/04_sales_by_store.png",
+    "dst": "docs/03_exploratory_analysis/04_sales_by_store.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/05_sales_by_department.png",
+    "dst": "docs/03_exploratory_analysis/05_sales_by_department.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/06_example_series.png",
+    "dst": "docs/03_exploratory_analysis/06_example_series.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/07_weekly_pattern.png",
+    "dst": "docs/03_exploratory_analysis/07_weekly_pattern.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/08_price_vs_sales.png",
+    "dst": "docs/03_exploratory_analysis/08_price_vs_sales.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/09_snap_effect.png",
+    "dst": "docs/03_exploratory_analysis/09_snap_effect.png"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/calendar_full_readable.csv",
+    "dst": "docs/03_exploratory_analysis/calendar_full_readable.csv"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/cat_daily_sales.csv",
+    "dst": "docs/03_exploratory_analysis/cat_daily_sales.csv"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/cat_summary.csv",
+    "dst": "docs/03_exploratory_analysis/cat_summary.csv"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/daily_total_sales.csv",
+    "dst": "docs/03_exploratory_analysis/daily_total_sales.csv"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/dept_summary.csv",
+    "dst": "docs/03_exploratory_analysis/dept_summary.csv"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/sample_price_history.csv",
+    "dst": "docs/03_exploratory_analysis/sample_price_history.csv"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/series_summary.csv",
+    "dst": "docs/03_exploratory_analysis/series_summary.csv"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/step1_inventory.json",
+    "dst": "docs/03_exploratory_analysis/step1_inventory.json"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/step2_calendar_summary.json",
+    "dst": "docs/03_exploratory_analysis/step2_calendar_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/step3_hierarchy_summary.json",
+    "dst": "docs/03_exploratory_analysis/step3_hierarchy_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/step4_sales_stats.json",
+    "dst": "docs/03_exploratory_analysis/step4_sales_stats.json"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/step5_price_summary.json",
+    "dst": "docs/03_exploratory_analysis/step5_price_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/step6_submission_quality.json",
+    "dst": "docs/03_exploratory_analysis/step6_submission_quality.json"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/store_daily_sales.csv",
+    "dst": "docs/03_exploratory_analysis/store_daily_sales.csv"
+  },
+  {
+    "action": "move",
+    "src": "analysis_output/store_summary.csv",
+    "dst": "docs/03_exploratory_analysis/store_summary.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/01_sales_value_frequency.png",
+    "dst": "docs/04_eda/charts/01_sales_value_frequency.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/02_zero_vs_nonzero_share.png",
+    "dst": "docs/04_eda/charts/02_zero_vs_nonzero_share.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/03_sales_mean_median_by_category.png",
+    "dst": "docs/04_eda/charts/03_sales_mean_median_by_category.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/04_sales_share_by_store.png",
+    "dst": "docs/04_eda/charts/04_sales_share_by_store.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/05_sales_concentration_lorenz.png",
+    "dst": "docs/04_eda/charts/05_sales_concentration_lorenz.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/06_series_zero_pct_distribution.png",
+    "dst": "docs/04_eda/charts/06_series_zero_pct_distribution.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/07_zero_pct_by_category_store.png",
+    "dst": "docs/04_eda/charts/07_zero_pct_by_category_store.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/08_zero_streak_length_distribution.png",
+    "dst": "docs/04_eda/charts/08_zero_streak_length_distribution.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/09_leading_zero_vs_noprice_gap.png",
+    "dst": "docs/04_eda/charts/09_leading_zero_vs_noprice_gap.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/10_mean_sales_by_weekday.png",
+    "dst": "docs/04_eda/charts/10_mean_sales_by_weekday.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/11_mean_sales_by_month_category.png",
+    "dst": "docs/04_eda/charts/11_mean_sales_by_month_category.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/12_daily_total_sales_trend.png",
+    "dst": "docs/04_eda/charts/12_daily_total_sales_trend.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/13_yearly_sales_vs_active_series.png",
+    "dst": "docs/04_eda/charts/13_yearly_sales_vs_active_series.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/14_mean_sales_by_week_of_year.png",
+    "dst": "docs/04_eda/charts/14_mean_sales_by_week_of_year.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/15_event_effect_by_category.png",
+    "dst": "docs/04_eda/charts/15_event_effect_by_category.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/16_named_event_lift.png",
+    "dst": "docs/04_eda/charts/16_named_event_lift.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/17_snap_effect_by_state.png",
+    "dst": "docs/04_eda/charts/17_snap_effect_by_state.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/18_snap_effect_by_category.png",
+    "dst": "docs/04_eda/charts/18_snap_effect_by_category.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/19_price_distribution_by_category.png",
+    "dst": "docs/04_eda/charts/19_price_distribution_by_category.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/20_sales_by_relative_price_bin.png",
+    "dst": "docs/04_eda/charts/20_sales_by_relative_price_bin.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/21_relative_price_by_category.png",
+    "dst": "docs/04_eda/charts/21_relative_price_by_category.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/22_sales_before_after_price_change.png",
+    "dst": "docs/04_eda/charts/22_sales_before_after_price_change.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/23_segment_activity_x_volume.png",
+    "dst": "docs/04_eda/charts/23_segment_activity_x_volume.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/24_lag_correlations.png",
+    "dst": "docs/04_eda/charts/24_lag_correlations.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/25_days_since_last_sale_vs_today.png",
+    "dst": "docs/04_eda/charts/25_days_since_last_sale_vs_today.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/charts/26_sampled_price_sales_correlation_distribution.png",
+    "dst": "docs/04_eda/charts/26_sampled_price_sales_correlation_distribution.png"
+  },
+  {
+    "action": "move",
+    "src": "EDA/EDA_METHODOLOGY.md",
+    "dst": "docs/04_eda/EDA_METHODOLOGY.md"
+  },
+  {
+    "action": "move",
+    "src": "EDA/EDA_REPORT.md",
+    "dst": "docs/04_eda/EDA_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "EDA/EDA_REPORT.pdf",
+    "dst": "docs/04_eda/EDA_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/audit_metadata.json",
+    "dst": "docs/04_eda/statistics/audit_metadata.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/phase1_sanity_check.json",
+    "dst": "docs/04_eda/statistics/phase1_sanity_check.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/phase2_sales_distribution.json",
+    "dst": "docs/04_eda/statistics/phase2_sales_distribution.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/phase3_zero_intermittent.json",
+    "dst": "docs/04_eda/statistics/phase3_zero_intermittent.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/phase4_temporal.json",
+    "dst": "docs/04_eda/statistics/phase4_temporal.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/phase5_6_events_snap.json",
+    "dst": "docs/04_eda/statistics/phase5_6_events_snap.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/phase7_price.json",
+    "dst": "docs/04_eda/statistics/phase7_price.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/phase8_heterogeneity.json",
+    "dst": "docs/04_eda/statistics/phase8_heterogeneity.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/statistics/phase9_correlations.json",
+    "dst": "docs/04_eda/statistics/phase9_correlations.json"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/daily_total_sales.csv",
+    "dst": "docs/04_eda/tables/daily_total_sales.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/days_since_last_sale_vs_today.csv",
+    "dst": "docs/04_eda/tables/days_since_last_sale_vs_today.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/event_effect_by_category.csv",
+    "dst": "docs/04_eda/tables/event_effect_by_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/event_effect_by_department.csv",
+    "dst": "docs/04_eda/tables/event_effect_by_department.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/event_effect_by_store.csv",
+    "dst": "docs/04_eda/tables/event_effect_by_store.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/event_name_aggregated_lift.csv",
+    "dst": "docs/04_eda/tables/event_name_aggregated_lift.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/event_occurrence_level_lift.csv",
+    "dst": "docs/04_eda/tables/event_occurrence_level_lift.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/feature_candidates.csv",
+    "dst": "docs/04_eda/tables/feature_candidates.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/mean_sales_by_month_and_category.csv",
+    "dst": "docs/04_eda/tables/mean_sales_by_month_and_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/mean_sales_by_weekday_and_category.csv",
+    "dst": "docs/04_eda/tables/mean_sales_by_weekday_and_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/price_change_event_sales_before_after.csv",
+    "dst": "docs/04_eda/tables/price_change_event_sales_before_after.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/price_distribution_by_category.csv",
+    "dst": "docs/04_eda/tables/price_distribution_by_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/sales_by_category.csv",
+    "dst": "docs/04_eda/tables/sales_by_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/sales_by_department.csv",
+    "dst": "docs/04_eda/tables/sales_by_department.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/sales_by_relative_price_bin.csv",
+    "dst": "docs/04_eda/tables/sales_by_relative_price_bin.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/sales_by_relative_price_bin_and_category.csv",
+    "dst": "docs/04_eda/tables/sales_by_relative_price_bin_and_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/sales_by_state.csv",
+    "dst": "docs/04_eda/tables/sales_by_state.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/sales_by_store.csv",
+    "dst": "docs/04_eda/tables/sales_by_store.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/sampled_series_event_price_sensitivity.csv",
+    "dst": "docs/04_eda/tables/sampled_series_event_price_sensitivity.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/segment_activity_x_volume.csv",
+    "dst": "docs/04_eda/tables/segment_activity_x_volume.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/series_classification_by_category.csv",
+    "dst": "docs/04_eda/tables/series_classification_by_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/series_leading_zero_and_price_gap.csv",
+    "dst": "docs/04_eda/tables/series_leading_zero_and_price_gap.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/series_level_sales_stats.csv",
+    "dst": "docs/04_eda/tables/series_level_sales_stats.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/series_seasonality_index.csv",
+    "dst": "docs/04_eda/tables/series_seasonality_index.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/series_segment_assignment.csv",
+    "dst": "docs/04_eda/tables/series_segment_assignment.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/series_zero_pct.csv",
+    "dst": "docs/04_eda/tables/series_zero_pct.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/snap_effect_by_category.csv",
+    "dst": "docs/04_eda/tables/snap_effect_by_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/snap_effect_by_department.csv",
+    "dst": "docs/04_eda/tables/snap_effect_by_department.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/snap_effect_by_state.csv",
+    "dst": "docs/04_eda/tables/snap_effect_by_state.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/snap_effect_by_store.csv",
+    "dst": "docs/04_eda/tables/snap_effect_by_store.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/yearly_sales_stats.csv",
+    "dst": "docs/04_eda/tables/yearly_sales_stats.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/zero_pct_by_category.csv",
+    "dst": "docs/04_eda/tables/zero_pct_by_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/zero_pct_by_department.csv",
+    "dst": "docs/04_eda/tables/zero_pct_by_department.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/zero_pct_by_store.csv",
+    "dst": "docs/04_eda/tables/zero_pct_by_store.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/zero_streak_by_category.csv",
+    "dst": "docs/04_eda/tables/zero_streak_by_category.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/zero_streak_by_department.csv",
+    "dst": "docs/04_eda/tables/zero_streak_by_department.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/zero_streak_by_store.csv",
+    "dst": "docs/04_eda/tables/zero_streak_by_store.csv"
+  },
+  {
+    "action": "move",
+    "src": "EDA/tables/zero_streak_length_distribution.csv",
+    "dst": "docs/04_eda/tables/zero_streak_length_distribution.csv"
+  },
+  {
+    "action": "move",
+    "src": "Project_Approach/AUDIT_LOG.md",
+    "dst": "docs/05_approach/AUDIT_LOG.md"
+  },
+  {
+    "action": "move",
+    "src": "Project_Approach/ML_FORECASTING_APPROACH.md",
+    "dst": "docs/05_approach/ML_FORECASTING_APPROACH.md"
+  },
+  {
+    "action": "move",
+    "src": "Project_Approach/ML_FORECASTING_APPROACH.pdf",
+    "dst": "docs/05_approach/ML_FORECASTING_APPROACH.pdf"
+  },
+  {
+    "action": "move",
+    "src": "FINAL_APPROACH/_build_pdf.py",
+    "dst": "docs/05_approach/_build_pdf.py"
+  },
+  {
+    "action": "move",
+    "src": "FINAL_APPROACH/FINAL_PROJECT_APPROACH.md",
+    "dst": "docs/05_approach/FINAL_PROJECT_APPROACH.md"
+  },
+  {
+    "action": "move",
+    "src": "FINAL_APPROACH/FINAL_PROJECT_APPROACH.pdf",
+    "dst": "docs/05_approach/FINAL_PROJECT_APPROACH.pdf"
+  },
+  {
+    "action": "move",
+    "src": "FINAL_APPROACH/SUPPORTING_EVIDENCE.md",
+    "dst": "docs/05_approach/SUPPORTING_EVIDENCE.md"
+  },
+  {
+    "action": "move",
+    "src": "experiments/ablation_abl_1_calendar.json",
+    "dst": "experiments/registry/ablation_abl_1_calendar.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/ablation_abl_2_calendar_demand.json",
+    "dst": "experiments/registry/ablation_abl_2_calendar_demand.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/ablation_abl_3_plus_recency.json",
+    "dst": "experiments/registry/ablation_abl_3_plus_recency.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/ablation_abl_4_plus_price.json",
+    "dst": "experiments/registry/ablation_abl_4_plus_price.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/ablation_abl_5_plus_listing.json",
+    "dst": "experiments/registry/ablation_abl_5_plus_listing.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/ablation_abl_6_plus_hierarchy.json",
+    "dst": "experiments/registry/ablation_abl_6_plus_hierarchy.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/ablation_abl_7_full.json",
+    "dst": "experiments/registry/ablation_abl_7_full.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/diagnostic_leakage_probe_DO_NOT_USE.json",
+    "dst": "experiments/registry/diagnostic_leakage_probe_DO_NOT_USE.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/exp_69_pre_origin_per_series_bias_correction.json",
+    "dst": "experiments/registry/exp_69_pre_origin_per_series_bias_correction.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/exp_70_variance_reduction_ensemble.json",
+    "dst": "experiments/registry/exp_70_variance_reduction_ensemble.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/exp_71_year_over_year_features.json",
+    "dst": "experiments/registry/exp_71_year_over_year_features.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_00_baseline_last_value.json",
+    "dst": "experiments/registry/model_00_baseline_last_value.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_00_baseline_rolling_mean_28.json",
+    "dst": "experiments/registry/model_00_baseline_rolling_mean_28.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_00_baseline_rolling_mean_7.json",
+    "dst": "experiments/registry/model_00_baseline_rolling_mean_7.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_00_baseline_seasonal_naive.json",
+    "dst": "experiments/registry/model_00_baseline_seasonal_naive.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_01_lightgbm.json",
+    "dst": "experiments/registry/model_01_lightgbm.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_02_tweedie.json",
+    "dst": "experiments/registry/model_02_tweedie.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_03_tweedie_recency.json",
+    "dst": "experiments/registry/model_03_tweedie_recency.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_04_tweedie_recency_listing.json",
+    "dst": "experiments/registry/model_04_tweedie_recency_listing.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_05_hurdle.json",
+    "dst": "experiments/registry/model_05_hurdle.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_06_tuned_primary.json",
+    "dst": "experiments/registry/model_06_tuned_primary.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_06_window_christmas_2015.json",
+    "dst": "experiments/registry/model_06_window_christmas_2015.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_06_window_summer_2015.json",
+    "dst": "experiments/registry/model_06_window_summer_2015.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_07_final_forecast.json",
+    "dst": "experiments/registry/model_07_final_forecast.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_08_team_style_reproduction.json",
+    "dst": "experiments/registry/model_08_team_style_reproduction.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/model_09_tweedie_power_1_5.json",
+    "dst": "experiments/registry/model_09_tweedie_power_1_5.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_00_baseline_reproduce.json",
+    "dst": "experiments/registry/opt_00_baseline_reproduce.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_02_v2_A_demand.json",
+    "dst": "experiments/registry/opt_02_v2_A_demand.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_02_v2_all.json",
+    "dst": "experiments/registry/opt_02_v2_all.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_02_v2_B_calendar.json",
+    "dst": "experiments/registry/opt_02_v2_B_calendar.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_02_v2_C_price.json",
+    "dst": "experiments/registry/opt_02_v2_C_price.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_02_v2_D_interactions.json",
+    "dst": "experiments/registry/opt_02_v2_D_interactions.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_03_highvol_calibration.json",
+    "dst": "experiments/registry/opt_03_highvol_calibration.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_03_volume_weight_cap3.json",
+    "dst": "experiments/registry/opt_03_volume_weight_cap3.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_03_volume_weight_cap5.json",
+    "dst": "experiments/registry/opt_03_volume_weight_cap5.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04_power_1_1.json",
+    "dst": "experiments/registry/opt_04_power_1_1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04_power_1_2.json",
+    "dst": "experiments/registry/opt_04_power_1_2.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04_power_1_3.json",
+    "dst": "experiments/registry/opt_04_power_1_3.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04_power_1_4.json",
+    "dst": "experiments/registry/opt_04_power_1_4.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04_power_1_5.json",
+    "dst": "experiments/registry/opt_04_power_1_5.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04_power_1_6.json",
+    "dst": "experiments/registry/opt_04_power_1_6.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04_power_1_7.json",
+    "dst": "experiments/registry/opt_04_power_1_7.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04_power_1_8.json",
+    "dst": "experiments/registry/opt_04_power_1_8.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_04b_power_1_5_primary.json",
+    "dst": "experiments/registry/opt_04b_power_1_5_primary.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_05_recursive.json",
+    "dst": "experiments/registry/opt_05_recursive.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_06_obj_l1.json",
+    "dst": "experiments/registry/opt_06_obj_l1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_06_obj_l2.json",
+    "dst": "experiments/registry/opt_06_obj_l2.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_06_obj_poisson.json",
+    "dst": "experiments/registry/opt_06_obj_poisson.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_06_obj_tweedie_1_1.json",
+    "dst": "experiments/registry/opt_06_obj_tweedie_1_1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_07_hurdle_v2.json",
+    "dst": "experiments/registry/opt_07_hurdle_v2.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_07_hurdle_v2_calibrated.json",
+    "dst": "experiments/registry/opt_07_hurdle_v2_calibrated.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_08_ensemble_tweedie_l1.json",
+    "dst": "experiments/registry/opt_08_ensemble_tweedie_l1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_autumn_2015_l1.json",
+    "dst": "experiments/registry/opt_09_robust_autumn_2015_l1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_autumn_2015_tweedie_1_1.json",
+    "dst": "experiments/registry/opt_09_robust_autumn_2015_tweedie_1_1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_autumn_2015_tweedie_1_5.json",
+    "dst": "experiments/registry/opt_09_robust_autumn_2015_tweedie_1_5.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_christmas_2015_l1.json",
+    "dst": "experiments/registry/opt_09_robust_christmas_2015_l1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_christmas_2015_tweedie_1_1.json",
+    "dst": "experiments/registry/opt_09_robust_christmas_2015_tweedie_1_1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_christmas_2015_tweedie_1_5.json",
+    "dst": "experiments/registry/opt_09_robust_christmas_2015_tweedie_1_5.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_primary_spring_2016_l1.json",
+    "dst": "experiments/registry/opt_09_robust_primary_spring_2016_l1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_primary_spring_2016_tweedie_1_1.json",
+    "dst": "experiments/registry/opt_09_robust_primary_spring_2016_tweedie_1_1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_primary_spring_2016_tweedie_1_5.json",
+    "dst": "experiments/registry/opt_09_robust_primary_spring_2016_tweedie_1_5.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_summer_2015_l1.json",
+    "dst": "experiments/registry/opt_09_robust_summer_2015_l1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_summer_2015_tweedie_1_1.json",
+    "dst": "experiments/registry/opt_09_robust_summer_2015_tweedie_1_1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/opt_09_robust_summer_2015_tweedie_1_5.json",
+    "dst": "experiments/registry/opt_09_robust_summer_2015_tweedie_1_5.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/probe_tweedie_power_1_1.json",
+    "dst": "experiments/registry/probe_tweedie_power_1_1.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/probe_tweedie_power_1_3.json",
+    "dst": "experiments/registry/probe_tweedie_power_1_3.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/probe_tweedie_power_1_5.json",
+    "dst": "experiments/registry/probe_tweedie_power_1_5.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/tune_inner_A_current_settings.json",
+    "dst": "experiments/registry/tune_inner_A_current_settings.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/tune_inner_B_more_rounds.json",
+    "dst": "experiments/registry/tune_inner_B_more_rounds.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/tune_inner_C_rounds_and_leaves.json",
+    "dst": "experiments/registry/tune_inner_C_rounds_and_leaves.json"
+  },
+  {
+    "action": "move",
+    "src": "experiments/tune_inner_D_more_history.json",
+    "dst": "experiments/registry/tune_inner_D_more_history.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/ablation_results.csv",
+    "dst": "experiments/artifacts/ablation_results.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/autopsy_worst_200_rows.csv",
+    "dst": "experiments/artifacts/autopsy_worst_200_rows.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/error_analysis.json",
+    "dst": "experiments/artifacts/error_analysis.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/error_autopsy.json",
+    "dst": "experiments/artifacts/error_autopsy.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/exp69_by_decile.csv",
+    "dst": "experiments/artifacts/exp69_by_decile.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/exp69_correction_factors.csv",
+    "dst": "experiments/artifacts/exp69_correction_factors.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/exp69_summary.json",
+    "dst": "experiments/artifacts/exp69_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/exp70_members.csv",
+    "dst": "experiments/artifacts/exp70_members.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/exp70_summary.json",
+    "dst": "experiments/artifacts/exp70_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/exp71_summary.json",
+    "dst": "experiments/artifacts/exp71_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/feature_importance.csv",
+    "dst": "experiments/artifacts/feature_importance.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/feature_summary.csv",
+    "dst": "experiments/artifacts/feature_summary.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/final_forecast_summary.json",
+    "dst": "experiments/artifacts/final_forecast_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/final_scorecard.csv",
+    "dst": "experiments/artifacts/final_scorecard.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/final_selection.json",
+    "dst": "experiments/artifacts/final_selection.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/foundation_checks.json",
+    "dst": "experiments/artifacts/foundation_checks.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/inner_window_tuning.csv",
+    "dst": "experiments/artifacts/inner_window_tuning.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/leakage_probe.json",
+    "dst": "experiments/artifacts/leakage_probe.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/multi_window_results.csv",
+    "dst": "experiments/artifacts/multi_window_results.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase2_feature_results.csv",
+    "dst": "experiments/artifacts/phase2_feature_results.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase3_diagnostics.json",
+    "dst": "experiments/artifacts/phase3_diagnostics.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase3_highvolume_results.csv",
+    "dst": "experiments/artifacts/phase3_highvolume_results.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase4_6_summary.json",
+    "dst": "experiments/artifacts/phase4_6_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase4_power_search.csv",
+    "dst": "experiments/artifacts/phase4_power_search.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase5_horizon_errors.csv",
+    "dst": "experiments/artifacts/phase5_horizon_errors.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase5_recursive_summary.json",
+    "dst": "experiments/artifacts/phase5_recursive_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase6_objectives.csv",
+    "dst": "experiments/artifacts/phase6_objectives.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase7_8_summary.json",
+    "dst": "experiments/artifacts/phase7_8_summary.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase9_robustness.csv",
+    "dst": "experiments/artifacts/phase9_robustness.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase9_robustness.json",
+    "dst": "experiments/artifacts/phase9_robustness.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/phase9_robustness_summary.csv",
+    "dst": "experiments/artifacts/phase9_robustness_summary.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/sample_features.csv",
+    "dst": "experiments/artifacts/sample_features.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/team_doc_analysis.json",
+    "dst": "experiments/artifacts/team_doc_analysis.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/team_style_by_volume_tier.csv",
+    "dst": "experiments/artifacts/team_style_by_volume_tier.csv"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/tweedie_power_applied.json",
+    "dst": "experiments/artifacts/tweedie_power_applied.json"
+  },
+  {
+    "action": "move",
+    "src": "artifacts/tweedie_power_probe.csv",
+    "dst": "experiments/artifacts/tweedie_power_probe.csv"
+  },
+  {
+    "action": "move",
+    "src": "models/model_04_tweedie_recency_listing.txt",
+    "dst": "models/champion/model_04_tweedie_recency_listing.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_07_final_forecast.txt",
+    "dst": "models/champion/model_07_final_forecast.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_01_lightgbm.txt",
+    "dst": "models/experiments/model_01_lightgbm.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_02_tweedie.txt",
+    "dst": "models/experiments/model_02_tweedie.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_03_tweedie_recency.txt",
+    "dst": "models/experiments/model_03_tweedie_recency.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_05_hurdle_stage1.txt",
+    "dst": "models/experiments/model_05_hurdle_stage1.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_05_hurdle_stage2.txt",
+    "dst": "models/experiments/model_05_hurdle_stage2.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_06_tuned_primary.txt",
+    "dst": "models/experiments/model_06_tuned_primary.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_08_team_style_reproduction.txt",
+    "dst": "models/experiments/model_08_team_style_reproduction.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/model_09_tweedie_power_1_5.txt",
+    "dst": "models/experiments/model_09_tweedie_power_1_5.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/opt_04b_power_1_5_primary.txt",
+    "dst": "models/experiments/opt_04b_power_1_5_primary.txt"
+  },
+  {
+    "action": "move",
+    "src": "models/opt_05_recursive_onestep.txt",
+    "dst": "models/experiments/opt_05_recursive_onestep.txt"
+  },
+  {
+    "action": "move",
+    "src": "predictions/final_forecast_28day.csv",
+    "dst": "predictions/final_forecast/final_forecast_28day.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/submission_m5_format.csv",
+    "dst": "predictions/final_forecast/submission_m5_format.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/exp_69_bias_corrected_validation.csv",
+    "dst": "predictions/validation/exp_69_bias_corrected_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/exp_70_ensemble_validation.csv",
+    "dst": "predictions/validation/exp_70_ensemble_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/exp_71_yoy_validation.csv",
+    "dst": "predictions/validation/exp_71_yoy_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_00_seasonal_naive_validation.csv",
+    "dst": "predictions/validation/model_00_seasonal_naive_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_01_lightgbm_validation.csv",
+    "dst": "predictions/validation/model_01_lightgbm_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_02_tweedie_validation.csv",
+    "dst": "predictions/validation/model_02_tweedie_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_03_tweedie_recency_validation.csv",
+    "dst": "predictions/validation/model_03_tweedie_recency_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_04_tweedie_recency_listing_validation.csv",
+    "dst": "predictions/validation/model_04_tweedie_recency_listing_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_05_hurdle_validation.csv",
+    "dst": "predictions/validation/model_05_hurdle_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_06_tuned_primary_validation.csv",
+    "dst": "predictions/validation/model_06_tuned_primary_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_08_team_style_validation.csv",
+    "dst": "predictions/validation/model_08_team_style_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/model_09_tweedie_power_1_5_validation.csv",
+    "dst": "predictions/validation/model_09_tweedie_power_1_5_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_00_baseline_reproduce_validation.csv",
+    "dst": "predictions/validation/opt_00_baseline_reproduce_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_02_v2_A_demand_validation.csv",
+    "dst": "predictions/validation/opt_02_v2_A_demand_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_02_v2_all_validation.csv",
+    "dst": "predictions/validation/opt_02_v2_all_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_02_v2_B_calendar_validation.csv",
+    "dst": "predictions/validation/opt_02_v2_B_calendar_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_02_v2_C_price_validation.csv",
+    "dst": "predictions/validation/opt_02_v2_C_price_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_02_v2_D_interactions_validation.csv",
+    "dst": "predictions/validation/opt_02_v2_D_interactions_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_04b_power_1_5_primary_validation.csv",
+    "dst": "predictions/validation/opt_04b_power_1_5_primary_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_05_recursive_validation.csv",
+    "dst": "predictions/validation/opt_05_recursive_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_06_obj_l1_validation.csv",
+    "dst": "predictions/validation/opt_06_obj_l1_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_06_obj_l2_validation.csv",
+    "dst": "predictions/validation/opt_06_obj_l2_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_06_obj_poisson_validation.csv",
+    "dst": "predictions/validation/opt_06_obj_poisson_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_06_obj_tweedie_1_1_validation.csv",
+    "dst": "predictions/validation/opt_06_obj_tweedie_1_1_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_07_hurdle_v2_validation.csv",
+    "dst": "predictions/validation/opt_07_hurdle_v2_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "predictions/opt_08_ensemble_validation.csv",
+    "dst": "predictions/validation/opt_08_ensemble_validation.csv"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_PIPELINE_FOUNDATION_REPORT.pdf",
+    "dst": "reports/01_foundation/ML_PIPELINE_FOUNDATION_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_PIPELINE_FOUNDATION_REPORT.md",
+    "dst": "reports/01_foundation/ML_PIPELINE_FOUNDATION_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_0_BASELINE_REPORT.pdf",
+    "dst": "reports/02_modelling/ML_MODEL_0_BASELINE_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_0_BASELINE_REPORT.md",
+    "dst": "reports/02_modelling/ML_MODEL_0_BASELINE_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_1_LIGHTGBM_REPORT.pdf",
+    "dst": "reports/02_modelling/ML_MODEL_1_LIGHTGBM_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_1_LIGHTGBM_REPORT.md",
+    "dst": "reports/02_modelling/ML_MODEL_1_LIGHTGBM_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_2_TWEEDIE_REPORT.pdf",
+    "dst": "reports/02_modelling/ML_MODEL_2_TWEEDIE_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_2_TWEEDIE_REPORT.md",
+    "dst": "reports/02_modelling/ML_MODEL_2_TWEEDIE_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_3_RECENCY_REPORT.pdf",
+    "dst": "reports/02_modelling/ML_MODEL_3_RECENCY_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_3_RECENCY_REPORT.md",
+    "dst": "reports/02_modelling/ML_MODEL_3_RECENCY_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_4_LISTING_RECENCY_REPORT.pdf",
+    "dst": "reports/02_modelling/ML_MODEL_4_LISTING_RECENCY_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_4_LISTING_RECENCY_REPORT.md",
+    "dst": "reports/02_modelling/ML_MODEL_4_LISTING_RECENCY_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_5_HURDLE_REPORT.pdf",
+    "dst": "reports/02_modelling/ML_MODEL_5_HURDLE_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ML_MODEL_5_HURDLE_REPORT.md",
+    "dst": "reports/02_modelling/ML_MODEL_5_HURDLE_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/FINAL_MODEL_COMPARISON_REPORT.pdf",
+    "dst": "reports/02_modelling/FINAL_MODEL_COMPARISON_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/FINAL_MODEL_COMPARISON_REPORT.md",
+    "dst": "reports/02_modelling/FINAL_MODEL_COMPARISON_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/FINAL_ML_PROJECT_REPORT.pdf",
+    "dst": "reports/02_modelling/FINAL_ML_PROJECT_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/FINAL_ML_PROJECT_REPORT.md",
+    "dst": "reports/02_modelling/FINAL_ML_PROJECT_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/TEAM_FAIR_COMPARISON_REPORT.pdf",
+    "dst": "reports/03_benchmark_investigation/TEAM_FAIR_COMPARISON_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/TEAM_FAIR_COMPARISON_REPORT.md",
+    "dst": "reports/03_benchmark_investigation/TEAM_FAIR_COMPARISON_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/TEAM_APPROACH_VS_OUR_PIPELINE_REPORT.pdf",
+    "dst": "reports/03_benchmark_investigation/TEAM_APPROACH_VS_OUR_PIPELINE_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/TEAM_APPROACH_VS_OUR_PIPELINE_REPORT.md",
+    "dst": "reports/03_benchmark_investigation/TEAM_APPROACH_VS_OUR_PIPELINE_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/OPTIMIZATION_BASELINE_REPORT.pdf",
+    "dst": "reports/04_optimization/OPTIMIZATION_BASELINE_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/OPTIMIZATION_BASELINE_REPORT.md",
+    "dst": "reports/04_optimization/OPTIMIZATION_BASELINE_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/FEATURE_OPTIMIZATION_REPORT.pdf",
+    "dst": "reports/04_optimization/FEATURE_OPTIMIZATION_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/FEATURE_OPTIMIZATION_REPORT.md",
+    "dst": "reports/04_optimization/FEATURE_OPTIMIZATION_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/HIGH_VOLUME_ERROR_REPORT.pdf",
+    "dst": "reports/04_optimization/HIGH_VOLUME_ERROR_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/HIGH_VOLUME_ERROR_REPORT.md",
+    "dst": "reports/04_optimization/HIGH_VOLUME_ERROR_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/TWEEDIE_OPTIMIZATION_REPORT.pdf",
+    "dst": "reports/04_optimization/TWEEDIE_OPTIMIZATION_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/TWEEDIE_OPTIMIZATION_REPORT.md",
+    "dst": "reports/04_optimization/TWEEDIE_OPTIMIZATION_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/RECURSIVE_FORECAST_REPORT.pdf",
+    "dst": "reports/04_optimization/RECURSIVE_FORECAST_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/RECURSIVE_FORECAST_REPORT.md",
+    "dst": "reports/04_optimization/RECURSIVE_FORECAST_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/OBJECTIVE_COMPARISON_REPORT.pdf",
+    "dst": "reports/04_optimization/OBJECTIVE_COMPARISON_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/OBJECTIVE_COMPARISON_REPORT.md",
+    "dst": "reports/04_optimization/OBJECTIVE_COMPARISON_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/HURDLE_MODEL_REPORT.pdf",
+    "dst": "reports/04_optimization/HURDLE_MODEL_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/HURDLE_MODEL_REPORT.md",
+    "dst": "reports/04_optimization/HURDLE_MODEL_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ENSEMBLE_REPORT.pdf",
+    "dst": "reports/04_optimization/ENSEMBLE_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ENSEMBLE_REPORT.md",
+    "dst": "reports/04_optimization/ENSEMBLE_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ROBUSTNESS_REPORT.pdf",
+    "dst": "reports/04_optimization/ROBUSTNESS_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ROBUSTNESS_REPORT.md",
+    "dst": "reports/04_optimization/ROBUSTNESS_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/FINAL_MODEL_SELECTION_REPORT.pdf",
+    "dst": "reports/04_optimization/FINAL_MODEL_SELECTION_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/FINAL_MODEL_SELECTION_REPORT.md",
+    "dst": "reports/04_optimization/FINAL_MODEL_SELECTION_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/FINAL_ML_RESULTS_REPORT.pdf",
+    "dst": "reports/04_optimization/FINAL_ML_RESULTS_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/FINAL_ML_RESULTS_REPORT.md",
+    "dst": "reports/04_optimization/FINAL_ML_RESULTS_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/ERROR_AUTOPSY_REPORT.pdf",
+    "dst": "reports/05_diagnostics_and_research/ERROR_AUTOPSY_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/ERROR_AUTOPSY_REPORT.md",
+    "dst": "reports/05_diagnostics_and_research/ERROR_AUTOPSY_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/EXPERIMENT_69_BIAS_CORRECTION_REPORT.pdf",
+    "dst": "reports/05_diagnostics_and_research/EXPERIMENT_69_BIAS_CORRECTION_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/EXPERIMENT_69_BIAS_CORRECTION_REPORT.md",
+    "dst": "reports/05_diagnostics_and_research/EXPERIMENT_69_BIAS_CORRECTION_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "reports/AUTONOMOUS_RESEARCH_CAMPAIGN_REPORT.pdf",
+    "dst": "reports/05_diagnostics_and_research/AUTONOMOUS_RESEARCH_CAMPAIGN_REPORT.pdf"
+  },
+  {
+    "action": "move",
+    "src": "reports/AUTONOMOUS_RESEARCH_CAMPAIGN_REPORT.md",
+    "dst": "reports/05_diagnostics_and_research/AUTONOMOUS_RESEARCH_CAMPAIGN_REPORT.md"
+  },
+  {
+    "action": "move",
+    "src": "scripts/01_foundation_check.py",
+    "dst": "scripts/01_foundation/01_foundation_check.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/02_build_foundation_report.py",
+    "dst": "scripts/01_foundation/02_build_foundation_report.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/03_run_models.py",
+    "dst": "scripts/02_modelling/03_run_models.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/04_run_ablation.py",
+    "dst": "scripts/02_modelling/04_run_ablation.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/05_tune_inner_window.py",
+    "dst": "scripts/02_modelling/05_tune_inner_window.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/06_final_candidate.py",
+    "dst": "scripts/02_modelling/06_final_candidate.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/07_analysis.py",
+    "dst": "scripts/02_modelling/07_analysis.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/08_final_forecast.py",
+    "dst": "scripts/02_modelling/08_final_forecast.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/09_build_reports.py",
+    "dst": "scripts/02_modelling/09_build_reports.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/10_team_reproduction.py",
+    "dst": "scripts/03_benchmark_investigation/10_team_reproduction.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/11_leakage_probe.py",
+    "dst": "scripts/03_benchmark_investigation/11_leakage_probe.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/12_tweedie_power_probe.py",
+    "dst": "scripts/03_benchmark_investigation/12_tweedie_power_probe.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/13_build_comparison_report.py",
+    "dst": "scripts/03_benchmark_investigation/13_build_comparison_report.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/14_apply_tweedie_power.py",
+    "dst": "scripts/03_benchmark_investigation/14_apply_tweedie_power.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/15_team_doc_analysis.py",
+    "dst": "scripts/03_benchmark_investigation/15_team_doc_analysis.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/16_phase1_2_features.py",
+    "dst": "scripts/04_optimization/16_phase1_2_features.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/17_phase4_6_objective.py",
+    "dst": "scripts/04_optimization/17_phase4_6_objective.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/18_phase3_highvolume.py",
+    "dst": "scripts/04_optimization/18_phase3_highvolume.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/19_phase5_recursive.py",
+    "dst": "scripts/04_optimization/19_phase5_recursive.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/20_phase7_8_hurdle_ensemble.py",
+    "dst": "scripts/04_optimization/20_phase7_8_hurdle_ensemble.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/21_phase9_robustness.py",
+    "dst": "scripts/04_optimization/21_phase9_robustness.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/22_phase11_12_final.py",
+    "dst": "scripts/04_optimization/22_phase11_12_final.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/23_build_optimization_reports.py",
+    "dst": "scripts/04_optimization/23_build_optimization_reports.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/24_final_results_report.py",
+    "dst": "scripts/04_optimization/24_final_results_report.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/25_error_autopsy.py",
+    "dst": "scripts/05_diagnostics/25_error_autopsy.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/26_autopsy_report.py",
+    "dst": "scripts/05_diagnostics/26_autopsy_report.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/27_exp69_bias_correction.py",
+    "dst": "scripts/06_research_campaign/27_exp69_bias_correction.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/28_exp69_report.py",
+    "dst": "scripts/06_research_campaign/28_exp69_report.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/29_exp70_ensemble.py",
+    "dst": "scripts/06_research_campaign/29_exp70_ensemble.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/30_exp71_yoy.py",
+    "dst": "scripts/06_research_campaign/30_exp71_yoy.py"
+  },
+  {
+    "action": "move",
+    "src": "scripts/31_research_campaign_report.py",
+    "dst": "scripts/06_research_campaign/31_research_campaign_report.py"
+  },
+  {
+    "action": "delete-regenerable",
+    "src": "pipeline/__pycache__",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "raw_dataset/Dataset_Explanation",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "raw_dataset",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "processed_dataset/_audit",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "processed_dataset",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "EDA/charts",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "EDA/statistics",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "EDA/tables",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "EDA",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "analysis_output",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "Project_Approach",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "FINAL_APPROACH",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "ProblemStatement_Walkthrough",
+    "dst": "-"
+  },
+  {
+    "action": "rmdir-empty",
+    "src": "artifacts",
+    "dst": "-"
+  }
+]

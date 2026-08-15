@@ -1,0 +1,162 @@
+{
+  "experiment_name": "exp_79_upgrade_seed_check",
+  "started_at": "2026-08-15T12:34:01",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Experiment #79. #77 was accepted on four windows at one seed and it changed the shipped forecast. This closes that gap on the two windows that carry the effect; the other two produced gains of -0.0005 and -0.0004, which are noise and cannot be confirmed or refuted by reseeding.",
+    "Member A is held at seed 42 so that only the recursive members' seeds vary, isolating the question being asked."
+  ],
+  "model_type": "seed-stability check of exp_77",
+  "objective": "tweedie (variance_power=1.1)",
+  "feature_set_label": "member B (26f) vs B' (32f), seeds 7 and 202",
+  "n_features": 32,
+  "validation_origin_day": "autumn_2015 + christmas_2015",
+  "horizon": 28,
+  "n_series": 30490,
+  "metrics": {
+    "RMSE": 2.1515601663963655,
+    "MAE": 0.979378925710916
+  },
+  "blend_weight": 0.6,
+  "cells": [
+    {
+      "window": "autumn_2015",
+      "seed": 7,
+      "dRMSE_member": -0.019888134622052522,
+      "dRMSE_blend": -0.007812219659230291,
+      "source": "exp_79"
+    },
+    {
+      "window": "autumn_2015",
+      "seed": 202,
+      "dRMSE_member": -0.03417555031582342,
+      "dRMSE_blend": -0.009274571343889093,
+      "source": "exp_79"
+    },
+    {
+      "window": "christmas_2015",
+      "seed": 7,
+      "dRMSE_member": -0.0008940717362220241,
+      "dRMSE_blend": -0.0008138833523130273,
+      "source": "exp_79"
+    },
+    {
+      "window": "christmas_2015",
+      "seed": 202,
+      "dRMSE_member": -0.012404471814331686,
+      "dRMSE_blend": -0.001493017331467339,
+      "source": "exp_79"
+    },
+    {
+      "window": "autumn_2015",
+      "seed": 42,
+      "dRMSE_member": -0.0284,
+      "dRMSE_blend": -0.0105,
+      "source": "exp_77"
+    },
+    {
+      "window": "christmas_2015",
+      "seed": 42,
+      "dRMSE_member": -0.0108,
+      "dRMSE_blend": -0.0053,
+      "source": "exp_77"
+    }
+  ],
+  "new_runs": [
+    {
+      "window": "autumn_2015",
+      "seed": 7,
+      "B_RMSE": 2.2249325115719234,
+      "B2_RMSE": 2.205044376949871,
+      "B_MAE": 1.067365821176969,
+      "B2_MAE": 1.0697984099910733,
+      "blend_AB_RMSE": 2.1564817913963097,
+      "blend_AB2_RMSE": 2.1486695717370794,
+      "blend_AB_MAE": 1.0153940477982852,
+      "blend_AB2_MAE": 1.0165512215230985,
+      "rho_A_B": 0.9300646156938245,
+      "rho_A_B2": 0.9308546459906196,
+      "blend_AB2_highvol": 6.2574545102994845,
+      "blend_AB_highvol": 6.2985463756459925,
+      "dRMSE_member": -0.019888134622052522,
+      "dRMSE_blend": -0.007812219659230291,
+      "dMAE_blend": 0.0011571737248132763
+    },
+    {
+      "window": "autumn_2015",
+      "seed": 202,
+      "B_RMSE": 2.2271706757219185,
+      "B2_RMSE": 2.192995125406095,
+      "B_MAE": 1.0720896035178904,
+      "B2_MAE": 1.0508953646274801,
+      "blend_AB_RMSE": 2.155523769871231,
+      "blend_AB2_RMSE": 2.1462491985273418,
+      "blend_AB_MAE": 1.0165685174124786,
+      "blend_AB2_MAE": 1.0102659099660038,
+      "rho_A_B": 0.9273912235820112,
+      "rho_A_B2": 0.9326233382983095,
+      "blend_AB2_highvol": 6.251542401829238,
+      "blend_AB_highvol": 6.296550675711982,
+      "dRMSE_member": -0.03417555031582342,
+      "dRMSE_blend": -0.009274571343889093,
+      "dMAE_blend": -0.006302607446474706
+    },
+    {
+      "window": "christmas_2015",
+      "seed": 7,
+      "B_RMSE": 2.2113313040292026,
+      "B2_RMSE": 2.2104372322929806,
+      "B_MAE": 0.9941904765545871,
+      "B2_MAE": 0.9962024905839576,
+      "blend_AB_RMSE": 2.1565454104253168,
+      "blend_AB2_RMSE": 2.1557315270730038,
+      "blend_AB_MAE": 0.9452113143250327,
+      "blend_AB2_MAE": 0.9462428016734297,
+      "rho_A_B": 0.9359956529733628,
+      "rho_A_B2": 0.9350422450225299,
+      "blend_AB2_highvol": 6.21762240269295,
+      "blend_AB_highvol": 6.216337355532594,
+      "dRMSE_member": -0.0008940717362220241,
+      "dRMSE_blend": -0.0008138833523130273,
+      "dMAE_blend": 0.0010314873483969755
+    },
+    {
+      "window": "christmas_2015",
+      "seed": 202,
+      "B_RMSE": 2.2167412032335325,
+      "B2_RMSE": 2.204336731419201,
+      "B_MAE": 0.9958022807438953,
+      "B2_MAE": 0.9904320667168357,
+      "blend_AB_RMSE": 2.1570833855795044,
+      "blend_AB2_RMSE": 2.155590368248037,
+      "blend_AB_MAE": 0.9460041819372986,
+      "blend_AB2_MAE": 0.944455769681132,
+      "rho_A_B": 0.9334586963449963,
+      "rho_A_B2": 0.9392947316114303,
+      "blend_AB2_highvol": 6.216405603852169,
+      "blend_AB_highvol": 6.218886965744285,
+      "dRMSE_member": -0.012404471814331686,
+      "dRMSE_blend": -0.001493017331467339,
+      "dMAE_blend": -0.0015484122561666425
+    }
+  ],
+  "member_wins": 6,
+  "blend_wins": 6,
+  "mean_member_dRMSE": -0.01776037141473828,
+  "mean_blend_dRMSE": -0.005865615281149959,
+  "acceptance_criteria": {
+    "E1_member_wins_at_least_5_of_6": true,
+    "E2_blend_wins_at_least_5_of_6": true
+  },
+  "confirmed": true,
+  "decision": "UPGRADE CONFIRMED SEED-STABLE",
+  "finished_at": "2026-08-15T12:34:01",
+  "wall_seconds": 0.0
+}

@@ -1,0 +1,139 @@
+{
+  "price_percentiles_all": {
+    "p1": 0.47999998927116394,
+    "p5": 0.9700000286102295,
+    "p10": 1.2400000095367432,
+    "p25": 2.180000066757202,
+    "p50": 3.4700000286102295,
+    "p75": 5.840000152587891,
+    "p90": 8.640000343322754,
+    "p95": 10.979999542236328,
+    "p99": 17.920000076293945
+  },
+  "price_mean": 4.409438133239746,
+  "price_min": 0.009999999776482582,
+  "price_max": 107.31999969482422,
+  "price_distribution_by_category": [
+    {
+      "cat_id": "FOODS",
+      "mean": 3.248950719833374,
+      "median": 2.680000066757202,
+      "std": 2.1307642459869385,
+      "min": 0.009999999776482582,
+      "max": 19.479999542236328
+    },
+    {
+      "cat_id": "HOBBIES",
+      "mean": 5.329613208770752,
+      "median": 3.9700000286102295,
+      "std": 4.821907043457031,
+      "min": 0.009999999776482582,
+      "max": 30.979999542236328
+    },
+    {
+      "cat_id": "HOUSEHOLD",
+      "mean": 5.46568489074707,
+      "median": 4.940000057220459,
+      "std": 3.37375807762146,
+      "min": 0.009999999776482582,
+      "max": 107.31999969482422
+    }
+  ],
+  "n_total_price_change_events": 78057,
+  "n_series_with_at_least_one_price_change": 22190,
+  "mean_price_changes_per_series": 2.560085273860282,
+  "median_price_changes_per_series": 2.0,
+  "mean_price_change_rate_pct_of_priced_days": 0.15934553689219091,
+  "n_price_increases": 44696,
+  "n_price_decreases": 33361,
+  "pct_changes_that_are_increases": 57.26071973045339,
+  "price_change_magnitude_pct_mean": 10.777541160583496,
+  "price_change_magnitude_pct_median_abs": 9.420289993286133,
+  "price_change_magnitude_pct_percentiles": {
+    "p5": -38.829856872558594,
+    "p25": -8.43071174621582,
+    "p50": 2.3195853233337402,
+    "p75": 10.227276802062988,
+    "p95": 62.33332824707031
+  },
+  "sales_by_relative_price_bin_overall": [
+    {
+      "price_bin": "<0.85x",
+      "count": 583257,
+      "mean": 2.336594331486806,
+      "median": 0.0
+    },
+    {
+      "price_bin": "0.85-0.95x",
+      "count": 3287283,
+      "mean": 1.8134629723087425,
+      "median": 0.0
+    },
+    {
+      "price_bin": "0.95-1.0x",
+      "count": 21950366,
+      "mean": 1.4246676798008744,
+      "median": 0.0
+    },
+    {
+      "price_bin": "1.0-1.05x",
+      "count": 16869695,
+      "mean": 1.293947341668003,
+      "median": 0.0
+    },
+    {
+      "price_bin": "1.05-1.15x",
+      "count": 3914574,
+      "mean": 1.5618248626798217,
+      "median": 0.0
+    },
+    {
+      "price_bin": ">1.15x",
+      "count": 276502,
+      "mean": 1.405483504640111,
+      "median": 0.0
+    }
+  ],
+  "sales_by_relative_price_bin_by_category": {
+    "<0.85x": {
+      "FOODS": 3.028308049115236,
+      "HOBBIES": 0.6800764497482752,
+      "HOUSEHOLD": 0.7514318571299721
+    },
+    "0.85-0.95x": {
+      "FOODS": 2.661622951465712,
+      "HOBBIES": 0.6125552746256009,
+      "HOUSEHOLD": 0.9718815909812046
+    },
+    "0.95-1.0x": {
+      "FOODS": 2.2046468507719963,
+      "HOBBIES": 0.7186080154480682,
+      "HOUSEHOLD": 0.8824443441211486
+    },
+    "1.0-1.05x": {
+      "FOODS": 1.8383427089133073,
+      "HOBBIES": 0.7029871084994855,
+      "HOUSEHOLD": 0.9454480197788621
+    },
+    "1.05-1.15x": {
+      "FOODS": 1.9982153290226288,
+      "HOBBIES": 0.8083795941184883,
+      "HOUSEHOLD": 0.8566591897309472
+    },
+    ">1.15x": {
+      "FOODS": 2.016673708263661,
+      "HOBBIES": 0.41247137018906904,
+      "HOUSEHOLD": 0.4904644941253774
+    }
+  },
+  "price_decrease_n_events_with_valid_before_after": 33255,
+  "price_decrease_mean_sales_before": 1.2592563953863007,
+  "price_decrease_mean_sales_after": 1.7381833021887148,
+  "price_decrease_mean_pct_change_in_sales": 48.4732766348822,
+  "price_decrease_median_pct_change_in_sales": 0.0,
+  "price_increase_n_events_with_valid_before_after": 44647,
+  "price_increase_mean_sales_before": 1.5848065299540204,
+  "price_increase_mean_sales_after": 1.9726201408509287,
+  "price_increase_mean_pct_change_in_sales": 70.98413127939672,
+  "price_increase_median_pct_change_in_sales": 0.0
+}

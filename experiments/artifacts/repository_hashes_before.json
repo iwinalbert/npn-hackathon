@@ -1,0 +1,18 @@
+{
+  "raw_dataset/calendar.csv": "3ffeab2991b0c8e861d008b39ea4c95c",
+  "raw_dataset/Dataset_Explanation/Cognizant_M5_Problem_Approach_Algorithms_Hierarchical_Plan.pdf": "886d7de7ce7e725a48f014ecaaa3dbe0",
+  "raw_dataset/Dataset_Explanation/Cognizant_Walmart_M5_Dataset_Deep_Explanation.pdf": "9b29d38c7c593793579dbdf8e8099a7d",
+  "raw_dataset/Dataset_Explanation/DATASET_EXPLAINED.md": "f55aaab94fbe61d35a17d2a26404ba1b",
+  "raw_dataset/Dataset_Explanation/DATASET_EXPLAINED.pdf": "cebeea524f08cee7609f1e39a3248c3c",
+  "raw_dataset/Dataset_Explanation/DATASET_SUMMARY.md": "04d6961a5581bb3f04b3b4d670533a0b",
+  "raw_dataset/sales_train_evaluation.csv": "b806dfc9f30a745102b708c09951f6aa",
+  "raw_dataset/sales_train_validation.csv": "26a366a25beb57b0a8f4c7b148758f94",
+  "raw_dataset/sample_submission.csv": "c281a69d7c011274899d92020a66e25b",
+  "raw_dataset/sell_prices.csv": "08c591caa99e55daf3e0ccac913f7c85",
+  "processed_dataset/sales_long_full.parquet": "faa70ced1dddd2a84801a748b1149986",
+  "predictions/final_forecast_28day.csv": "d1067b9ff7a09fefadac71be27b7044c",
+  "predictions/submission_m5_format.csv": "1722effc629d8d74000c4c33c7ae36ca",
+  "predictions/model_04_tweedie_recency_listing_validation.csv": "36553293c0d30e15b60f712a17dd4721",
+  "models/model_04_tweedie_recency_listing.txt": "e1fb7b8733b0e030174fed3b2648f16a",
+  "models/model_07_final_forecast.txt": "d722e2cc6ae11ae6f6d78ca7322a50e9"
+}

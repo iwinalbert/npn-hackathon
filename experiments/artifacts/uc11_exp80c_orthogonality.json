@@ -1,0 +1,39 @@
+{
+  "window": "origin d_1885",
+  "champion_bias": 0.08171579637586102,
+  "global_component_of_correction": 0.9441806815173059,
+  "results": {
+    "1_champion": {
+      "RMSE": 2.067687455558442,
+      "MAE": 1.0294145990324697,
+      "highvol_RMSE": 5.843623668722869,
+      "alpha": null
+    },
+    "2_global_rescale_oracle": {
+      "RMSE": 2.0447242842845026,
+      "MAE": 1.0036572285607885,
+      "highvol_RMSE": 5.75383785915805,
+      "alpha": null,
+      "c": 0.9139485920437561
+    },
+    "3_reconcile_full": {
+      "RMSE": 2.051720301854988,
+      "MAE": 1.0192207249399807,
+      "highvol_RMSE": 5.777621884295766,
+      "alpha": 0.55
+    },
+    "4_reconcile_demeaned": {
+      "RMSE": 2.0623651466033466,
+      "MAE": 1.0296932622686763,
+      "highvol_RMSE": 5.819519328508193,
+      "alpha": 0.35
+    },
+    "5_rescale_then_demeaned": {
+      "RMSE": 2.0415042989713417,
+      "MAE": 1.0035123225908855,
+      "highvol_RMSE": 5.741414055162032,
+      "alpha": 0.3
+    }
+  },
+  "item_specific_share_of_gain_pct": 33.33285978166592
+}

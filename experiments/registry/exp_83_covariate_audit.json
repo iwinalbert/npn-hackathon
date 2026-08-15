@@ -1,0 +1,113 @@
+{
+  "experiment_name": "exp_83_covariate_audit",
+  "started_at": "2026-08-15T18:50:35",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Requirement-6 audit: availability of every external covariate at the REAL forecast origin d_1941, plus the champion's residual structure across discount depth, price age, events and SNAP."
+  ],
+  "model_type": "audit",
+  "objective": "diagnostic",
+  "feature_set_label": "n/a",
+  "n_features": 0,
+  "horizon": 28,
+  "n_series": 30490,
+  "validation_days": "d_1914..d_1941",
+  "availability": {
+    "wday": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "month": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "year": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "event_name_1": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "event_type_1": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "event_name_2": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "event_type_2": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "snap_CA": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "snap_TX": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "snap_WI": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "sell_price": {
+      "future_weeks": [
+        277,
+        278,
+        279,
+        280,
+        281
+      ],
+      "series_with_price_all_future_weeks": 30490,
+      "series_with_price_some_future_week": 30490,
+      "of": 30490,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "sell_prices.csv (covers the forecast weeks)"
+    }
+  },
+  "promotion_field_exists": false,
+  "decision": "audit only \u2014 no model change",
+  "finished_at": "2026-08-15T18:50:35",
+  "wall_seconds": 0.0
+}

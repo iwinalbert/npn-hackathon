@@ -1,0 +1,53 @@
+{
+  "segment_activity_x_volume_counts": {
+    "Low-volume": {
+      "Extremely sparse": 1534,
+      "High-activity": 0,
+      "Regular/intermittent": 2760,
+      "Sparse": 5873
+    },
+    "Mid-volume": {
+      "Extremely sparse": 0,
+      "High-activity": 149,
+      "Regular/intermittent": 9834,
+      "Sparse": 177
+    },
+    "High-volume": {
+      "Extremely sparse": 0,
+      "High-activity": 7480,
+      "Regular/intermittent": 2673,
+      "Sparse": 10
+    }
+  },
+  "seasonality_cv_percentiles": {
+    "p10": 0.13637253403268865,
+    "p25": 0.18568160183816168,
+    "p50": 0.2633459830995774,
+    "p75": 0.3842522699942517,
+    "p90": 0.5566097296007834
+  },
+  "mean_seasonality_cv_by_category": {
+    "FOODS": 0.31731700303534305,
+    "HOBBIES": 0.31458749534784974,
+    "HOUSEHOLD": 0.31351108090481766
+  },
+  "sensitivity_sample_method": "Stratified random sample (seed=99) of 501 series out of 30,490, proportionally allocated across cat_id x volume_tier strata, used only for the per-series event/price sensitivity distributions below (too slow to compute per-series correlations for all 30,490 series at this stage).",
+  "event_sensitivity_sample_stats": {
+    "mean": -0.038673024893793505,
+    "median": -0.019636936751457154,
+    "pct_positive": 36.72654690618762,
+    "pct_negative": 63.27345309381237
+  },
+  "price_sales_corr_sample_stats": {
+    "mean": -0.04994622368992529,
+    "median": -0.040127394197302255,
+    "pct_negative_corr": 46.506986027944116,
+    "pct_positive_corr": 24.9500998003992,
+    "n_valid": 358
+  },
+  "price_sales_corr_by_category": {
+    "FOODS": -0.06756564839542094,
+    "HOBBIES": -0.032290316250069874,
+    "HOUSEHOLD": -0.030475080998550327
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "experiment_name": "exp_80c_level_vs_crossstore",
+  "started_at": "2026-08-15T18:50:35",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Splits the item-level correction into a global (level) component and an item-specific (cross-store) remainder, to test whether the gain is hierarchical information or calibration in disguise.",
+    "On the inner window the champion over-forecasts by +0.0817 units per row. Two thirds of the headline gain was that level anomaly; the item-specific remainder was worth -0.0053."
+  ],
+  "model_type": "Decomposition of the reconciliation correction",
+  "objective": "diagnostic",
+  "feature_set_label": "n/a",
+  "n_features": 0,
+  "validation_origin_day": "origin d_1885",
+  "horizon": 28,
+  "n_series": 30490,
+  "results": {
+    "1_champion": {
+      "RMSE": 2.067687455558442,
+      "MAE": 1.0294145990324697,
+      "highvol_RMSE": 5.843623668722869,
+      "alpha": null
+    },
+    "2_global_rescale_oracle": {
+      "RMSE": 2.0447242842845026,
+      "MAE": 1.0036572285607885,
+      "highvol_RMSE": 5.75383785915805,
+      "alpha": null,
+      "c": 0.9139485920437561
+    },
+    "3_reconcile_full": {
+      "RMSE": 2.051720301854988,
+      "MAE": 1.0192207249399807,
+      "highvol_RMSE": 5.777621884295766,
+      "alpha": 0.55
+    },
+    "4_reconcile_demeaned": {
+      "RMSE": 2.0623651466033466,
+      "MAE": 1.0296932622686763,
+      "highvol_RMSE": 5.819519328508193,
+      "alpha": 0.35
+    },
+    "5_rescale_then_demeaned": {
+      "RMSE": 2.0415042989713417,
+      "MAE": 1.0035123225908855,
+      "highvol_RMSE": 5.741414055162032,
+      "alpha": 0.3
+    }
+  },
+  "item_specific_share_of_gain_pct": 33.33285978166592,
+  "decision": "Cross-store component is real but small; both variants carried forward to four-window validation",
+  "finished_at": "2026-08-15T18:50:35",
+  "wall_seconds": 0.0
+}

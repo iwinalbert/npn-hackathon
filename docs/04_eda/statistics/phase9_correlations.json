@@ -1,0 +1,51 @@
+{
+  "pearson_corr_sales_vs_lag": {
+    "lag_1": 0.7679914699179153,
+    "lag_7": 0.7199948946607174,
+    "lag_14": 0.6891950217523996,
+    "lag_28": 0.6724791268655412
+  },
+  "pearson_corr_sales_vs_rolling_mean_7_prior": 0.8202614901293743,
+  "pearson_corr_sales_vs_rolling_mean_28_prior": 0.8065157953034134,
+  "pearson_corr_sales_vs_price": -0.15081170913582442,
+  "pearson_corr_sales_vs_is_snap_day": 0.016755116195435907,
+  "pearson_corr_sales_vs_is_event_day": -0.0036602020242056687,
+  "days_since_last_sale_vs_today_sales": [
+    {
+      "bucket": "0 (sold yesterday)",
+      "count": 18923587,
+      "mean": 2.8723287503579527,
+      "pct_nonzero_today": 65.15896801171998
+    },
+    {
+      "bucket": "1-3",
+      "count": 12757932,
+      "mean": 0.7661414091249271,
+      "pct_nonzero_today": 38.34807239919448
+    },
+    {
+      "bucket": "4-7",
+      "count": 4785075,
+      "mean": 0.362941019733233,
+      "pct_nonzero_today": 22.154281803315516
+    },
+    {
+      "bucket": "8-14",
+      "count": 3062683,
+      "mean": 0.19160683622823518,
+      "pct_nonzero_today": 12.70722435198158
+    },
+    {
+      "bucket": "15-28",
+      "count": 2397318,
+      "mean": 0.09541579381625634,
+      "pct_nonzero_today": 6.223204430951588
+    },
+    {
+      "bucket": "29+",
+      "count": 17224005,
+      "mean": 0.01237377717900105,
+      "pct_nonzero_today": 0.6443681362145448
+    }
+  ]
+}

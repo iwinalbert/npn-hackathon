@@ -1,0 +1,265 @@
+{
+  "overall_zero_pct": 67.99776584040612,
+  "zero_pct_by_category": {
+    "HOBBIES": 77.1491658801913,
+    "HOUSEHOLD": 71.60219798280409,
+    "FOODS": 61.77342243360771
+  },
+  "zero_pct_by_department": {
+    "HOBBIES_2": 88.35828068974341,
+    "HOUSEHOLD_2": 80.61549696633203,
+    "HOBBIES_1": 73.13436273927,
+    "FOODS_2": 67.77847247572225,
+    "FOODS_1": 62.985812963917034,
+    "HOUSEHOLD_1": 62.87691795175729,
+    "FOODS_3": 58.551203391920716
+  },
+  "zero_pct_by_store": {
+    "CA_4": 71.99951876520016,
+    "TX_1": 70.71407437747429,
+    "WI_2": 70.48004692039298,
+    "WI_3": 70.03160975913083,
+    "TX_3": 69.7150728383002,
+    "CA_2": 68.81029058437417,
+    "WI_1": 68.75405640551737,
+    "TX_2": 66.31417231416319,
+    "CA_1": 63.75904870964695,
+    "CA_3": 59.39976772986101
+  },
+  "zero_pct_by_state": {
+    "WI": 69.75523769501373,
+    "TX": 68.91443984331256,
+    "CA": 65.99215644727057
+  },
+  "series_zero_pct_distribution": {
+    "p1": 8.752704791344668,
+    "p5": 24.678001030396704,
+    "p10": 34.363730036063885,
+    "p25": 53.47758887171561,
+    "p50": 73.31272539927872,
+    "p75": 86.50180319422978,
+    "p90": 92.83874291602267,
+    "p95": 95.00257599175683,
+    "p99": 97.3724884080371
+  },
+  "series_zero_pct_mean": 67.99776584040612,
+  "series_zero_pct_std": 22.34062223590475,
+  "n_series_all_zero_100pct": 0,
+  "n_series_zero_lt_10pct": 356,
+  "n_series_zero_gt_90pct": 5133,
+  "classification_thresholds": {
+    "p25": 53.47758887171561,
+    "p75": 86.50180319422978,
+    "p95": 95.00257599175683
+  },
+  "classification_method": "Working definition based on the observed distribution of per-series zero%% (quartiles of THIS dataset's series, not a universal standard). Boundaries: <=p25 High-activity, p25-p75 Regular/intermittent, p75-p95 Sparse, >p95 Extremely sparse.",
+  "series_classification_counts": {
+    "Regular/intermittent (middle 50%)": 15267,
+    "High-activity (bottom quartile of zero%)": 7629,
+    "Sparse (top quartile, below p95)": 6103,
+    "Extremely sparse (top 5% of zero%)": 1491
+  },
+  "series_classification_by_category": {
+    "Extremely sparse (top 5% of zero%)": {
+      "FOODS": 337,
+      "HOBBIES": 521,
+      "HOUSEHOLD": 633
+    },
+    "High-activity (bottom quartile of zero%)": {
+      "FOODS": 4869,
+      "HOBBIES": 713,
+      "HOUSEHOLD": 2047
+    },
+    "Regular/intermittent (middle 50%)": {
+      "FOODS": 7249,
+      "HOBBIES": 2617,
+      "HOUSEHOLD": 5401
+    },
+    "Sparse (top quartile, below p95)": {
+      "FOODS": 1915,
+      "HOBBIES": 1799,
+      "HOUSEHOLD": 2389
+    }
+  },
+  "n_zero_runs_total": 6616684,
+  "zero_run_length_mean": 6.081871070161428,
+  "zero_run_length_median": 2.0,
+  "zero_run_length_max": 1845,
+  "zero_run_length_p90": 7.0,
+  "zero_run_length_p99": 52.0,
+  "zero_streak_length_distribution": {
+    "1 day": 2894624,
+    "2-3 days": 2006240,
+    "4-7 days": 1063148,
+    "8-14 days": 390830,
+    "15-28 days": 150072,
+    "29-60 days": 52748,
+    "61+ days": 59022
+  },
+  "zero_streak_by_category": [
+    {
+      "cat_id": "HOBBIES",
+      "n_zero_runs": 1270218,
+      "mean_streak_len": 6.660808617103521,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1736
+    },
+    {
+      "cat_id": "HOUSEHOLD",
+      "n_zero_runs": 2331507,
+      "mean_streak_len": 6.241110148929426,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1845
+    },
+    {
+      "cat_id": "FOODS",
+      "n_zero_runs": 3014959,
+      "mean_streak_len": 5.714820002527397,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1845
+    }
+  ],
+  "zero_streak_by_department": [
+    {
+      "dept_id": "HOBBIES_2",
+      "n_zero_runs": 240487,
+      "mean_streak_len": 10.625942358630612,
+      "median_streak_len": 4.0,
+      "max_streak_len": 1647
+    },
+    {
+      "dept_id": "HOUSEHOLD_2",
+      "n_zero_runs": 1130976,
+      "mean_streak_len": 7.12521397447868,
+      "median_streak_len": 3.0,
+      "max_streak_len": 1732
+    },
+    {
+      "dept_id": "FOODS_2",
+      "n_zero_runs": 814366,
+      "mean_streak_len": 6.429552559905497,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1797
+    },
+    {
+      "dept_id": "HOBBIES_1",
+      "n_zero_runs": 1029731,
+      "mean_streak_len": 5.734777335051581,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1736
+    },
+    {
+      "dept_id": "FOODS_3",
+      "n_zero_runs": 1679145,
+      "mean_streak_len": 5.570228300712565,
+      "median_streak_len": 1.0,
+      "max_streak_len": 1845
+    },
+    {
+      "dept_id": "HOUSEHOLD_1",
+      "n_zero_runs": 1200531,
+      "mean_streak_len": 5.408228525544113,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1845
+    },
+    {
+      "dept_id": "FOODS_1",
+      "n_zero_runs": 521448,
+      "mean_streak_len": 5.064201991377855,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1511
+    }
+  ],
+  "zero_streak_by_store": [
+    {
+      "store_id": "WI_2",
+      "n_zero_runs": 606190,
+      "mean_streak_len": 6.880822844322737,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1845
+    },
+    {
+      "store_id": "WI_3",
+      "n_zero_runs": 644651,
+      "mean_streak_len": 6.429132972724776,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1724
+    },
+    {
+      "store_id": "CA_2",
+      "n_zero_runs": 636195,
+      "mean_streak_len": 6.400974543968437,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1844
+    },
+    {
+      "store_id": "TX_3",
+      "n_zero_runs": 654065,
+      "mean_streak_len": 6.307957160221079,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1775
+    },
+    {
+      "store_id": "TX_1",
+      "n_zero_runs": 670309,
+      "mean_streak_len": 6.243293764517558,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1776
+    },
+    {
+      "store_id": "CA_4",
+      "n_zero_runs": 690256,
+      "mean_streak_len": 6.173086507035071,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1844
+    },
+    {
+      "store_id": "WI_1",
+      "n_zero_runs": 678258,
+      "mean_streak_len": 5.999103585951069,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1841
+    },
+    {
+      "store_id": "TX_2",
+      "n_zero_runs": 696619,
+      "mean_streak_len": 5.633703645751838,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1821
+    },
+    {
+      "store_id": "CA_1",
+      "n_zero_runs": 692783,
+      "mean_streak_len": 5.446626144117277,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1845
+    },
+    {
+      "store_id": "CA_3",
+      "n_zero_runs": 647358,
+      "mean_streak_len": 5.430292048603709,
+      "median_streak_len": 2.0,
+      "max_streak_len": 1844
+    }
+  ],
+  "all_series_share_common_start_date": true,
+  "common_start_date": "2011-01-29",
+  "n_series_with_at_least_one_priced_row": 30490,
+  "n_series_never_priced": 0,
+  "n_series_with_at_least_one_nonzero_sale": 30490,
+  "n_series_never_nonzero": 0,
+  "leading_zero_days_mean": 406.1944899967202,
+  "leading_zero_days_median": 159.0,
+  "leading_zero_days_p90": 1161.0,
+  "leading_zero_days_max": 1845.0,
+  "n_series_leading_zero_gt_0": 23511,
+  "n_series_leading_zero_gt_90days": 15900,
+  "leading_noprice_days_mean": 403.39170219744176,
+  "leading_noprice_days_median": 154.0,
+  "n_series_leading_noprice_gt_0": 19558,
+  "n_series_with_either_leading_zero_or_noprice_gap": 23511,
+  "leading_gap_diff_mean": 3.6347667049466206,
+  "leading_gap_diff_median": 3.0,
+  "pct_series_where_zero_gap_within_7days_of_price_gap": 99.48109395602059,
+  "pct_series_where_zero_gap_exceeds_price_gap_by_30days": 0.29347964782442265
+}

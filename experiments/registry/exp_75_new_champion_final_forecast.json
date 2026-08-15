@@ -1,0 +1,77 @@
+{
+  "experiment_name": "exp_75_new_champion_final_forecast",
+  "started_at": "2026-08-14T22:45:58",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Retrain of the new champion at forecast origin d_1941. Validation estimate for this configuration is RMSE 2.1157 / MAE 1.0287 (Experiment #74), validated across 4 windows and 3 seeds in #73.",
+    "No ground truth exists for d_1942..d_1969, so no accuracy figure applies to this forecast itself."
+  ],
+  "model_type": "LightGBM",
+  "objective": "tweedie (variance_power=1.1)",
+  "feature_set_label": "NEW CHAMPION shape+cycle \u2014 final forecast",
+  "n_features": 38,
+  "forecast_origin_day": "d_1941",
+  "forecast_dates": "2016-05-23 .. 2016-06-19",
+  "horizon": 28,
+  "n_series": 30490,
+  "hyperparameters": {
+    "objective": "tweedie",
+    "tweedie_variance_power": 1.1,
+    "metric": "rmse",
+    "learning_rate": 0.05,
+    "num_leaves": 128,
+    "max_depth": -1,
+    "min_data_in_leaf": 100,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "lambda_l2": 1.0,
+    "max_cat_threshold": 32,
+    "verbosity": -1,
+    "num_threads": 0,
+    "seed": 42,
+    "deterministic": true,
+    "force_row_wise": true
+  },
+  "n_estimators": 400,
+  "training_seconds": 125.7,
+  "model_path": "models\\champion\\model_10_shape_cycle_final_forecast.txt",
+  "prediction_path": "predictions\\final_forecast\\final_forecast_28day_v2_shape_cycle.csv",
+  "forecast_mean": 1.485133,
+  "correlation_with_previous_forecast": 0.994336,
+  "structure_checks": [
+    {
+      "check": "rows_30490",
+      "passed": true
+    },
+    {
+      "check": "cols_F1_F28",
+      "passed": true
+    },
+    {
+      "check": "no_duplicate_ids",
+      "passed": true
+    },
+    {
+      "check": "no_nan",
+      "passed": true
+    },
+    {
+      "check": "no_negative",
+      "passed": true
+    },
+    {
+      "check": "ids_and_order_match_template",
+      "passed": true
+    }
+  ],
+  "finished_at": "2026-08-14T22:45:58",
+  "wall_seconds": 0.0
+}

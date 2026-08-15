@@ -1,0 +1,1023 @@
+{
+  "best_model": "model_04_tweedie_recency_listing",
+  "best_metrics": {
+    "RMSE": 2.121042941194765,
+    "MAE": 1.0319268155496617,
+    "WAPE": 0.7152153829557101,
+    "bias": -0.0703515737329952,
+    "n": 853720
+  },
+  "feature_set": "base_recency_listing",
+  "validation_days": "d_1914 .. d_1941",
+  "validation_dates": "2016-04-25 .. 2016-05-22",
+  "feature_importance": [
+    {
+      "feature": "rolling_mean_28",
+      "gain": 179650763.9443817,
+      "gain_pct": 74.06249008484603,
+      "splits": 1316,
+      "meaning": "average daily sales over the last 28 days before the forecast"
+    },
+    {
+      "feature": "rolling_mean_7",
+      "gain": 25207330.91918564,
+      "gain_pct": 10.391927400017071,
+      "splits": 803,
+      "meaning": "average daily sales over the last 7 days before the forecast"
+    },
+    {
+      "feature": "item_id",
+      "gain": 19607761.440460205,
+      "gain_pct": 8.083459292829383,
+      "splits": 31282,
+      "meaning": "which product this is"
+    },
+    {
+      "feature": "rolling_std_28",
+      "gain": 3766339.4284591675,
+      "gain_pct": 1.5527040934976515,
+      "splits": 654,
+      "meaning": "how much daily sales bounced around over the last 28 days"
+    },
+    {
+      "feature": "days_since_last_sale",
+      "gain": 1813948.1132202148,
+      "gain_pct": 0.7478148781565411,
+      "splits": 1706,
+      "meaning": "number of days since this item last recorded any sale"
+    },
+    {
+      "feature": "month",
+      "gain": 1371455.700908661,
+      "gain_pct": 0.5653937785747435,
+      "splits": 2469,
+      "meaning": "calendar month"
+    },
+    {
+      "feature": "price_rel_to_recent_avg",
+      "gain": 1360092.7636108398,
+      "gain_pct": 0.5607093151609662,
+      "splits": 884,
+      "meaning": "current price divided by the product's own recent average price"
+    },
+    {
+      "feature": "is_weekend",
+      "gain": 1276119.205570221,
+      "gain_pct": 0.5260905321776775,
+      "splits": 343,
+      "meaning": "flag: Saturday or Sunday"
+    },
+    {
+      "feature": "dept_id",
+      "gain": 1191723.1708869934,
+      "gain_pct": 0.4912975797588278,
+      "splits": 849,
+      "meaning": "which department the product belongs to"
+    },
+    {
+      "feature": "store_id",
+      "gain": 983883.1998062134,
+      "gain_pct": 0.4056138595261071,
+      "splits": 1725,
+      "meaning": "which of the 10 stores"
+    },
+    {
+      "feature": "sell_price",
+      "gain": 838354.947681427,
+      "gain_pct": 0.34561865275151304,
+      "splits": 862,
+      "meaning": "the price of this product in this store on the forecast day"
+    },
+    {
+      "feature": "wday",
+      "gain": 831469.1715583801,
+      "gain_pct": 0.3427799354833944,
+      "splits": 851,
+      "meaning": "day of the week (1 = Saturday in this dataset)"
+    },
+    {
+      "feature": "horizon",
+      "gain": 821178.1859359741,
+      "gain_pct": 0.33853739287523327,
+      "splits": 1202,
+      "meaning": "how many days ahead this particular prediction is (1 to 28)"
+    },
+    {
+      "feature": "recent_avg_price",
+      "gain": 770039.5676307678,
+      "gain_pct": 0.3174550811275658,
+      "splits": 590,
+      "meaning": "this product's own average price over the weeks before the forecast"
+    },
+    {
+      "feature": "event_name_1",
+      "gain": 748168.4359207153,
+      "gain_pct": 0.30843852901358976,
+      "splits": 879,
+      "meaning": "which named holiday/event falls on this day, if any"
+    },
+    {
+      "feature": "days_since_first_listing",
+      "gain": 401177.92113494873,
+      "gain_pct": 0.16538886422723442,
+      "splits": 738,
+      "meaning": "days since this product first had a price on record in this store"
+    },
+    {
+      "feature": "lag_1",
+      "gain": 389800.3818511963,
+      "gain_pct": 0.16069838102587303,
+      "splits": 391,
+      "meaning": "sales on the forecast origin day (the last day we know about)"
+    },
+    {
+      "feature": "snap",
+      "gain": 319906.3713684082,
+      "gain_pct": 0.13188400615366697,
+      "splits": 348,
+      "meaning": "whether SNAP food-assistance benefits were usable in this store's state that day"
+    },
+    {
+      "feature": "days_since_first_sale",
+      "gain": 264707.6833114624,
+      "gain_pct": 0.10912789759528801,
+      "splits": 545,
+      "meaning": "how long this item has been selling at all, in days"
+    },
+    {
+      "feature": "zero_streak_length",
+      "gain": 213715.89937210083,
+      "gain_pct": 0.08810611951041011,
+      "splits": 244,
+      "meaning": "length of the current run of zero-sales days (same number as days_since_last_sale at a fixed origin)"
+    },
+    {
+      "feature": "cat_id",
+      "gain": 161169.24000549316,
+      "gain_pct": 0.06644333137144061,
+      "splits": 167,
+      "meaning": "which category (FOODS / HOBBIES / HOUSEHOLD)"
+    },
+    {
+      "feature": "lag_28",
+      "gain": 127694.29253768921,
+      "gain_pct": 0.05264301173743936,
+      "splits": 372,
+      "meaning": "sales 28 days before the first forecast day"
+    },
+    {
+      "feature": "lag_14",
+      "gain": 103463.23558425903,
+      "gain_pct": 0.04265356122825947,
+      "splits": 396,
+      "meaning": "sales 14 days before the first forecast day"
+    },
+    {
+      "feature": "rolling_std_7",
+      "gain": 101736.14121627808,
+      "gain_pct": 0.041941552513708256,
+      "splits": 453,
+      "meaning": "how much daily sales bounced around over the last 7 days"
+    },
+    {
+      "feature": "state_id",
+      "gain": 90750.0789527893,
+      "gain_pct": 0.037412458901208846,
+      "splits": 245,
+      "meaning": "which of the 3 states (CA / TX / WI)"
+    },
+    {
+      "feature": "lag_7",
+      "gain": 70646.65481185913,
+      "gain_pct": 0.029124658624611926,
+      "splits": 298,
+      "meaning": "sales 7 days before the first forecast day"
+    },
+    {
+      "feature": "year",
+      "gain": 35508.480503082275,
+      "gain_pct": 0.014638660184053862,
+      "splits": 143,
+      "meaning": "calendar year"
+    },
+    {
+      "feature": "pre_listing",
+      "gain": 28074.124801635742,
+      "gain_pct": 0.011573786518411865,
+      "splits": 21,
+      "meaning": "flag: this product had no price on record yet on the forecast day"
+    },
+    {
+      "feature": "price_is_missing",
+      "gain": 12085.407043457031,
+      "gain_pct": 0.004982307448491966,
+      "splits": 7,
+      "meaning": "flag: no price on record for this product-week"
+    },
+    {
+      "feature": "event_type_1",
+      "gain": 7400.695960998535,
+      "gain_pct": 0.003050997163597397,
+      "splits": 17,
+      "meaning": "the broad type of that event (Sporting, Cultural, National, Religious)"
+    },
+    {
+      "feature": "event_name_2",
+      "gain": 0.0,
+      "gain_pct": 0.0,
+      "splits": 0,
+      "meaning": "a second simultaneous event, which is rare"
+    },
+    {
+      "feature": "event_type_2",
+      "gain": 0.0,
+      "gain_pct": 0.0,
+      "splits": 0,
+      "meaning": "the type of that second event"
+    }
+  ],
+  "error_breakdowns": {
+    "cat_id": {
+      "title": "Category",
+      "rows": [
+        {
+          "cat_id": "FOODS",
+          "n": 402360,
+          "actual_mean": 2.069012824336415,
+          "pred_mean": 1.9394646890844018,
+          "RMSE": 2.661530898256999,
+          "MAE": 1.3369189271299335,
+          "bias": -0.12954813525201314,
+          "share_of_total_sq_err": 74.21017329934841
+        },
+        {
+          "cat_id": "HOBBIES",
+          "n": 158200,
+          "actual_mean": 0.732338811630847,
+          "pred_mean": 0.7032202326801517,
+          "RMSE": 1.6280472300375683,
+          "MAE": 0.7387416808470291,
+          "bias": -0.029118578950695362,
+          "share_of_total_sq_err": 10.917572892000834
+        },
+        {
+          "cat_id": "HOUSEHOLD",
+          "n": 293160,
+          "actual_mean": 0.9667758220766817,
+          "pred_mean": 0.9554202526947743,
+          "RMSE": 1.3958643862904645,
+          "MAE": 0.7715408895483695,
+          "bias": -0.011355569381907404,
+          "share_of_total_sq_err": 14.872253808650749
+        }
+      ]
+    },
+    "dept_id": {
+      "title": "Department",
+      "rows": [
+        {
+          "dept_id": "FOODS_3",
+          "n": 230440,
+          "actual_mean": 2.4515101544870683,
+          "pred_mean": 2.331231373025516,
+          "RMSE": 2.9824236451588413,
+          "MAE": 1.4608820518139212,
+          "bias": -0.12027878146155224,
+          "share_of_total_sq_err": 53.368150927045185
+        },
+        {
+          "dept_id": "FOODS_1",
+          "n": 60480,
+          "actual_mean": 1.692443783068783,
+          "pred_mean": 1.3575426374007935,
+          "RMSE": 2.635386076984225,
+          "MAE": 1.3237573533399472,
+          "bias": -0.33490114566798956,
+          "share_of_total_sq_err": 10.936689905032564
+        },
+        {
+          "dept_id": "FOODS_2",
+          "n": 111440,
+          "actual_mean": 1.4824389806173726,
+          "pred_mean": 1.4451711772254128,
+          "RMSE": 1.8476562098388885,
+          "MAE": 1.0877260837221823,
+          "bias": -0.037267803391959786,
+          "share_of_total_sq_err": 9.905332467270664
+        },
+        {
+          "dept_id": "HOBBIES_1",
+          "n": 116480,
+          "actual_mean": 0.8804429945054945,
+          "pred_mean": 0.8601562460508242,
+          "RMSE": 1.8328483195781995,
+          "MAE": 0.8523082932692307,
+          "bias": -0.020286748454670267,
+          "share_of_total_sq_err": 10.188025772821636
+        },
+        {
+          "dept_id": "HOUSEHOLD_1",
+          "n": 148960,
+          "actual_mean": 1.4925281954887217,
+          "pred_mean": 1.4915755175214822,
+          "RMSE": 1.7834415437700057,
+          "MAE": 1.0516407058942,
+          "bias": -0.0009526779672395236,
+          "share_of_total_sq_err": 12.335962574709876
+        },
+        {
+          "dept_id": "HOUSEHOLD_2",
+          "n": 144200,
+          "actual_mean": 0.4236685159500693,
+          "pred_mean": 0.4015666587378641,
+          "RMSE": 0.8219097253965212,
+          "MAE": 0.4821950598474341,
+          "bias": -0.0221018572122052,
+          "share_of_total_sq_err": 2.536291233940872
+        },
+        {
+          "dept_id": "HOBBIES_2",
+          "n": 41720,
+          "actual_mean": 0.3188398849472675,
+          "pred_mean": 0.26506330944391177,
+          "RMSE": 0.8195240683539601,
+          "MAE": 0.4216697965004794,
+          "bias": -0.05377657550335574,
+          "share_of_total_sq_err": 0.7295471191791981
+        }
+      ]
+    },
+    "store_id": {
+      "title": "Store",
+      "rows": [
+        {
+          "store_id": "WI_2",
+          "n": 85372,
+          "actual_mean": 1.8035889987349483,
+          "pred_mean": 1.6973825538818348,
+          "RMSE": 3.0347242304607422,
+          "MAE": 1.199419446539849,
+          "bias": -0.10620644485311348,
+          "share_of_total_sq_err": 20.471022793090622
+        },
+        {
+          "store_id": "CA_3",
+          "n": 85372,
+          "actual_mean": 2.054069249871152,
+          "pred_mean": 2.0420297918521295,
+          "RMSE": 2.6178997902665873,
+          "MAE": 1.3348281669634072,
+          "bias": -0.012039458019022398,
+          "share_of_total_sq_err": 15.233760165202368
+        },
+        {
+          "store_id": "CA_1",
+          "n": 85372,
+          "actual_mean": 1.5699761045776133,
+          "pred_mean": 1.4941158626950288,
+          "RMSE": 2.1983120778688567,
+          "MAE": 1.1239394477111935,
+          "bias": -0.07586024188258444,
+          "share_of_total_sq_err": 10.741866960844515
+        },
+        {
+          "store_id": "WI_3",
+          "n": 85372,
+          "actual_mean": 1.3444103453122804,
+          "pred_mean": 1.3085363715269644,
+          "RMSE": 2.0353245100332478,
+          "MAE": 0.954082325469709,
+          "bias": -0.03587397378531598,
+          "share_of_total_sq_err": 9.208065552610984
+        },
+        {
+          "store_id": "TX_3",
+          "n": 85372,
+          "actual_mean": 1.3659045120179918,
+          "pred_mean": 1.25000485170782,
+          "RMSE": 2.0318014703163976,
+          "MAE": 0.9878227744459541,
+          "bias": -0.11589966031017185,
+          "share_of_total_sq_err": 9.176215786934037
+        },
+        {
+          "store_id": "CA_2",
+          "n": 85372,
+          "actual_mean": 1.5569507566883756,
+          "pred_mean": 1.4312232621936936,
+          "RMSE": 2.0077419673547214,
+          "MAE": 1.1127199957831606,
+          "bias": -0.125727494494682,
+          "share_of_total_sq_err": 8.96018282955507
+        },
+        {
+          "store_id": "TX_2",
+          "n": 85372,
+          "actual_mean": 1.3500679379656093,
+          "pred_mean": 1.2612057684018179,
+          "RMSE": 1.9594087993912717,
+          "MAE": 0.9765607264676942,
+          "bias": -0.08886216956379145,
+          "share_of_total_sq_err": 8.533971446444562
+        },
+        {
+          "store_id": "TX_1",
+          "n": 85372,
+          "actual_mean": 1.1424237454903248,
+          "pred_mean": 1.1052171536335098,
+          "RMSE": 1.7515246210845303,
+          "MAE": 0.8676846396945135,
+          "bias": -0.03720659185681496,
+          "share_of_total_sq_err": 6.819202235473262
+        },
+        {
+          "store_id": "WI_1",
+          "n": 85372,
+          "actual_mean": 1.3171063112027364,
+          "pred_mean": 1.2501283129128988,
+          "RMSE": 1.6762051319259048,
+          "MAE": 0.9609428005669307,
+          "bias": -0.06697799828983753,
+          "share_of_total_sq_err": 6.245330259378507
+        },
+        {
+          "store_id": "CA_4",
+          "n": 85372,
+          "actual_mean": 0.9236986365553109,
+          "pred_mean": 0.8848369313123742,
+          "RMSE": 1.4401837801988344,
+          "MAE": 0.8012678276249824,
+          "bias": -0.03886170524293675,
+          "share_of_total_sq_err": 4.610381970466068
+        }
+      ]
+    },
+    "state_id": {
+      "title": "State",
+      "rows": [
+        {
+          "state_id": "WI",
+          "n": 256116,
+          "actual_mean": 1.4883685517499883,
+          "pred_mean": 1.4186824127738993,
+          "RMSE": 2.32104578874713,
+          "MAE": 1.0381481908588295,
+          "bias": -0.069686138976089,
+          "share_of_total_sq_err": 35.92441860508011
+        },
+        {
+          "state_id": "CA",
+          "n": 341488,
+          "actual_mean": 1.526173686923113,
+          "pred_mean": 1.4630514620133066,
+          "RMSE": 2.108976791705349,
+          "MAE": 1.0931888595206858,
+          "bias": -0.06312222490980646,
+          "share_of_total_sq_err": 39.54619192606802
+        },
+        {
+          "state_id": "TX",
+          "n": 256116,
+          "actual_mean": 1.2861320651579753,
+          "pred_mean": 1.2054759245810494,
+          "RMSE": 1.9179275756379268,
+          "MAE": 0.944022713536054,
+          "bias": -0.08065614057692594,
+          "share_of_total_sq_err": 24.529389468851864
+        }
+      ]
+    },
+    "volume_tier": {
+      "title": "Historical volume tier",
+      "rows": [
+        {
+          "volume_tier": "high (>3)",
+          "n": 65968,
+          "actual_mean": 7.584768372544264,
+          "pred_mean": 7.1956929579493085,
+          "RMSE": 5.975623582817357,
+          "MAE": 3.638975048053602,
+          "bias": -0.38907541459495576,
+          "share_of_total_sq_err": 61.33175669325064
+        },
+        {
+          "volume_tier": "medium (1-3)",
+          "n": 160244,
+          "actual_mean": 2.184936721499713,
+          "pred_mean": 2.076266604615461,
+          "RMSE": 2.2911696929742975,
+          "MAE": 1.5052762701255584,
+          "bias": -0.10867011688425166,
+          "share_of_total_sq_err": 21.90190600011541
+        },
+        {
+          "volume_tier": "low (0.2-1)",
+          "n": 398160,
+          "actual_mean": 0.7965265220012056,
+          "pred_mean": 0.7608977069519791,
+          "RMSE": 1.1743304893922082,
+          "MAE": 0.7824925374723729,
+          "bias": -0.03562881504922644,
+          "share_of_total_sq_err": 14.296308878910402
+        },
+        {
+          "volume_tier": "very low (<0.2/day)",
+          "n": 229348,
+          "actual_mean": 0.27967978792054,
+          "pred_mean": 0.2674960520693444,
+          "RMSE": 0.643147648910288,
+          "MAE": 0.3843588576747998,
+          "bias": -0.012183735851195587,
+          "share_of_total_sq_err": 2.4700284277235456
+        }
+      ]
+    },
+    "sparsity_band": {
+      "title": "Historical sparsity",
+      "rows": [
+        {
+          "sparsity_band": "<50% zeros",
+          "n": 184072,
+          "actual_mean": 3.706354035377461,
+          "pred_mean": 3.5556868898583165,
+          "RMSE": 3.6811129046732605,
+          "MAE": 2.0511879921443783,
+          "bias": -0.15066714551914462,
+          "share_of_total_sq_err": 64.94289264300443
+        },
+        {
+          "sparsity_band": "50-75% zeros",
+          "n": 262696,
+          "actual_mean": 1.3172450284739776,
+          "pred_mean": 1.2368109504141669,
+          "RMSE": 1.9005136768595574,
+          "MAE": 1.061985658822365,
+          "bias": -0.08043407805981073,
+          "share_of_total_sq_err": 24.704785084645245
+        },
+        {
+          "sparsity_band": "75-95% zeros",
+          "n": 361704,
+          "actual_mean": 0.535155818016942,
+          "pred_mean": 0.5057328543781655,
+          "RMSE": 1.0233586580151735,
+          "MAE": 0.5822336177648021,
+          "bias": -0.0294229636387765,
+          "share_of_total_sq_err": 9.86267380362444
+        },
+        {
+          "sparsity_band": ">95% zeros",
+          "n": 45248,
+          "actual_mean": 0.21934671145685997,
+          "pred_mean": 0.20708476418847244,
+          "RMSE": 0.6446881620596348,
+          "MAE": 0.30575210860148516,
+          "bias": -0.01226194726838753,
+          "share_of_total_sq_err": 0.48964846872588524
+        }
+      ]
+    },
+    "weekday": {
+      "title": "Day of week",
+      "rows": [
+        {
+          "weekday": "Sunday",
+          "n": 121960,
+          "actual_mean": 1.745654312889472,
+          "pred_mean": 1.6178556784191538,
+          "RMSE": 2.4107041704826226,
+          "MAE": 1.17048323319121,
+          "bias": -0.12779863447031814,
+          "share_of_total_sq_err": 18.454015272913537
+        },
+        {
+          "weekday": "Saturday",
+          "n": 121960,
+          "actual_mean": 1.7259265332896032,
+          "pred_mean": 1.640207183666776,
+          "RMSE": 2.3812895944350343,
+          "MAE": 1.1621063927517217,
+          "bias": -0.08571934962282723,
+          "share_of_total_sq_err": 18.006423727133754
+        },
+        {
+          "weekday": "Friday",
+          "n": 121960,
+          "actual_mean": 1.4211708756969499,
+          "pred_mean": 1.367833951541489,
+          "RMSE": 2.109027209305255,
+          "MAE": 1.02935053583142,
+          "bias": -0.053336924155460874,
+          "share_of_total_sq_err": 14.124315266509111
+        },
+        {
+          "weekday": "Monday",
+          "n": 121960,
+          "actual_mean": 1.39993440472286,
+          "pred_mean": 1.3399779391603805,
+          "RMSE": 2.056469503655215,
+          "MAE": 1.0034193343719253,
+          "bias": -0.059956465562479355,
+          "share_of_total_sq_err": 13.429120919948309
+        },
+        {
+          "weekday": "Wednesday",
+          "n": 121960,
+          "actual_mean": 1.2577074450639554,
+          "pred_mean": 1.199754862331912,
+          "RMSE": 1.9811391641279141,
+          "MAE": 0.9501932982125286,
+          "bias": -0.05795258273204329,
+          "share_of_total_sq_err": 12.463298714329916
+        },
+        {
+          "weekday": "Tuesday",
+          "n": 121960,
+          "actual_mean": 1.295154148901279,
+          "pred_mean": 1.215222653082978,
+          "RMSE": 1.948312627220664,
+          "MAE": 0.9565719315349295,
+          "bias": -0.07993149581830106,
+          "share_of_total_sq_err": 12.053698598516236
+        },
+        {
+          "weekday": "Thursday",
+          "n": 121960,
+          "actual_mean": 1.2541898983273205,
+          "pred_mean": 1.2264243338799607,
+          "RMSE": 1.9004816109678588,
+          "MAE": 0.9513629799934405,
+          "bias": -0.02776556444735978,
+          "share_of_total_sq_err": 11.46912750064913
+        }
+      ]
+    },
+    "is_weekend": {
+      "title": "Weekend vs weekday",
+      "rows": [
+        {
+          "is_weekend": 1,
+          "n": 243920,
+          "actual_mean": 1.7357904230895376,
+          "pred_mean": 1.6290314310429648,
+          "RMSE": 2.3960420207236433,
+          "MAE": 1.166294812971466,
+          "bias": -0.1067589920465728,
+          "share_of_total_sq_err": 36.46043900004729
+        },
+        {
+          "is_weekend": 0,
+          "n": 609800,
+          "actual_mean": 1.325631354542473,
+          "pred_mean": 1.2698427479993442,
+          "RMSE": 2.000486312060633,
+          "MAE": 0.9781796159888488,
+          "bias": -0.05578860654312878,
+          "share_of_total_sq_err": 63.539560999952705
+        }
+      ]
+    },
+    "is_event": {
+      "title": "Event day vs ordinary day",
+      "rows": [
+        {
+          "is_event": true,
+          "n": 121960,
+          "actual_mean": 1.556518530665792,
+          "pred_mean": 1.5386581229091505,
+          "RMSE": 2.1281520079279392,
+          "MAE": 1.077794516152837,
+          "bias": -0.01786040775664155,
+          "share_of_total_sq_err": 14.381637161873043
+        },
+        {
+          "is_event": false,
+          "n": 731760,
+          "actual_mean": 1.423869848037608,
+          "pred_mean": 1.3447697465289166,
+          "RMSE": 2.1198557806687752,
+          "MAE": 1.0242821982890564,
+          "bias": -0.0791001015086914,
+          "share_of_total_sq_err": 85.61836283812696
+        }
+      ]
+    },
+    "snap": {
+      "title": "SNAP day vs non-SNAP day",
+      "rows": [
+        {
+          "snap": 1,
+          "n": 304900,
+          "actual_mean": 1.5361692358150214,
+          "pred_mean": 1.4631928318137095,
+          "RMSE": 2.276111778386676,
+          "MAE": 1.0788769212856675,
+          "bias": -0.07297640400131189,
+          "share_of_total_sq_err": 41.12730181943871
+        },
+        {
+          "snap": 0,
+          "n": 548820,
+          "actual_mean": 1.3909587843008637,
+          "pred_mean": 1.3220654494551947,
+          "RMSE": 2.0297810546723314,
+          "MAE": 1.0058434228162239,
+          "bias": -0.06889333484566906,
+          "share_of_total_sq_err": 58.87269818056129
+        }
+      ]
+    },
+    "horizon": {
+      "title": "Days ahead (horizon)",
+      "rows": [
+        {
+          "horizon": 21,
+          "n": 30490,
+          "actual_mean": 1.9652673007543457,
+          "pred_mean": 1.686949174483437,
+          "RMSE": 2.7976709725343265,
+          "MAE": 1.275851349622827,
+          "bias": -0.2783181262709087,
+          "share_of_total_sq_err": 6.213500242001093
+        },
+        {
+          "horizon": 13,
+          "n": 30490,
+          "actual_mean": 1.7789111183994752,
+          "pred_mean": 1.695681363725812,
+          "RMSE": 2.524721833575403,
+          "MAE": 1.1959582689406363,
+          "bias": -0.08322975467366334,
+          "share_of_total_sq_err": 5.060228374797157
+        },
+        {
+          "horizon": 20,
+          "n": 30490,
+          "actual_mean": 1.781174155460807,
+          "pred_mean": 1.639741940636274,
+          "RMSE": 2.5126606658546753,
+          "MAE": 1.1888962673007544,
+          "bias": -0.14143221482453283,
+          "share_of_total_sq_err": 5.011996145919132
+        },
+        {
+          "horizon": 28,
+          "n": 30490,
+          "actual_mean": 1.7821580846179075,
+          "pred_mean": 1.5900851597244998,
+          "RMSE": 2.4172160272937404,
+          "MAE": 1.1931922171203673,
+          "bias": -0.19207292489340766,
+          "share_of_total_sq_err": 4.638461714256737
+        },
+        {
+          "horizon": 12,
+          "n": 30490,
+          "actual_mean": 1.4367005575598557,
+          "pred_mean": 1.4909819662184323,
+          "RMSE": 2.3654126357687946,
+          "MAE": 1.0652586602164644,
+          "bias": 0.05428140865857656,
+          "share_of_total_sq_err": 4.441778226095123
+        },
+        {
+          "horizon": 27,
+          "n": 30490,
+          "actual_mean": 1.6896687438504427,
+          "pred_mean": 1.5752570334535911,
+          "RMSE": 2.34831399958544,
+          "MAE": 1.1607099891767794,
+          "bias": -0.1144117103968516,
+          "share_of_total_sq_err": 4.377794590936871
+        },
+        {
+          "horizon": 15,
+          "n": 30490,
+          "actual_mean": 1.5218104296490653,
+          "pred_mean": 1.4396623919317808,
+          "RMSE": 2.284000282773779,
+          "MAE": 1.068128687110528,
+          "bias": -0.08214803771728452,
+          "share_of_total_sq_err": 4.141287224754302
+        },
+        {
+          "horizon": 17,
+          "n": 30490,
+          "actual_mean": 1.38563463430633,
+          "pred_mean": 1.270281792390948,
+          "RMSE": 2.209932725794315,
+          "MAE": 1.0111230865857659,
+          "bias": -0.11535284191538198,
+          "share_of_total_sq_err": 3.877047772585977
+        },
+        {
+          "horizon": 14,
+          "n": 30490,
+          "actual_mean": 1.4958674975401771,
+          "pred_mean": 1.4725991443096098,
+          "RMSE": 2.195129873784992,
+          "MAE": 1.0716213706133157,
+          "bias": -0.023268353230567307,
+          "share_of_total_sq_err": 3.8252822589297417
+        },
+        {
+          "horizon": 9,
+          "n": 30490,
+          "actual_mean": 1.4533945555919974,
+          "pred_mean": 1.3135328753689735,
+          "RMSE": 2.193682129192602,
+          "MAE": 1.0204217563135456,
+          "bias": -0.13986168022302392,
+          "share_of_total_sq_err": 3.8202381788197695
+        },
+        {
+          "horizon": 7,
+          "n": 30490,
+          "actual_mean": 1.7393243686454576,
+          "pred_mean": 1.7217892351590685,
+          "RMSE": 2.181166438944775,
+          "MAE": 1.1412679954083307,
+          "bias": -0.01753513348638913,
+          "share_of_total_sq_err": 3.776771057725967
+        },
+        {
+          "horizon": 6,
+          "n": 30490,
+          "actual_mean": 1.6539521154476877,
+          "pred_mean": 1.6501483968514266,
+          "RMSE": 2.116576937166167,
+          "MAE": 1.1028610455887176,
+          "bias": -0.003803718596261163,
+          "share_of_total_sq_err": 3.556404615480593
+        },
+        {
+          "horizon": 19,
+          "n": 30490,
+          "actual_mean": 1.4454903246966218,
+          "pred_mean": 1.329969002623811,
+          "RMSE": 2.1081595310075696,
+          "MAE": 1.050797272876353,
+          "bias": -0.11552132207281085,
+          "share_of_total_sq_err": 3.5281739605938327
+        },
+        {
+          "horizon": 10,
+          "n": 30490,
+          "actual_mean": 1.2988192850114793,
+          "pred_mean": 1.2167911997376188,
+          "RMSE": 2.077383890293362,
+          "MAE": 0.9730966644801574,
+          "bias": -0.08202808527386041,
+          "share_of_total_sq_err": 3.4259148524036167
+        },
+        {
+          "horizon": 22,
+          "n": 30490,
+          "actual_mean": 1.3893735651033126,
+          "pred_mean": 1.2574185841259429,
+          "RMSE": 2.0768097639040697,
+          "MAE": 1.0182262541816989,
+          "bias": -0.13195498097736968,
+          "share_of_total_sq_err": 3.424021474548597
+        },
+        {
+          "horizon": 11,
+          "n": 30490,
+          "actual_mean": 1.3369301410298458,
+          "pred_mean": 1.3100957153164972,
+          "RMSE": 2.014979837935064,
+          "MAE": 0.9954276530009839,
+          "bias": -0.026834425713348597,
+          "share_of_total_sq_err": 3.2231792297367425
+        },
+        {
+          "horizon": 8,
+          "n": 30490,
+          "actual_mean": 1.4162348310921613,
+          "pred_mean": 1.3992447258117415,
+          "RMSE": 2.0067175976521554,
+          "MAE": 1.0124107710724828,
+          "bias": -0.016990105280419776,
+          "share_of_total_sq_err": 3.1968007197032016
+        },
+        {
+          "horizon": 18,
+          "n": 30490,
+          "actual_mean": 1.32840275500164,
+          "pred_mean": 1.255569335847819,
+          "RMSE": 1.9993563444517994,
+          "MAE": 0.9915234657264677,
+          "bias": -0.07283341915382091,
+          "share_of_total_sq_err": 3.173390054016171
+        },
+        {
+          "horizon": 26,
+          "n": 30490,
+          "actual_mean": 1.395605116431617,
+          "pred_mean": 1.3069606218432273,
+          "RMSE": 1.992543253856621,
+          "MAE": 1.0132297612331913,
+          "bias": -0.08864449458838974,
+          "share_of_total_sq_err": 3.151799349217519
+        },
+        {
+          "horizon": 16,
+          "n": 30490,
+          "actual_mean": 1.291538209248934,
+          "pred_mean": 1.224052734667104,
+          "RMSE": 1.9713760381278114,
+          "MAE": 0.978636183666776,
+          "bias": -0.06748547458183007,
+          "share_of_total_sq_err": 3.0851905529431978
+        },
+        {
+          "horizon": 5,
+          "n": 30490,
+          "actual_mean": 1.4068875040997049,
+          "pred_mean": 1.3434242154804854,
+          "RMSE": 1.944798425091245,
+          "MAE": 0.988116448999672,
+          "bias": -0.06346328861921946,
+          "share_of_total_sq_err": 3.002563730602634
+        },
+        {
+          "horizon": 23,
+          "n": 30490,
+          "actual_mean": 1.2717940308297802,
+          "pred_mean": 1.1565623269924565,
+          "RMSE": 1.9182723985323538,
+          "MAE": 0.9611860095113153,
+          "bias": -0.11523170383732362,
+          "share_of_total_sq_err": 2.921215536457703
+        },
+        {
+          "horizon": 25,
+          "n": 30490,
+          "actual_mean": 1.2122991144637587,
+          "pred_mean": 1.1632355962610692,
+          "RMSE": 1.8622650950338004,
+          "MAE": 0.9321960278779927,
+          "bias": -0.049063518202689504,
+          "share_of_total_sq_err": 2.7531257755899636
+        },
+        {
+          "horizon": 24,
+          "n": 30490,
+          "actual_mean": 1.2166612003935717,
+          "pred_mean": 1.1518255831420137,
+          "RMSE": 1.8592094453442713,
+          "MAE": 0.9351948150213184,
+          "bias": -0.06483561725155806,
+          "share_of_total_sq_err": 2.7440983968834787
+        },
+        {
+          "horizon": 1,
+          "n": 30490,
+          "actual_mean": 1.2723187930469007,
+          "pred_mean": 1.2635860547720565,
+          "RMSE": 1.8329090741143959,
+          "MAE": 0.9149116251229911,
+          "bias": -0.00873273827484411,
+          "share_of_total_sq_err": 2.6670115009422104
+        },
+        {
+          "horizon": 3,
+          "n": 30490,
+          "actual_mean": 1.1297146605444408,
+          "pred_mean": 1.1601208740570679,
+          "RMSE": 1.7446097869498995,
+          "MAE": 0.8813586267628731,
+          "bias": 0.030406213512627067,
+          "share_of_total_sq_err": 2.416237692456844
+        },
+        {
+          "horizon": 4,
+          "n": 30490,
+          "actual_mean": 1.1391275828140375,
+          "pred_mean": 1.1767966880944574,
+          "RMSE": 1.7093041247660474,
+          "MAE": 0.8863047733683176,
+          "bias": 0.03766910528041989,
+          "share_of_total_sq_err": 2.3194324413062533
+        },
+        {
+          "horizon": 2,
+          "n": 30490,
+          "actual_mean": 1.1638897999344047,
+          "pred_mean": 1.1667426753033783,
+          "RMSE": 1.6749192849016274,
+          "MAE": 0.8660437766480813,
+          "bias": 0.0028528753689736064,
+          "share_of_total_sq_err": 2.2270543302955663
+        }
+      ]
+    }
+  },
+  "error_concentration": {
+    "pct_of_squared_error_from_worst_1pct_of_rows": 55.18,
+    "zero_actual_rows_pct": 54.44,
+    "mean_pred_on_zero_actual_rows": 0.5849,
+    "mean_pred_on_positive_actual_rows": 2.3134,
+    "mean_actual_on_positive_rows": 3.1665
+  }
+}

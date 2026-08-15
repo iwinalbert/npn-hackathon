@@ -1,0 +1,264 @@
+{
+  "real_forecast_origin": "d_1941",
+  "forecast_window": "d_1942..d_1969",
+  "availability": {
+    "wday": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "month": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "year": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "event_name_1": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "event_type_1": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "event_name_2": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "event_type_2": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "snap_CA": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "snap_TX": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "snap_WI": {
+      "days_covered": 28,
+      "of": 28,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "calendar.csv (published in advance)"
+    },
+    "sell_price": {
+      "future_weeks": [
+        277,
+        278,
+        279,
+        280,
+        281
+      ],
+      "series_with_price_all_future_weeks": 30490,
+      "series_with_price_some_future_week": 30490,
+      "of": 30490,
+      "complete": true,
+      "requires_forecasting": false,
+      "source": "sell_prices.csv (covers the forecast weeks)"
+    }
+  },
+  "residual_tables": [
+    {
+      "covariate": "discount_vs_regular",
+      "bin": "price >= regular",
+      "n": 2705,
+      "mean_actual": 1.9985212569316082,
+      "mean_pred": 2.088527101663586,
+      "mean_residual": -0.09000584473197779,
+      "RMSE": 2.5992214366360464,
+      "share_of_sq_error_pct": 0.48911935192934003
+    },
+    {
+      "covariate": "discount_vs_regular",
+      "bin": "0-2% off",
+      "n": 770926,
+      "mean_actual": 1.411774930408366,
+      "mean_pred": 1.4117296495383476,
+      "mean_residual": 4.52808700186527e-05,
+      "RMSE": 2.076190601018601,
+      "share_of_sq_error_pct": 88.9422579086522
+    },
+    {
+      "covariate": "discount_vs_regular",
+      "bin": "2-5% off",
+      "n": 19290,
+      "mean_actual": 1.6283566614826335,
+      "mean_pred": 1.5794324250907206,
+      "mean_residual": 0.0489242363919129,
+      "RMSE": 2.19285594164546,
+      "share_of_sq_error_pct": 2.4826382810468473
+    },
+    {
+      "covariate": "discount_vs_regular",
+      "bin": "5-10% off",
+      "n": 29506,
+      "mean_actual": 1.4065952687588965,
+      "mean_pred": 1.2912640493458958,
+      "mean_residual": 0.11533121941300076,
+      "RMSE": 1.787661972467494,
+      "share_of_sq_error_pct": 2.523725744767363
+    },
+    {
+      "covariate": "discount_vs_regular",
+      "bin": "10-20% off",
+      "n": 27877,
+      "mean_actual": 2.2299386591096604,
+      "mean_pred": 2.1191193406751085,
+      "mean_residual": 0.11081931843455178,
+      "RMSE": 2.621973128096869,
+      "share_of_sq_error_pct": 5.129364056082948
+    },
+    {
+      "covariate": "discount_vs_regular",
+      "bin": "20-30% off",
+      "n": 2210,
+      "mean_actual": 1.0348416289592761,
+      "mean_pred": 1.0499697737556561,
+      "mean_residual": -0.015128144796380097,
+      "RMSE": 1.6935564424035343,
+      "share_of_sq_error_pct": 0.16964952206828987
+    },
+    {
+      "covariate": "discount_vs_regular",
+      "bin": "30%+ off",
+      "n": 1206,
+      "mean_actual": 0.5132669983416253,
+      "mean_pred": 0.7550053482587065,
+      "mean_residual": -0.24173834991708126,
+      "RMSE": 2.8557883345115793,
+      "share_of_sq_error_pct": 0.26324513545301975
+    },
+    {
+      "covariate": "weeks_at_current_price",
+      "bin": "1 week",
+      "n": 3948,
+      "mean_actual": 1.7059270516717324,
+      "mean_pred": 0.7107318693009119,
+      "mean_residual": 0.9951951823708207,
+      "RMSE": 3.6250941107406014,
+      "share_of_sq_error_pct": 1.3885986277253435
+    },
+    {
+      "covariate": "weeks_at_current_price",
+      "bin": "2 weeks",
+      "n": 3584,
+      "mean_actual": 1.7798549107142858,
+      "mean_pred": 1.6646467522321429,
+      "mean_residual": 0.11520815848214287,
+      "RMSE": 2.294877874670302,
+      "share_of_sq_error_pct": 0.5051823571703972
+    },
+    {
+      "covariate": "weeks_at_current_price",
+      "bin": "3-4 weeks",
+      "n": 8428,
+      "mean_actual": 0.9205030849549122,
+      "mean_pred": 0.8620827206929282,
+      "mean_residual": 0.05842036426198386,
+      "RMSE": 2.0555532990256715,
+      "share_of_sq_error_pct": 0.9531100031689743
+    },
+    {
+      "covariate": "weeks_at_current_price",
+      "bin": "5-8 weeks",
+      "n": 45220,
+      "mean_actual": 2.0691950464396287,
+      "mean_pred": 2.088287620521893,
+      "mean_residual": -0.019092574082264484,
+      "RMSE": 3.4836054803849086,
+      "share_of_sq_error_pct": 14.687554952252674
+    },
+    {
+      "covariate": "weeks_at_current_price",
+      "bin": "9-16 weeks",
+      "n": 49616,
+      "mean_actual": 1.6208078039342149,
+      "mean_pred": 1.5685026090374075,
+      "mean_residual": 0.052305194896807475,
+      "RMSE": 2.0389911698126024,
+      "share_of_sq_error_pct": 5.520945438133343
+    },
+    {
+      "covariate": "weeks_at_current_price",
+      "bin": "17+ weeks",
+      "n": 742924,
+      "mean_actual": 1.3957080401225428,
+      "mean_pred": 1.3952552581959932,
+      "mean_residual": 0.00045278192654968504,
+      "RMSE": 1.9671450988826482,
+      "share_of_sq_error_pct": 76.94460862154926
+    },
+    {
+      "covariate": "event_day",
+      "bin": "no event",
+      "n": 731760,
+      "mean_actual": 1.423869848037608,
+      "mean_pred": 1.410209527604679,
+      "mean_residual": 0.013660320432928828,
+      "RMSE": 2.0884464050051843,
+      "share_of_sq_error_pct": 85.42330134949108
+    },
+    {
+      "covariate": "event_day",
+      "bin": "event day",
+      "n": 121960,
+      "mean_actual": 1.556518530665792,
+      "mean_pred": 1.5818840744506397,
+      "mean_residual": -0.02536554378484749,
+      "RMSE": 2.1131988797755707,
+      "share_of_sq_error_pct": 14.576698650508915
+    },
+    {
+      "covariate": "snap",
+      "bin": "SNAP off",
+      "n": 548820,
+      "mean_actual": 1.3909587843008637,
+      "mean_pred": 1.384122045333625,
+      "mean_residual": 0.006836738967238802,
+      "RMSE": 2.0049570368153815,
+      "share_of_sq_error_pct": 59.047441872525106
+    },
+    {
+      "covariate": "snap",
+      "bin": "SNAP on",
+      "n": 304900,
+      "mean_actual": 1.5361692358150214,
+      "mean_pred": 1.5258368144309609,
+      "mean_residual": 0.010332421384060349,
+      "RMSE": 2.2401716530051337,
+      "share_of_sq_error_pct": 40.952558127474894
+    }
+  ],
+  "promotion_field_exists": false
+}

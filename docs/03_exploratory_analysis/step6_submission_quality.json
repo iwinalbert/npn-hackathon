@@ -1,0 +1,8 @@
+{
+  "submission_rows": 60980,
+  "submission_cols": 29,
+  "submission_val_eval_match_sales": true,
+  "submission_all_zero_placeholder": true,
+  "sales_pairs_missing_price_ever": 0,
+  "duplicate_id_rows_sales_evaluation": 0
+}

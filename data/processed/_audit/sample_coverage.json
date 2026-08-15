@@ -1,0 +1,31 @@
+{
+  "target_rows": 50000,
+  "actual_rows": 50000,
+  "seed": 42,
+  "source_total_rows": 59181090,
+  "n_unique_dates_in_sample": 1941,
+  "n_unique_dates_in_population": 1941,
+  "n_unique_store_id_in_sample": 10,
+  "n_unique_item_id_in_sample": 3049,
+  "n_unique_item_id_in_population": 3049,
+  "pct_zero_sales_sample": 68.00399999999999,
+  "pct_zero_sales_population": 67.99776584040612,
+  "pct_missing_price_sample": 20.785999999999998,
+  "pct_missing_price_population": 20.782673992655422,
+  "pct_event_day_rows_sample": 8.142000000000001,
+  "pct_event_day_rows_population": 8.140133951571354,
+  "sales_max_in_sample": 119,
+  "sales_max_in_population": 763,
+  "store_id_value_counts_sample": {
+    "TX_1": 5002,
+    "WI_1": 5002,
+    "CA_2": 5001,
+    "WI_3": 5001,
+    "TX_2": 5000,
+    "CA_1": 4999,
+    "CA_4": 4999,
+    "TX_3": 4999,
+    "WI_2": 4999,
+    "CA_3": 4998
+  }
+}

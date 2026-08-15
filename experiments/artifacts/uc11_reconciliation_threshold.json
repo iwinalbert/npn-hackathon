@@ -1,0 +1,663 @@
+{
+  "source_predictions": "exp_76_diversity_blend_validation.csv",
+  "base_RMSE": 2.0920004037475435,
+  "lambda_definition": "A_hat = F + lambda*(A - F); lambda is the fraction of the bottom-up aggregate discrepancy that a dedicated aggregate model recovers, WITHOUT adding any error of its own \u2014 optimistic by construction",
+  "summary": {
+    "L9_store_dept": {
+      "prop_breakeven_lambda": 0.05,
+      "prop_lambda_for_-0.010": 0.25,
+      "prop_gain_at_lambda_0.2": -0.009279769217766631,
+      "shrunk_breakeven_lambda": 0.05,
+      "shrunk_lambda_for_-0.010": 0.05,
+      "shrunk_gain_at_lambda_0.2": -0.02271116316261601
+    },
+    "L10_item": {
+      "prop_breakeven_lambda": 0.05,
+      "prop_lambda_for_-0.010": 0.05,
+      "prop_gain_at_lambda_0.2": -0.08519731610484538,
+      "shrunk_breakeven_lambda": 0.05,
+      "shrunk_lambda_for_-0.010": 0.05,
+      "shrunk_gain_at_lambda_0.2": -0.2288546353261225
+    },
+    "L11_item_state": {
+      "prop_breakeven_lambda": 0.05,
+      "prop_lambda_for_-0.010": 0.05,
+      "prop_gain_at_lambda_0.2": -0.17003233258072403,
+      "shrunk_breakeven_lambda": 0.05,
+      "shrunk_lambda_for_-0.010": 0.05,
+      "shrunk_gain_at_lambda_0.2": -0.5154505562819343
+    }
+  },
+  "curve": [
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.0,
+      "prop_RMSE": 2.0920004037475435,
+      "equal_RMSE": 2.0920004037475435,
+      "shrunk_RMSE": 2.0920004037475435,
+      "alpha_star": 0.0,
+      "prop_gain": 0.0,
+      "shrunk_gain": 0.0
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.05,
+      "prop_RMSE": 2.0894564326933676,
+      "equal_RMSE": 2.091201687830356,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 17.253854986103224,
+      "prop_gain": -0.0025439710541759197,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.1,
+      "prop_RMSE": 2.087061476759689,
+      "equal_RMSE": 2.090443648419296,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 8.626927493051603,
+      "prop_gain": -0.004938926987854586,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.15,
+      "prop_RMSE": 2.0848160494949686,
+      "equal_RMSE": 2.089726323324365,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 5.751284995367741,
+      "prop_gain": -0.007184354252574909,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.2,
+      "prop_RMSE": 2.082720634529777,
+      "equal_RMSE": 2.0890497038274636,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 4.313463746525804,
+      "prop_gain": -0.009279769217766631,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.25,
+      "prop_RMSE": 2.0807756850672923,
+      "equal_RMSE": 2.0884136352948146,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 3.4507709972206433,
+      "prop_gain": -0.011224718680251211,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.3,
+      "prop_RMSE": 2.078981623402486,
+      "equal_RMSE": 2.0878181512716636,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 2.875642497683869,
+      "prop_gain": -0.013018780345057657,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.35,
+      "prop_RMSE": 2.0773388404711555,
+      "equal_RMSE": 2.087262908463214,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 2.464836426586174,
+      "prop_gain": -0.014661563276388012,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.4,
+      "prop_RMSE": 2.075847695429915,
+      "equal_RMSE": 2.0867479121773265,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 2.1567318732629017,
+      "prop_gain": -0.016152708317628495,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.45,
+      "prop_RMSE": 2.0745085152681746,
+      "equal_RMSE": 2.086273016900365,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.9170949984559131,
+      "prop_gain": -0.01749188847936889,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.5,
+      "prop_RMSE": 2.073321594453084,
+      "equal_RMSE": 2.085838060492823,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.7253854986103219,
+      "prop_gain": -0.01867880929445942,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.55,
+      "prop_RMSE": 2.0722871946083203,
+      "equal_RMSE": 2.0854426134137296,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.5685322714639283,
+      "prop_gain": -0.019713209139223142,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.6,
+      "prop_RMSE": 2.0714055442275425,
+      "equal_RMSE": 2.085086307443732,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.437821248841935,
+      "prop_gain": -0.020594859520000952,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.65,
+      "prop_RMSE": 2.070676838423228,
+      "equal_RMSE": 2.0847686196953146,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.327219614315632,
+      "prop_gain": -0.021323565324315563,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.7,
+      "prop_RMSE": 2.070101238711542,
+      "equal_RMSE": 2.084489812298931,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.232418213293087,
+      "prop_gain": -0.021899165036001644,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.75,
+      "prop_RMSE": 2.0696788728337885,
+      "equal_RMSE": 2.0842496060338918,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.150256999073548,
+      "prop_gain": -0.022321530913754994,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.8,
+      "prop_RMSE": 2.069409834614897,
+      "equal_RMSE": 2.084047694864881,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.0783659366314509,
+      "prop_gain": -0.022590569132646454,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.85,
+      "prop_RMSE": 2.0692941838593186,
+      "equal_RMSE": 2.0838837374199812,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 1.014932646241366,
+      "prop_gain": -0.022706219888224854,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.9,
+      "prop_RMSE": 2.0693319462845934,
+      "equal_RMSE": 2.0837573382315453,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 0.9585474992279566,
+      "prop_gain": -0.022668457462950098,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 0.95,
+      "prop_RMSE": 2.069523113492768,
+      "equal_RMSE": 2.083668608838994,
+      "shrunk_RMSE": 2.069289240584927,
+      "alpha_star": 0.9080976308475378,
+      "prop_gain": -0.022477290254775628,
+      "shrunk_gain": -0.022711163162616455
+    },
+    {
+      "level": "L9_store_dept",
+      "lambda": 1.0,
+      "prop_RMSE": 2.0698676429797267,
+      "equal_RMSE": 2.0836175923394133,
+      "shrunk_RMSE": 2.0692892405849275,
+      "alpha_star": 0.8626927493051609,
+      "prop_gain": -0.022132760767816784,
+      "shrunk_gain": -0.02271116316261601
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.0,
+      "prop_RMSE": 2.0920004037475435,
+      "equal_RMSE": 2.0920004037475435,
+      "shrunk_RMSE": 2.0920004037475435,
+      "alpha_star": 0.0,
+      "prop_gain": 0.0,
+      "shrunk_gain": 0.0
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.05,
+      "prop_RMSE": 2.06911197441464,
+      "equal_RMSE": 2.074834110218027,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 18.4936855532789,
+      "prop_gain": -0.02288842933290347,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.1,
+      "prop_RMSE": 2.0472606276868697,
+      "equal_RMSE": 2.0584157771480016,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 9.246842776639452,
+      "prop_gain": -0.04473977606067381,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.15,
+      "prop_RMSE": 2.0264799121413075,
+      "equal_RMSE": 2.042762899764114,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 6.1645618510929685,
+      "prop_gain": -0.06552049160623596,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.2,
+      "prop_RMSE": 2.006803087642698,
+      "equal_RMSE": 2.027892464913802,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 4.623421388319724,
+      "prop_gain": -0.08519731610484538,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.25,
+      "prop_RMSE": 1.988262928401803,
+      "equal_RMSE": 2.013819591464973,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 3.698737110655781,
+      "prop_gain": -0.10373747534574052,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.3,
+      "prop_RMSE": 1.970891512480121,
+      "equal_RMSE": 2.000560361157861,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 3.0822809255464843,
+      "prop_gain": -0.12110889126742252,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.35,
+      "prop_RMSE": 1.9547199996674884,
+      "equal_RMSE": 1.988129500111435,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 2.6419550790398434,
+      "prop_gain": -0.13728040408005504,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.4,
+      "prop_RMSE": 1.93977840019384,
+      "equal_RMSE": 1.9765418839055648,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 2.3117106941598626,
+      "prop_gain": -0.1522220035537034,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.45,
+      "prop_RMSE": 1.9260953372670058,
+      "equal_RMSE": 1.9658080295815192,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 2.054853950364323,
+      "prop_gain": -0.1659050664805377,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.5,
+      "prop_RMSE": 1.913697806930198,
+      "equal_RMSE": 1.9559360538846946,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.8493685553278905,
+      "prop_gain": -0.1783025968173455,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.55,
+      "prop_RMSE": 1.9026109391785324,
+      "equal_RMSE": 1.9469356990108662,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.6812441412071726,
+      "prop_gain": -0.18938946456901107,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.6,
+      "prop_RMSE": 1.8928577646349465,
+      "equal_RMSE": 1.938813858550219,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.541140462773242,
+      "prop_gain": -0.199142639112597,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.65,
+      "prop_RMSE": 1.8844589913342278,
+      "equal_RMSE": 1.9315766296519996,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.4225911964060696,
+      "prop_gain": -0.2075414124133157,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.7,
+      "prop_RMSE": 1.877432796274382,
+      "equal_RMSE": 1.9252243687131583,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.3209775395199217,
+      "prop_gain": -0.2145676074731615,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.75,
+      "prop_RMSE": 1.8717946363470257,
+      "equal_RMSE": 1.9197557017683176,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.2329123702185936,
+      "prop_gain": -0.22020576740051778,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.8,
+      "prop_RMSE": 1.8675570830400243,
+      "equal_RMSE": 1.9151704265384177,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.155855347079931,
+      "prop_gain": -0.22444332070751916,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.85,
+      "prop_RMSE": 1.864729684912281,
+      "equal_RMSE": 1.9114637847777367,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.0878638560752296,
+      "prop_gain": -0.2272707188352625,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.9,
+      "prop_RMSE": 1.8633188612789184,
+      "equal_RMSE": 1.908635020447588,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 1.0274269751821614,
+      "prop_gain": -0.22868154246862504,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 0.95,
+      "prop_RMSE": 1.8633278298321787,
+      "equal_RMSE": 1.9066768458302719,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 0.9733518712252054,
+      "prop_gain": -0.22867257391536477,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L10_item",
+      "lambda": 1.0,
+      "prop_RMSE": 1.8647565700865751,
+      "equal_RMSE": 1.9055809750221346,
+      "shrunk_RMSE": 1.863145768421421,
+      "alpha_star": 0.9246842776639452,
+      "prop_gain": -0.22724383366096834,
+      "shrunk_gain": -0.2288546353261225
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.0,
+      "prop_RMSE": 2.0920004037475435,
+      "equal_RMSE": 2.0920004037475435,
+      "shrunk_RMSE": 2.0920004037475435,
+      "alpha_star": 0.0,
+      "prop_gain": 0.0,
+      "shrunk_gain": 0.0
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.05,
+      "prop_RMSE": 2.047333571670974,
+      "equal_RMSE": 2.0545817718927375,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 19.94197056920183,
+      "prop_gain": -0.044666832076569296,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.1,
+      "prop_RMSE": 2.0040443370125853,
+      "equal_RMSE": 2.0184408015838478,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 9.970985284600912,
+      "prop_gain": -0.08795606673495815,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.15,
+      "prop_RMSE": 1.9622238767132152,
+      "equal_RMSE": 1.9836470426182224,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 6.647323523067277,
+      "prop_gain": -0.1297765270343283,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.2,
+      "prop_RMSE": 1.9219680711668194,
+      "equal_RMSE": 1.950264888719003,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 4.985492642300457,
+      "prop_gain": -0.17003233258072403,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.25,
+      "prop_RMSE": 1.883377253084472,
+      "equal_RMSE": 1.9183705263773163,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 3.988394113840365,
+      "prop_gain": -0.20862315066307158,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.3,
+      "prop_RMSE": 1.8465558141841685,
+      "equal_RMSE": 1.8880321035005734,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 3.3236617615336383,
+      "prop_gain": -0.245444589563375,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.35,
+      "prop_RMSE": 1.8116116468406647,
+      "equal_RMSE": 1.8593093600503476,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 2.8488529384574037,
+      "prop_gain": -0.2803887569068788,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.4,
+      "prop_RMSE": 1.7786553993537288,
+      "equal_RMSE": 1.8322641789183358,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 2.4927463211502285,
+      "prop_gain": -0.31334500439381463,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.45,
+      "prop_RMSE": 1.747799527103049,
+      "equal_RMSE": 1.8069793329630892,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 2.215774507689092,
+      "prop_gain": -0.3442008766444944,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.5,
+      "prop_RMSE": 1.719157128026159,
+      "equal_RMSE": 1.783506763994323,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.994197056920183,
+      "prop_gain": -0.3728432757213844,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.55,
+      "prop_RMSE": 1.6928405599331264,
+      "equal_RMSE": 1.7619094607092416,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.8129064153819845,
+      "prop_gain": -0.39915984381441705,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.6,
+      "prop_RMSE": 1.6689598492702848,
+      "equal_RMSE": 1.742249781394495,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.6618308807668192,
+      "prop_gain": -0.42304055447725863,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.65,
+      "prop_RMSE": 1.6476209158079789,
+      "equal_RMSE": 1.7245790237264536,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.5339977360924482,
+      "prop_gain": -0.4443794879395646,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.7,
+      "prop_RMSE": 1.62892365461049,
+      "equal_RMSE": 1.7089216186565424,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.4244264692287023,
+      "prop_gain": -0.46307674913705354,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.75,
+      "prop_RMSE": 1.612959934251718,
+      "equal_RMSE": 1.695330779691243,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.3294647046134553,
+      "prop_gain": -0.47904046949582546,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.8,
+      "prop_RMSE": 1.5998115867385947,
+      "equal_RMSE": 1.6838284464613673,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.2463731605751143,
+      "prop_gain": -0.4921888170089488,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.85,
+      "prop_RMSE": 1.5895484777869637,
+      "equal_RMSE": 1.6744368593463048,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.1730570923059902,
+      "prop_gain": -0.5024519259605797,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.9,
+      "prop_RMSE": 1.5822267536660755,
+      "equal_RMSE": 1.667145212763914,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.107887253844546,
+      "prop_gain": -0.509773650081468,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 0.95,
+      "prop_RMSE": 1.5778873608114625,
+      "equal_RMSE": 1.661976303042318,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 1.049577398379044,
+      "prop_gain": -0.514113042936081,
+      "shrunk_gain": -0.5154505562819343
+    },
+    {
+      "level": "L11_item_state",
+      "lambda": 1.0,
+      "prop_RMSE": 1.5765549255926603,
+      "equal_RMSE": 1.658925548637198,
+      "shrunk_RMSE": 1.5765498474656092,
+      "alpha_star": 0.9970985284600915,
+      "prop_gain": -0.5154454781548832,
+      "shrunk_gain": -0.5154505562819343
+    }
+  ]
+}

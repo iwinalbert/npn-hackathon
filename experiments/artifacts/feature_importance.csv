@@ -1,0 +1,33 @@
+feature,gain,gain_pct,splits,meaning
+rolling_mean_28,179650763.9443817,74.06249008484603,1316,average daily sales over the last 28 days before the forecast
+rolling_mean_7,25207330.91918564,10.391927400017071,803,average daily sales over the last 7 days before the forecast
+item_id,19607761.440460205,8.083459292829383,31282,which product this is
+rolling_std_28,3766339.4284591675,1.5527040934976515,654,how much daily sales bounced around over the last 28 days
+days_since_last_sale,1813948.1132202148,0.7478148781565411,1706,number of days since this item last recorded any sale
+month,1371455.700908661,0.5653937785747435,2469,calendar month
+price_rel_to_recent_avg,1360092.7636108398,0.5607093151609662,884,current price divided by the product's own recent average price
+is_weekend,1276119.205570221,0.5260905321776775,343,flag: Saturday or Sunday
+dept_id,1191723.1708869934,0.4912975797588278,849,which department the product belongs to
+store_id,983883.1998062134,0.4056138595261071,1725,which of the 10 stores
+sell_price,838354.947681427,0.34561865275151304,862,the price of this product in this store on the forecast day
+wday,831469.1715583801,0.3427799354833944,851,day of the week (1 = Saturday in this dataset)
+horizon,821178.1859359741,0.33853739287523327,1202,how many days ahead this particular prediction is (1 to 28)
+recent_avg_price,770039.5676307678,0.3174550811275658,590,this product's own average price over the weeks before the forecast
+event_name_1,748168.4359207153,0.30843852901358976,879,"which named holiday/event falls on this day, if any"
+days_since_first_listing,401177.92113494873,0.16538886422723442,738,days since this product first had a price on record in this store
+lag_1,389800.3818511963,0.16069838102587303,391,sales on the forecast origin day (the last day we know about)
+snap,319906.3713684082,0.13188400615366697,348,whether SNAP food-assistance benefits were usable in this store's state that day
+days_since_first_sale,264707.6833114624,0.10912789759528801,545,"how long this item has been selling at all, in days"
+zero_streak_length,213715.89937210083,0.08810611951041011,244,length of the current run of zero-sales days (same number as days_since_last_sale at a fixed origin)
+cat_id,161169.24000549316,0.06644333137144061,167,which category (FOODS / HOBBIES / HOUSEHOLD)
+lag_28,127694.29253768921,0.05264301173743936,372,sales 28 days before the first forecast day
+lag_14,103463.23558425903,0.04265356122825947,396,sales 14 days before the first forecast day
+rolling_std_7,101736.14121627808,0.041941552513708256,453,how much daily sales bounced around over the last 7 days
+state_id,90750.0789527893,0.037412458901208846,245,which of the 3 states (CA / TX / WI)
+lag_7,70646.65481185913,0.029124658624611926,298,sales 7 days before the first forecast day
+year,35508.480503082275,0.014638660184053862,143,calendar year
+pre_listing,28074.124801635742,0.011573786518411865,21,flag: this product had no price on record yet on the forecast day
+price_is_missing,12085.407043457031,0.004982307448491966,7,flag: no price on record for this product-week
+event_type_1,7400.695960998535,0.003050997163597397,17,"the broad type of that event (Sporting, Cultural, National, Religious)"
+event_name_2,0.0,0.0,0,"a second simultaneous event, which is rare"
+event_type_2,0.0,0.0,0,the type of that second event

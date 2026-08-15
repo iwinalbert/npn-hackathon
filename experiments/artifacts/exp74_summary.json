@@ -1,0 +1,43 @@
+{
+  "reproduction": {
+    "expected": 2.1163,
+    "measured": 2.1163241923762475,
+    "drift": 2.4192376247622605e-05,
+    "reproduced": true,
+    "MAE": 1.0298548416969369
+  },
+  "extension_primary": {
+    "shape_RMSE": 2.1163241923762475,
+    "extended_RMSE": 2.1156930820206945,
+    "delta": -0.0006311103555529662,
+    "extended_MAE": 1.0286892499701086
+  },
+  "extension_windows": [
+    {
+      "window": "christmas_2015",
+      "shape_RMSE": 2.1837100596749135,
+      "extended_RMSE": 2.1842811759135086,
+      "delta": 0.0005711162385950708
+    },
+    {
+      "window": "summer_2015",
+      "shape_RMSE": 2.121421822284975,
+      "extended_RMSE": 2.1179516249282266,
+      "delta": -0.0034701973567483613
+    },
+    {
+      "window": "autumn_2015",
+      "shape_RMSE": 2.1747001458282975,
+      "extended_RMSE": 2.1511917148469837,
+      "delta": -0.023508430981313833
+    }
+  ],
+  "extension_wins": 2,
+  "extension_accepted": true,
+  "final": {
+    "label": "shape + cycle (6 new features)",
+    "RMSE": 2.1156930820206945,
+    "MAE": 1.0286892499701086,
+    "n_features": 38
+  }
+}

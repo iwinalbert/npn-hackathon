@@ -1,0 +1,52 @@
+{
+  "champion": {
+    "RMSE": 2.121042941194765,
+    "MAE": 1.0319268155496617
+  },
+  "with_yoy": {
+    "RMSE": 2.1564051303020277,
+    "MAE": 1.0344184011917859,
+    "WAPE": 0.716942269351476,
+    "bias": -0.07080366372095852,
+    "n": 853720,
+    "high_volume_RMSE": 6.135061124007249,
+    "high_volume_MAE": 3.6775734067475354,
+    "high_volume_bias": -0.37575982875358177,
+    "high_volume_share_of_sq_error_pct": 62.55,
+    "mean_pred_on_zero_actual": 0.58468,
+    "mean_pred_on_positive_actual": 2.31263,
+    "pred_mean": 1.37202,
+    "pred_p50": 0.60965,
+    "pred_p99": 12.34502,
+    "pred_max": 151.5766,
+    "pct_predictions_below_0_5": 43.66
+  },
+  "delta": {
+    "RMSE": 0.035362189107262854,
+    "MAE": 0.00249158564212415
+  },
+  "new_feature_gain_share_pct": 2.555277224755632,
+  "new_feature_importance": [
+    {
+      "feature": "rolling_mean_7_lag364",
+      "gain": 3585140.170097351,
+      "pct": 1.474942306539056
+    },
+    {
+      "feature": "rolling_mean_28_lag364",
+      "gain": 1737424.734079361,
+      "pct": 0.7147841153032053
+    },
+    {
+      "feature": "lag_364",
+      "gain": 639193.6927375793,
+      "pct": 0.26296707374372524
+    },
+    {
+      "feature": "yoy_level_ratio",
+      "gain": 249350.12482452393,
+      "pct": 0.10258372916964588
+    }
+  ],
+  "decision": "REJECT"
+}

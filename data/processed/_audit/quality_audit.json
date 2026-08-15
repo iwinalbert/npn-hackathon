@@ -1,0 +1,179 @@
+{
+  "calendar": {
+    "n_rows": 1969,
+    "n_cols": 14,
+    "columns": [
+      "date",
+      "wm_yr_wk",
+      "weekday",
+      "wday",
+      "month",
+      "year",
+      "d",
+      "event_name_1",
+      "event_type_1",
+      "event_name_2",
+      "event_type_2",
+      "snap_CA",
+      "snap_TX",
+      "snap_WI"
+    ],
+    "min_date": "2011-01-29",
+    "max_date": "2016-06-19",
+    "n_unique_dates": 1969,
+    "duplicate_dates": 0,
+    "n_unique_d": 1969,
+    "duplicate_d": 0,
+    "d_first": "d_1",
+    "d_last": "d_1969",
+    "missing_by_col": {
+      "date": 0,
+      "wm_yr_wk": 0,
+      "weekday": 0,
+      "wday": 0,
+      "month": 0,
+      "year": 0,
+      "d": 0,
+      "event_name_1": 1807,
+      "event_type_1": 1807,
+      "event_name_2": 1964,
+      "event_type_2": 1964,
+      "snap_CA": 0,
+      "snap_TX": 0,
+      "snap_WI": 0
+    },
+    "event_type_1_values": [
+      "Cultural",
+      "National",
+      "Religious",
+      "Sporting"
+    ],
+    "event_type_2_values": [
+      "Cultural",
+      "Religious"
+    ],
+    "snap_CA_values": [
+      0,
+      1
+    ],
+    "snap_TX_values": [
+      0,
+      1
+    ],
+    "snap_WI_values": [
+      0,
+      1
+    ],
+    "expected_days_in_range": 1969,
+    "missing_dates_in_range": 0,
+    "event1_name_type_mismatch": 0,
+    "event2_name_type_mismatch": 0
+  },
+  "sell_prices": {
+    "n_rows": 6841121,
+    "n_cols": 4,
+    "columns": [
+      "store_id",
+      "item_id",
+      "wm_yr_wk",
+      "sell_price"
+    ],
+    "missing_by_col": {
+      "store_id": 0,
+      "item_id": 0,
+      "wm_yr_wk": 0,
+      "sell_price": 0
+    },
+    "n_negative_price": 0,
+    "n_zero_price": 0,
+    "price_min": 0.01,
+    "price_max": 107.32,
+    "price_mean": 4.410952389235624,
+    "duplicate_store_item_week": 0,
+    "n_unique_store_id": 10,
+    "n_unique_item_id": 3049,
+    "n_unique_store_item_pairs": 30490,
+    "wm_yr_wk_min": 11101,
+    "wm_yr_wk_max": 11621
+  },
+  "sales": {
+    "validation_shape": [
+      30490,
+      1919
+    ],
+    "evaluation_shape": [
+      30490,
+      1947
+    ],
+    "validation_n_d_cols": 1913,
+    "evaluation_n_d_cols": 1941,
+    "validation_d_range": [
+      "d_1",
+      "d_1913"
+    ],
+    "evaluation_d_range": [
+      "d_1",
+      "d_1941"
+    ],
+    "n_unique_item_id": 3049,
+    "n_unique_store_id": 10,
+    "n_unique_dept_id": 7,
+    "n_unique_cat_id": 3,
+    "n_unique_state_id": 3,
+    "n_item_store_combinations": 30490,
+    "duplicate_id_rows_eval": 0,
+    "duplicate_id_rows_val": 0,
+    "missing_id_col_values_eval": 0,
+    "missing_sales_values_eval": 0,
+    "missing_sales_values_val": 0,
+    "n_negative_sales_eval": 0,
+    "n_non_numeric_check_eval": 0,
+    "eval_is_superset_of_val_on_shared_days": true,
+    "val_ids_subset_of_eval_ids": false,
+    "flat_stats_eval": {
+      "count": 59181090,
+      "mean": 1.1308878055473464,
+      "std": 3.8700380872055162,
+      "min": 0.0,
+      "max": 763.0,
+      "pct_zero": 67.99776584040612,
+      "n_zero": 40241819
+    }
+  },
+  "relationships": {
+    "all_eval_d_cols_in_calendar": true,
+    "n_eval_d_cols_missing_from_calendar": 0,
+    "store_ids_sales": [
+      "CA_1",
+      "CA_2",
+      "CA_3",
+      "CA_4",
+      "TX_1",
+      "TX_2",
+      "TX_3",
+      "WI_1",
+      "WI_2",
+      "WI_3"
+    ],
+    "store_ids_prices": [
+      "CA_1",
+      "CA_2",
+      "CA_3",
+      "CA_4",
+      "TX_1",
+      "TX_2",
+      "TX_3",
+      "WI_1",
+      "WI_2",
+      "WI_3"
+    ],
+    "store_ids_match": true,
+    "n_items_sales_not_in_prices": 0,
+    "n_items_prices_not_in_sales": 0,
+    "n_sales_weeks_not_covered_by_any_price_row": 0,
+    "sales_wm_yr_wk_min": 11101,
+    "sales_wm_yr_wk_max": 11617,
+    "price_wm_yr_wk_min": 11101,
+    "price_wm_yr_wk_max": 11621
+  }
+}

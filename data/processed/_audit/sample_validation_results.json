@@ -1,0 +1,94 @@
+{
+  "csv_rows": 50000,
+  "csv_columns": [
+    "id",
+    "item_id",
+    "dept_id",
+    "cat_id",
+    "store_id",
+    "state_id",
+    "d",
+    "date",
+    "wm_yr_wk",
+    "weekday",
+    "wday",
+    "month",
+    "year",
+    "event_name_1",
+    "event_type_1",
+    "event_name_2",
+    "event_type_2",
+    "snap_CA",
+    "snap_TX",
+    "snap_WI",
+    "sell_price",
+    "sales"
+  ],
+  "csv_n_columns": 22,
+  "approx_50000": true,
+  "parquet_columns": [
+    "id",
+    "item_id",
+    "dept_id",
+    "cat_id",
+    "store_id",
+    "state_id",
+    "d",
+    "date",
+    "wm_yr_wk",
+    "weekday",
+    "wday",
+    "month",
+    "year",
+    "event_name_1",
+    "event_type_1",
+    "event_name_2",
+    "event_type_2",
+    "snap_CA",
+    "snap_TX",
+    "snap_WI",
+    "sell_price",
+    "sales"
+  ],
+  "columns_match_order": true,
+  "n_spot_checked": 200,
+  "n_mismatches": 0,
+  "mismatches": [],
+  "all_sampled_rows_match_parquet": true,
+  "duplicate_id_d_in_csv": 0,
+  "n_big_check": 2000,
+  "n_big_check_found_in_parquet": 2000,
+  "n_big_check_sales_match": 2000,
+  "big_check_all_found_and_match": true,
+  "raw_checksum_verification": {
+    "calendar.csv": {
+      "expected": "3ffeab2991b0c8e861d008b39ea4c95c",
+      "actual": "3ffeab2991b0c8e861d008b39ea4c95c",
+      "match": true
+    },
+    "sales_train_evaluation.csv": {
+      "expected": "b806dfc9f30a745102b708c09951f6aa",
+      "actual": "b806dfc9f30a745102b708c09951f6aa",
+      "match": true
+    },
+    "sales_train_validation.csv": {
+      "expected": "26a366a25beb57b0a8f4c7b148758f94",
+      "actual": "26a366a25beb57b0a8f4c7b148758f94",
+      "match": true
+    },
+    "sample_submission.csv": {
+      "expected": "c281a69d7c011274899d92020a66e25b",
+      "actual": "c281a69d7c011274899d92020a66e25b",
+      "match": true
+    },
+    "sell_prices.csv": {
+      "expected": "08c591caa99e55daf3e0ccac913f7c85",
+      "actual": "08c591caa99e55daf3e0ccac913f7c85",
+      "match": true
+    }
+  },
+  "raw_dataset_untouched": true,
+  "parquet_checksum_expected": "faa70ced1dddd2a84801a748b1149986",
+  "parquet_checksum_actual": "faa70ced1dddd2a84801a748b1149986",
+  "parquet_untouched": true
+}

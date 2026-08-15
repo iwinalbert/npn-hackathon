@@ -1,0 +1,398 @@
+{
+  "mean_sales_event_day": 1.083303095847985,
+  "mean_sales_non_event_day": 1.1351045100523935,
+  "event_vs_nonevent_pct_diff": -4.563581039953538,
+  "n_event_day_rows": 4817420,
+  "n_distinct_event_dates": 158,
+  "mean_sales_by_event_type_1": {
+    "Cultural": 1.1386879171726663,
+    "National": 0.9661695573604975,
+    "Religious": 1.1290994011394142,
+    "Sporting": 1.1740263201049523
+  },
+  "mean_sales_non_event_baseline": 1.1351045100523935,
+  "event_effect_by_category": [
+    {
+      "cat_id": "FOODS",
+      "non_event_mean": 1.6507866570966574,
+      "event_mean": 1.5972313980426873,
+      "pct_diff": -3.244226552458395
+    },
+    {
+      "cat_id": "HOUSEHOLD",
+      "non_event_mean": 0.7305980658891869,
+      "event_mean": 0.680230435360826,
+      "pct_diff": -6.894027356486376
+    },
+    {
+      "cat_id": "HOBBIES",
+      "non_event_mean": 0.573127521974995,
+      "event_mean": 0.5231298308502297,
+      "pct_diff": -8.723659082445288
+    }
+  ],
+  "event_effect_by_department": [
+    {
+      "dept_id": "FOODS_3",
+      "non_event_mean": 2.06607060471893,
+      "event_mean": 2.0143162557484966,
+      "pct_diff": -2.504965166835332
+    },
+    {
+      "dept_id": "FOODS_1",
+      "non_event_mean": 1.241263943416215,
+      "event_mean": 1.2011984294421003,
+      "pct_diff": -3.2277997106599297
+    },
+    {
+      "dept_id": "HOUSEHOLD_2",
+      "non_event_mean": 0.30554623221471394,
+      "event_mean": 0.2895096472901561,
+      "pct_diff": -5.248497030488199
+    },
+    {
+      "dept_id": "FOODS_2",
+      "non_event_mean": 1.0142997657947619,
+      "event_mean": 0.9496994466000891,
+      "pct_diff": -6.368957321414221
+    },
+    {
+      "dept_id": "HOUSEHOLD_1",
+      "non_event_mean": 1.1420674161567688,
+      "event_mean": 1.058465784714952,
+      "pct_diff": -7.3202010896299905
+    },
+    {
+      "dept_id": "HOBBIES_2",
+      "non_event_mean": 0.18854618752046734,
+      "event_mean": 0.17303967377453064,
+      "pct_diff": -8.22425207842159
+    },
+    {
+      "dept_id": "HOBBIES_1",
+      "non_event_mean": 0.7108742018637559,
+      "event_mean": 0.6485226996105161,
+      "pct_diff": -8.771102128867229
+    }
+  ],
+  "event_effect_by_store": [
+    {
+      "store_id": "TX_1",
+      "non_event_mean": 0.9614667295272744,
+      "event_mean": 0.9671919824304296,
+      "pct_diff": 0.59547072481334
+    },
+    {
+      "store_id": "TX_2",
+      "non_event_mean": 1.2398009553071012,
+      "event_mean": 1.2239518248357004,
+      "pct_diff": -1.2783608855564186
+    },
+    {
+      "store_id": "TX_3",
+      "non_event_mean": 1.051325269246907,
+      "event_mean": 1.018283645602833,
+      "pct_diff": -3.1428545104544714
+    },
+    {
+      "store_id": "CA_2",
+      "non_event_mean": 0.9860978848558237,
+      "event_mean": 0.9498964175845162,
+      "pct_diff": -3.6711839491066907
+    },
+    {
+      "store_id": "CA_3",
+      "non_event_mean": 1.9268467342252649,
+      "event_mean": 1.8443357647869607,
+      "pct_diff": -4.282176053378718
+    },
+    {
+      "store_id": "WI_3",
+      "non_event_mean": 1.1101211526006247,
+      "event_mean": 1.0535328038659697,
+      "pct_diff": -5.097493062094021
+    },
+    {
+      "store_id": "CA_4",
+      "non_event_mean": 0.7099364336513705,
+      "event_mean": 0.6706058429615852,
+      "pct_diff": -5.540015813457943
+    },
+    {
+      "store_id": "CA_1",
+      "non_event_mean": 1.3297303143809092,
+      "event_mean": 1.252425572194245,
+      "pct_diff": -5.813565453883437
+    },
+    {
+      "store_id": "WI_1",
+      "non_event_mean": 0.895471920861855,
+      "event_mean": 0.8166030779961058,
+      "pct_diff": -8.807517134634574
+    },
+    {
+      "store_id": "WI_2",
+      "non_event_mean": 1.1402477058668041,
+      "event_mean": 1.0362040262215044,
+      "pct_diff": -9.124655906780081
+    }
+  ],
+  "event_name_aggregated_lift_top10_positive": [
+    {
+      "event_name": "LaborDay",
+      "n_occurrences": 5,
+      "mean_pct_lift": 27.495236490075747
+    },
+    {
+      "event_name": "ColumbusDay",
+      "n_occurrences": 5,
+      "mean_pct_lift": 9.577787556056148
+    },
+    {
+      "event_name": "VeteransDay",
+      "n_occurrences": 5,
+      "mean_pct_lift": 8.797521348167594
+    },
+    {
+      "event_name": "Cinco De Mayo",
+      "n_occurrences": 5,
+      "mean_pct_lift": 7.124224619135839
+    },
+    {
+      "event_name": "LentStart",
+      "n_occurrences": 6,
+      "mean_pct_lift": 5.978293822469385
+    },
+    {
+      "event_name": "NBAFinalsStart",
+      "n_occurrences": 5,
+      "mean_pct_lift": 5.94837749243122
+    },
+    {
+      "event_name": "PresidentsDay",
+      "n_occurrences": 6,
+      "mean_pct_lift": 5.7740095420971445
+    },
+    {
+      "event_name": "OrthodoxChristmas",
+      "n_occurrences": 5,
+      "mean_pct_lift": 3.041569081279353
+    },
+    {
+      "event_name": "Chanukah End",
+      "n_occurrences": 5,
+      "mean_pct_lift": 2.4404504852018816
+    },
+    {
+      "event_name": "MartinLutherKingDay",
+      "n_occurrences": 5,
+      "mean_pct_lift": 2.0426303866063753
+    }
+  ],
+  "event_name_aggregated_lift_top10_negative": [
+    {
+      "event_name": "MemorialDay",
+      "n_occurrences": 5,
+      "mean_pct_lift": -3.2839599513668047
+    },
+    {
+      "event_name": "StPatricksDay",
+      "n_occurrences": 6,
+      "mean_pct_lift": -3.70482822961448
+    },
+    {
+      "event_name": "ValentinesDay",
+      "n_occurrences": 6,
+      "mean_pct_lift": -4.009561318941365
+    },
+    {
+      "event_name": "Father's day",
+      "n_occurrences": 4,
+      "mean_pct_lift": -8.556979175206571
+    },
+    {
+      "event_name": "Halloween",
+      "n_occurrences": 5,
+      "mean_pct_lift": -10.034387126020778
+    },
+    {
+      "event_name": "Easter",
+      "n_occurrences": 5,
+      "mean_pct_lift": -11.436779867769733
+    },
+    {
+      "event_name": "Mother's day",
+      "n_occurrences": 6,
+      "mean_pct_lift": -12.520357691155837
+    },
+    {
+      "event_name": "NewYear",
+      "n_occurrences": 5,
+      "mean_pct_lift": -20.411848572900986
+    },
+    {
+      "event_name": "Thanksgiving",
+      "n_occurrences": 5,
+      "mean_pct_lift": -29.937438831646745
+    },
+    {
+      "event_name": "Christmas",
+      "n_occurrences": 5,
+      "mean_pct_lift": -99.95223373647384
+    }
+  ],
+  "mean_sales_snap_day": 1.2233387483601181,
+  "mean_sales_non_snap_day": 1.0854084793366054,
+  "snap_vs_nonsnap_pct_diff": 12.707683019743385,
+  "pct_of_days_that_are_snap_days_per_state": {
+    "CA": 32.97269448737764,
+    "TX": 32.97269448737764,
+    "WI": 32.97269448737764
+  },
+  "snap_effect_by_state": [
+    {
+      "state_id": "WI",
+      "non_snap_mean": 0.9721770480898422,
+      "snap_mean": 1.1842858314201377,
+      "pct_diff": 21.8179171938951
+    },
+    {
+      "state_id": "TX",
+      "non_snap_mean": 1.0433864944147797,
+      "snap_mean": 1.1636069203017383,
+      "pct_diff": 11.522137437133347
+    },
+    {
+      "state_id": "CA",
+      "non_snap_mean": 1.2018485414630469,
+      "snap_mean": 1.2974273071088882,
+      "pct_diff": 7.952646473197894
+    }
+  ],
+  "snap_effect_by_category": [
+    {
+      "cat_id": "FOODS",
+      "non_snap_mean": 1.5578135121155665,
+      "snap_mean": 1.8265621737995825,
+      "pct_diff": 17.251658147389268
+    },
+    {
+      "cat_id": "HOUSEHOLD",
+      "non_snap_mean": 0.7181503171096806,
+      "snap_mean": 0.7434674964183381,
+      "pct_diff": 3.5253314947420553
+    },
+    {
+      "cat_id": "HOBBIES",
+      "non_snap_mean": 0.5644762027847877,
+      "snap_mean": 0.5783708517699115,
+      "pct_diff": 2.4615119143333133
+    }
+  ],
+  "snap_effect_by_department": [
+    {
+      "dept_id": "FOODS_2",
+      "non_snap_mean": 0.9120375126980019,
+      "snap_mean": 1.2062315483668342,
+      "pct_diff": 32.25679114870434
+    },
+    {
+      "dept_id": "FOODS_3",
+      "non_snap_mean": 1.9607695921354076,
+      "snap_mean": 2.267350964459295,
+      "pct_diff": 15.635767382030854
+    },
+    {
+      "dept_id": "FOODS_1",
+      "non_snap_mean": 1.2123782987445555,
+      "snap_mean": 1.290091869212963,
+      "pct_diff": 6.410010023181846
+    },
+    {
+      "dept_id": "HOUSEHOLD_1",
+      "non_snap_mean": 1.121052487097837,
+      "snap_mean": 1.1641476738721805,
+      "pct_diff": 3.844172085636043
+    },
+    {
+      "dept_id": "HOBBIES_1",
+      "non_snap_mean": 0.699814861349258,
+      "snap_mean": 0.7179627403846154,
+      "pct_diff": 2.593240017848138
+    },
+    {
+      "dept_id": "HOUSEHOLD_2",
+      "non_snap_mean": 0.3019484638403618,
+      "snap_mean": 0.3089007888349515,
+      "pct_diff": 2.302487287454904
+    },
+    {
+      "dept_id": "HOBBIES_2",
+      "non_snap_mean": 0.18661793457794468,
+      "snap_mean": 0.18863779362416108,
+      "pct_diff": 1.0823499096078413
+    }
+  ],
+  "snap_effect_by_store": [
+    {
+      "store_id": "WI_2",
+      "non_snap_mean": 1.0210535125867555,
+      "snap_mean": 1.3568613684814694,
+      "pct_diff": 32.8883698802399
+    },
+    {
+      "store_id": "WI_3",
+      "non_snap_mean": 1.0207414182243444,
+      "snap_mean": 1.2778431452935388,
+      "pct_diff": 25.18774319126209
+    },
+    {
+      "store_id": "TX_1",
+      "non_snap_mean": 0.9231859641232657,
+      "snap_mean": 1.0406977697605773,
+      "pct_diff": 12.728941968795048
+    },
+    {
+      "store_id": "TX_3",
+      "non_snap_mean": 1.0093517386655924,
+      "snap_mean": 1.1284924360446047,
+      "pct_diff": 11.803684762709342
+    },
+    {
+      "store_id": "CA_3",
+      "non_snap_mean": 1.8538833689754506,
+      "snap_mean": 2.0547976795670713,
+      "pct_diff": 10.837483843584835
+    },
+    {
+      "store_id": "TX_2",
+      "non_snap_mean": 1.1976217804554814,
+      "snap_mean": 1.3216305551000327,
+      "pct_diff": 10.354585785621575
+    },
+    {
+      "store_id": "CA_1",
+      "non_snap_mean": 1.2819129720584792,
+      "snap_mean": 1.4078493973433912,
+      "pct_diff": 9.824101013868743
+    },
+    {
+      "store_id": "WI_1",
+      "non_snap_mean": 0.8747362134584266,
+      "snap_mean": 0.9181529804854051,
+      "pct_diff": 4.963412553291068
+    },
+    {
+      "store_id": "CA_4",
+      "non_snap_mean": 0.6960637035516994,
+      "snap_mean": 0.7284273532305674,
+      "pct_diff": 4.649524104436251
+    },
+    {
+      "store_id": "CA_2",
+      "non_snap_mean": 0.9755341212665586,
+      "snap_mean": 0.9986347982945228,
+      "pct_diff": 2.3680029764588975
+    }
+  ]
+}

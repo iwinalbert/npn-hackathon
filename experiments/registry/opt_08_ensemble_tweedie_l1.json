@@ -1,0 +1,114 @@
+{
+  "experiment_name": "opt_08_ensemble_tweedie_l1",
+  "started_at": "2026-08-14T18:00:00",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Phase 8. Blend weight selected on the inner window d_1886..d_1913 and applied once here, so the primary window remains unbiased."
+  ],
+  "model_type": "weighted ensemble",
+  "objective": "0.80*tweedie + 0.20*L1",
+  "feature_set_label": "Ensemble of two objectives, 32 features",
+  "n_features": 32,
+  "validation_origin_day": "d_1913",
+  "validation_days": "d_1914 .. d_1941",
+  "validation_dates": "2016-04-25 .. 2016-05-22",
+  "horizon": 28,
+  "n_series": 30490,
+  "validation_rows": 853720,
+  "training_origins": [
+    "d_1493",
+    "d_1521",
+    "d_1549",
+    "d_1577",
+    "d_1605",
+    "d_1633",
+    "d_1661",
+    "d_1689",
+    "d_1717",
+    "d_1745",
+    "d_1773",
+    "d_1801",
+    "d_1829",
+    "d_1857",
+    "d_1885"
+  ],
+  "metrics": {
+    "RMSE": 2.1272078099013494,
+    "MAE": 1.0127803597034157,
+    "WAPE": 0.7019452173354637,
+    "bias": -0.15140046745771446,
+    "n": 853720,
+    "high_volume_RMSE": 5.992547097868836,
+    "high_volume_bias": -0.5738286456463739
+  },
+  "ensemble_weight_tweedie": 0.8,
+  "training_seconds": 0,
+  "weight_grid": [
+    {
+      "w_tweedie": 0.0,
+      "inner_RMSE": 2.1825653608159956,
+      "inner_MAE": 0.9293262265242864
+    },
+    {
+      "w_tweedie": 0.1,
+      "inner_RMSE": 2.157924954352084,
+      "inner_MAE": 0.9346689748643293
+    },
+    {
+      "w_tweedie": 0.2,
+      "inner_RMSE": 2.1365061206663585,
+      "inner_MAE": 0.940929836899811
+    },
+    {
+      "w_tweedie": 0.3,
+      "inner_RMSE": 2.118406580267812,
+      "inner_MAE": 0.9479641790087182
+    },
+    {
+      "w_tweedie": 0.4,
+      "inner_RMSE": 2.1037120087233663,
+      "inner_MAE": 0.9556922136958256
+    },
+    {
+      "w_tweedie": 0.5,
+      "inner_RMSE": 2.092494141597443,
+      "inner_MAE": 0.9641403501201922
+    },
+    {
+      "w_tweedie": 0.6,
+      "inner_RMSE": 2.0848091016301993,
+      "inner_MAE": 0.9732814940337232
+    },
+    {
+      "w_tweedie": 0.7,
+      "inner_RMSE": 2.08069603462601,
+      "inner_MAE": 0.9831382787251071
+    },
+    {
+      "w_tweedie": 0.8,
+      "inner_RMSE": 2.0801761289430445,
+      "inner_MAE": 0.9937390954703182
+    },
+    {
+      "w_tweedie": 0.9,
+      "inner_RMSE": 2.0832520747591534,
+      "inner_MAE": 1.0051029904193605
+    },
+    {
+      "w_tweedie": 1.0,
+      "inner_RMSE": 2.0899079949126826,
+      "inner_MAE": 1.0172919644639211
+    }
+  ],
+  "delta_rmse_vs_best": 0.006165,
+  "delta_mae_vs_best": -0.019146,
+  "finished_at": "2026-08-14T18:00:00",
+  "wall_seconds": 0.0
+}

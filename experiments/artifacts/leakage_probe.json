@@ -1,0 +1,28 @@
+{
+  "leaky_probe": {
+    "RMSE": 1.916503698257834,
+    "MAE": 0.9754164787706155,
+    "WAPE": 0.6760487855271382
+  },
+  "leaky_features": [
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "rolling_mean_7",
+    "rolling_mean_28",
+    "rolling_mean_56",
+    "rolling_std_7",
+    "rolling_std_28",
+    "rolling_max_28",
+    "rolling_min_28"
+  ],
+  "our_best": {
+    "RMSE": 2.121,
+    "MAE": 1.0319
+  },
+  "team_reported": {
+    "RMSE": 2.0324,
+    "MAE": 1.0869
+  },
+  "interpretation_rules": "If the leaky probe lands at or below the team's reported RMSE, then a per-target-day lag leak is a sufficient explanation for a score we cannot otherwise reproduce. If the probe is still well above their figure, leakage of this particular kind does NOT explain the gap and another cause must be sought."
+}

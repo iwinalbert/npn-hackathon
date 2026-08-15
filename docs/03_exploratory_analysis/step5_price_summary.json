@@ -1,0 +1,20 @@
+{
+  "n_rows": 6841121,
+  "n_unique_store_id": 10,
+  "n_unique_item_id": 3049,
+  "n_unique_store_item_pairs": 30490,
+  "sales_store_item_pairs": 30490,
+  "wm_yr_wk_min": 11101,
+  "wm_yr_wk_max": 11621,
+  "price_min": 0.009999999776482582,
+  "price_max": 107.31999969482422,
+  "price_mean": 4.410952568054199,
+  "n_missing": 0,
+  "n_price_le_0": 0,
+  "pairs_with_single_price": 8247,
+  "cal_wm_yr_wk_min": 11101,
+  "cal_wm_yr_wk_max": 11621,
+  "wm_yr_wk_at_d1941": 11617,
+  "wm_yr_wk_at_d1969": 11621,
+  "price_covers_future_28days": true
+}

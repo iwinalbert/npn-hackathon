@@ -1,0 +1,65 @@
+{
+  "purpose": "Reproducibility and audit record for the EDA + feature-design investigation stage of the NPN Hackathon M5-style sales forecasting project.",
+  "source_dataset": {
+    "path": "processed_dataset/sales_long_full.parquet",
+    "row_count": 59181090,
+    "column_count": 22,
+    "note": "This EDA is READ-ONLY against this file. It was never opened in write mode by any script in this stage."
+  },
+  "upstream_raw_dataset": {
+    "path": "raw_dataset/",
+    "note": "Not read directly by this EDA stage (all analysis derives from sales_long_full.parquet, which was itself built and validated in the earlier data-processing stage documented in processed_dataset/PROCESSING_REPORT.md)."
+  },
+  "analysis_date": "2026-08-13",
+  "environment": {
+    "python_packages": ["pandas 3.0.5", "numpy", "pyarrow 25.0.1", "matplotlib 3.11.1", "reportlab 5.0.0"]
+  },
+  "scripts_used": [
+    {"name": "eda_style.py", "purpose": "Shared chart color palette / matplotlib style module (dataviz-skill categorical + sequential palette)."},
+    {"name": "eda_01_sanity_and_distribution.py", "purpose": "Phase 1 (structural sanity check) and Phase 2 (sales distribution)."},
+    {"name": "eda_02_zero_intermittent.py", "purpose": "Phase 3 (zero-sales / intermittent demand, zero-run RLE, leading-zero vs leading-no-price alignment)."},
+    {"name": "eda_03_temporal.py", "purpose": "Phase 4 (day-of-week, monthly, yearly, daily trend, week-of-year, composition-effect check)."},
+    {"name": "eda_04_events_snap.py", "purpose": "Phase 5 (event effects, per-named-event lift vs local baseline) and Phase 6 (SNAP effects)."},
+    {"name": "eda_05_price.py", "purpose": "Phase 7 (price distributions, price-change frequency, relative-price bins, before/after price-change sales)."},
+    {"name": "eda_06_heterogeneity_correlation.py", "purpose": "Phase 8 (activity x volume segments, seasonality index, sampled event/price sensitivity) and Phase 9 (lag/rolling/price/snap/event correlations, days-since-last-sale bucket analysis)."},
+    {"name": "eda_07_feature_table.py", "purpose": "Phase 10-11 (candidate feature table with leakage assessment column), written via csv.DictWriter for correct quoting."}
+  ],
+  "output_files": {
+    "charts": "EDA/charts/*.png (26 charts, listed in EDA_REPORT.md)",
+    "tables": "EDA/tables/*.csv (33 CSV tables, listed in EDA_REPORT.md)",
+    "statistics": "EDA/statistics/*.json (8 phase-level JSON stat dumps, this file, plus this audit file itself)",
+    "reports": ["EDA/EDA_REPORT.md", "EDA/EDA_REPORT.pdf", "EDA/EDA_METHODOLOGY.md"]
+  },
+  "sampling_methods_used": [
+    {
+      "location": "Phase 8c - per-series event sensitivity and price-sales correlation",
+      "method": "Stratified random sample, seed=99, n=501 series out of 30,490, proportionally allocated across cat_id x volume_tier strata (numpy.random.default_rng(99)).",
+      "reason": "Computing exact per-series event/price correlations for all 30,490 series individually was unnecessary for an exploratory distribution-of-effects view; a stratified sample gives a representative picture at a fraction of the cost."
+    }
+  ],
+  "full_data_analyses": [
+    "All of Phase 1, 2, 3, 4, 5, 6, 7 run on the complete 59,181,090-row table.",
+    "Phase 8's activity x volume segmentation and seasonality index run on all 30,490 series.",
+    "Phase 9's lag/rolling correlations, price/snap/event point correlations, and days-since-last-sale bucket analysis all run on the complete 59,181,090-row table."
+  ],
+  "important_parameters": {
+    "activity_class_thresholds": "Data-driven: p25/p75/p95 of the per-series zero-sales-percentage distribution (computed in Phase 3, reused identically in Phase 8). Not arbitrary round numbers.",
+    "zero_run_definition": "A maximal consecutive run of sales==0 rows within a single id, computed after explicitly sorting by (id, date) - required because the Parquet file's physical row order is date-major (an artifact of the original wide-to-long melt), not id-major.",
+    "leading_zero_window": "Days from each series' common start date (2011-01-29) to its first sales>0 row.",
+    "event_lift_baseline": "For each named-event occurrence date, the local baseline is the mean of same-weekday, non-event dates within +/-21 days (falls back to all same-weekday non-event dates if that window is empty).",
+    "relative_price_bins": "[<0.85x, 0.85-0.95x, 0.95-1.0x, 1.0-1.05x, 1.05-1.15x, >1.15x] of each series' own mean observed price.",
+    "price_change_before_after_window": "7-day trailing mean (days t-7..t-1) vs 7-day leading mean (days t+1..t+7) around each detected price-change event, per id, both requiring >=3 valid days.",
+    "lag_definitions": "lag_1/7/14/28 computed via groupby('id').shift(k) after sorting by (id, date); Pearson correlation against same-day sales computed only over rows where the lag is defined (no group-boundary leakage)."
+  },
+  "validation_checks_performed_during_this_stage": [
+    "Row/column shape of sales_long_full.parquet confirmed unchanged before and after this EDA stage (checksum comparison, see Final Validation).",
+    "All zero-sales counts, sums, and percentiles recomputed fresh from the loaded DataFrame in each phase script rather than reused from prior stages, to catch any accidental mutation.",
+    "Sorting for time-order-dependent computations (zero-run RLE, lag/rolling features, price-change windows) explicitly verified against the known date-major storage order rather than assumed.",
+    "feature_candidates.csv round-tripped through pandas.read_csv after generation to confirm well-formed quoting (27 rows x 8 columns)."
+  ],
+  "explicit_non_actions": [
+    "No values in sales_long_full.parquet were read via any method other than pandas.read_parquet (read-only).",
+    "raw_dataset/ was not opened by any script in this stage.",
+    "No model was trained. No forecasting algorithm was selected. No hyperparameters were tuned. No 28-day forecast was produced. No final ML training dataset (with engineered features) was created. No project novelty was decided."
+  ]
+}

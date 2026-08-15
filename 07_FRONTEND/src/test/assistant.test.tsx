@@ -15,7 +15,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Assistant } from '../pages/Assistant'
 
 const STATUS_OK = {
-  available: true, enabled: true, provider: 'gemini', model: 'gemini-2.0-flash',
+  available: true, enabled: true, provider: 'gemini', model: 'gemini-3.7-flash',
   reasons: [], key_configured: true, max_question_chars: 800,
   guarantees: ['The assistant reads only. It cannot modify forecasts.'],
   refusals: {
@@ -38,7 +38,7 @@ const SUGGESTIONS = {
 
 const GROUNDED_ANSWER = {
   answer: 'Demand is expected to stay broadly stable over the next 28 days.',
-  intent: 'series', model: 'gemini-2.0-flash', grounded: true,
+  intent: 'series', model: 'gemini-3.7-flash', grounded: true,
   ungrounded_numbers: [], injection_suspected: false,
   context_keys: ['forecast', 'recent_history', 'series'],
   elapsed_ms: 812,

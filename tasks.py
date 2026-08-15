@@ -43,6 +43,11 @@ def test() -> int:
     return _run([PY, "-m", "pytest"], cwd=BACKEND)
 
 
+def genai_check() -> int:
+    """Call the REAL Gemini API and check the guardrails hold (needs a key)."""
+    return _run([PY, "-m", "pytest", "-m", "live", "-v"], cwd=BACKEND)
+
+
 def verify_integrity() -> int:
     """Prove that no protected research artefact has changed."""
     script = ROOT / "scripts" / "08_organization" / "61_integrity_manifest.py"
@@ -132,6 +137,7 @@ COMMANDS = {
     "build-db": build_db,
     "api": api,
     "test": test,
+    "genai-check": genai_check,
     "ui": ui,
     "ui-install": ui_install,
     "ui-build": ui_build,

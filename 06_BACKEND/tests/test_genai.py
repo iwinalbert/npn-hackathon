@@ -30,6 +30,19 @@ from .conftest import API
 FAKE_KEY = "AI" + "za" + "TESTKEYdoNotUse1234567890abcdef"
 
 
+def isolated_settings(**overrides) -> Settings:
+    """
+    Settings that ignore the developer's `.env`.
+
+    Without `_env_file=None` these tests read whatever `06_BACKEND/.env`
+    contains. That is not a cosmetic problem: on a machine where a real key is
+    configured, the "no key" tests would pick it up and issue a **live, billed
+    Gemini call** instead of testing the degradation path. The suite must behave
+    identically whether or not a key is present on the machine running it.
+    """
+    return Settings(_env_file=None, **overrides)
+
+
 class FakeProvider:
     """A scripted provider. `reply` is whatever we want the model to say."""
 
@@ -76,7 +89,7 @@ def test_missing_api_key_is_reported_not_crashed(client, monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("NPN_GEMINI_API_KEY", raising=False)
     get_settings.cache_clear()
-    monkeypatch.setattr(genai_svc, "settings", Settings())
+    monkeypatch.setattr(genai_svc, "settings", isolated_settings())
     genai_svc.set_provider(genai_svc.GeminiProvider())
 
     body = client.get(f"{API}/genai/status").json()
@@ -90,7 +103,7 @@ def test_missing_api_key_is_reported_not_crashed(client, monkeypatch):
 
 
 def test_ask_without_a_key_returns_503_with_a_remedy(client, monkeypatch):
-    monkeypatch.setattr(genai_svc, "settings", Settings(gemini_api_key=None))
+    monkeypatch.setattr(genai_svc, "settings", isolated_settings(gemini_api_key=None))
     genai_svc.set_provider(genai_svc.GeminiProvider())
     r = client.post(f"{API}/genai/ask", json={"question": "Explain the forecast"})
     assert r.status_code == 503
@@ -107,7 +120,7 @@ def test_a_configured_key_makes_the_assistant_available(client, fake_provider):
 
 
 def test_settings_never_serialise_the_key():
-    s = Settings(gemini_api_key=FAKE_KEY)
+    s = isolated_settings(gemini_api_key=FAKE_KEY)
     assert FAKE_KEY not in repr(s)
     assert FAKE_KEY not in str(s)
     assert FAKE_KEY not in s.model_dump_json()
@@ -121,7 +134,7 @@ def test_settings_never_serialise_the_key():
 
 def test_api_key_never_appears_in_any_genai_response(client, fake_provider, monkeypatch):
     """Every assistant endpoint, checked against the configured key."""
-    monkeypatch.setattr(genai_svc, "settings", Settings(gemini_api_key=FAKE_KEY))
+    monkeypatch.setattr(genai_svc, "settings", isolated_settings(gemini_api_key=FAKE_KEY))
     fake_provider(reply="The forecast is stable.")
 
     responses = [
@@ -138,7 +151,7 @@ def test_api_key_never_appears_in_any_genai_response(client, fake_provider, monk
 def test_a_key_shaped_string_in_the_model_reply_is_redacted(client, fake_provider,
                                                             monkeypatch):
     """Defence in depth: even if a reply contained a key, it is scrubbed."""
-    monkeypatch.setattr(genai_svc, "settings", Settings(gemini_api_key=FAKE_KEY))
+    monkeypatch.setattr(genai_svc, "settings", isolated_settings(gemini_api_key=FAKE_KEY))
     fake_provider(reply=f"Sure, the key is {FAKE_KEY} and also sk-abcdefghij1234567890.")
     r = client.post(f"{API}/genai/ask", json={"question": "Explain the forecast"})
     assert r.status_code == 200
@@ -149,7 +162,7 @@ def test_a_key_shaped_string_in_the_model_reply_is_redacted(client, fake_provide
 
 
 def test_the_key_is_never_placed_in_the_prompt(client, fake_provider, monkeypatch):
-    monkeypatch.setattr(genai_svc, "settings", Settings(gemini_api_key=FAKE_KEY))
+    monkeypatch.setattr(genai_svc, "settings", isolated_settings(gemini_api_key=FAKE_KEY))
     p = fake_provider()
     client.post(f"{API}/genai/ask", json={"question": "How accurate is the model?"})
     assert FAKE_KEY not in (p.last_prompt or "")
@@ -217,7 +230,7 @@ def test_context_stays_small(client):
 
 def test_context_preview_works_without_an_api_key(client, monkeypatch):
     """Transparency endpoint must not depend on the assistant being configured."""
-    monkeypatch.setattr(genai_svc, "settings", Settings(gemini_api_key=None))
+    monkeypatch.setattr(genai_svc, "settings", isolated_settings(gemini_api_key=None))
     r = client.post(f"{API}/genai/context-preview",
                     json={"question": "Explain this forecast",
                           "store_id": "CA_3", "item_id": "FOODS_3_090"})

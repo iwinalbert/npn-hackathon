@@ -207,6 +207,14 @@ def _series_context(store_id: str, item_id: str) -> dict[str, Any]:
         "comparison": {
             "forecast_total_vs_last_28_days": plan.get("change_vs_recent"),
             "recent_28d_actual": plan.get("recent_28d_actual"),
+            # `forecast_total_vs_last_28_days` is signed; spelling the direction
+            # out in words keeps the model from having to interpret the sign,
+            # which is the one part of this comparison it could get backwards
+            # without the grounding check noticing (that check reads numbers,
+            # not claims).
+            "difference_direction": (
+                None if plan.get("recent_28d_actual") is None else
+                "higher" if fc["total_28d"] >= plan["recent_28d_actual"] else "lower"),
         },
         "uncertainty": {
             "planning_range_low": plan["planning_range"]["low"],

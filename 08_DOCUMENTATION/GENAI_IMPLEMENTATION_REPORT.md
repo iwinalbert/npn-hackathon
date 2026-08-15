@@ -68,9 +68,23 @@ building on it would have shipped a dead dependency. `google-genai` adds only 3
 small packages (`google-genai`, `distro`, `sniffio`) with no native or ML
 dependencies.
 
-**Model: `gemini-2.0-flash`** (configurable via `NPN_GEMINI_MODEL`). Chosen for
-latency: this is an interactive explanation task where a 1-second answer is worth
-more than a marginally better paragraph.
+**Model: `gemini-3.7-flash`** (configurable via `NPN_GEMINI_MODEL`). A flash tier
+is chosen for latency: this is an interactive explanation task where a ~2 s
+answer is worth more than a marginally better paragraph.
+
+The first live call exposed something worth recording: **model ids expire.** The
+original default, `gemini-2.0-flash`, returns `404 NOT_FOUND` — *"no longer
+available"* — and so does `gemini-2.5-flash`, even though `models.list()` still
+advertises it. Neither the key nor the code was at fault, but the symptom looks
+identical to a broken integration. Two consequences, both now in place:
+
+* the default is a verified-live id rather than an assumed one;
+* `NPN_GEMINI_MODEL` means the fix is an environment change, never a code change,
+  and `gemini-flash-latest` is documented as the alias that never 404s (at the
+  cost of the model changing under you without notice).
+
+The live test suite (§9) exists largely so this failure is caught by a test
+rather than by a demo.
 
 **Generation config:** `temperature 0.2`, `top_p 0.9`, `max_output_tokens 900`.
 Low temperature because this is a translation task, not a creative one.
@@ -300,9 +314,34 @@ from the backend).
 Full suites after the change:
 
 ```
-backend   121 passed   (was 80 → +41)
-frontend   44 passed   (was 30 → +14)
+backend   121 passed, 8 deselected (2 slow + 6 live)   (was 80 → +41)
+frontend   44 passed                                    (was 30 → +14)
 ```
+
+### The live suite
+
+`tests/test_genai_live.py` calls the **real** Gemini API. It is excluded from
+the default run (`-m "not slow and not live"`) because it costs money and needs
+network, and it skips itself when no key is configured.
+
+```bash
+python tasks.py genai-check        # or: python -m pytest -m live
+```
+
+Six tests, and they check the things a fake provider structurally cannot:
+
+| Test | Why a fake cannot prove it |
+|---|---|
+| key authenticates and the model id exists | a fake never talks to Google — this is the canary for a retired model id |
+| a real answer is numerically grounded | a scripted reply is grounded because we wrote it that way |
+| a real model still refuses price what-if | the guardrail has to survive a model with its own ideas |
+| missing data produces the required phrase | verbatim *"I don't have enough verified data to answer that"* |
+| an adversarial request is flagged and refused | injection detection end-to-end against a real generation |
+| live activity leaves the forecast untouched | `total_28d == 3331.3681` before and after |
+
+Google returns a transient `503 UNAVAILABLE` ("high demand") often enough to
+matter, so each call retries up to four times. An infrastructure hiccup is not
+a test failure.
 
 ---
 
@@ -310,7 +349,13 @@ frontend   44 passed   (was 30 → +14)
 
 | Check | Result |
 |---|---|
-| Backend tests | **121 passed**, 2 slow deselected |
+| **Live Gemini integration** (`-m live`) | **6 passed in 22.3 s** against the real API |
+| Live answer, grounded | *"3331.3681 units … 25.63 units lower than the 3357.0 units sold in the previous 28 days"* — `grounded: true`, 0 ungrounded |
+| Live refusal, price what-if | *"This system cannot answer how demand will change if you cut the price … not a causal price-response model"* |
+| Live refusal, adversarial | injection flagged; *"I do not have access to API keys … I cannot modify forecasts … the model is frozen"* |
+| Live refusal, missing data | *"I don't have enough verified data to answer that. The dataset contains no promotion field at all"* |
+| Live end-to-end over HTTP | `/genai/ask` → `grounded: true`, 5,460 ms, weekly totals matching the context, planning range correctly described as observed error and **not** a confidence interval |
+| Backend tests | **121 passed**, 8 deselected (2 slow + 6 live) |
 | Frontend tests | **44 passed** |
 | TypeScript | clean |
 | Production build | **succeeds**, 2.1 s |
@@ -380,59 +425,73 @@ Design properties that matter for deployment:
 
 1. **Deterministic retrieval, not tool-calling.** An unanticipated question gets
    a general context rather than a targeted fetch. Documented trade in §6.
-2. **No live Gemini call has been made in this environment** — no API key is
-   configured here. Every path is exercised through a scripted fake provider,
-   and the real SDK call site is a thin wrapper, but **the actual round-trip to
-   Google is unverified**. See §13.
-3. **The grounding check is a heuristic.** It catches fabricated *numbers*, not
+2. **Model ids expire, and the failure looks like a broken integration.**
+   `gemini-2.0-flash` and `gemini-2.5-flash` are already gone. `NPN_GEMINI_MODEL`
+   makes the fix an environment change, and `python tasks.py genai-check` turns
+   it into a test failure rather than a demo failure — but nothing stops Google
+   retiring `gemini-3.7-flash` too.
+3. **Google's 503s are frequent enough to notice.** *"This model is currently
+   experiencing high demand"* occurred during testing. The service surfaces it
+   as a clean 503 with the exception type, and the live tests retry, but there
+   is **no retry in the request path** — a user who hits it sees an error and
+   must ask again.
+4. **The grounding check is a heuristic.** It catches fabricated *numbers*, not
    fabricated *claims*: "demand is rising" when it is falling would pass. The
    preventive control for that is the system instruction plus the fact that the
    trend direction is supplied as a computed fact.
-4. **No conversation memory.** Each question is answered independently; a
+5. **No conversation memory.** Each question is answered independently; a
    follow-up like "why?" has no prior turn to refer to. Deliberate for a first
    version — memory adds context-window management and a new class of drift.
-5. **English only**, and no streaming — answers appear when complete.
-6. **No rate limiting or per-user quota.** Fine behind a demo; a public
+6. **English only**, and no streaming — answers appear when complete.
+7. **No rate limiting or per-user quota.** Fine behind a demo; a public
    deployment would want both, since each request costs money.
-7. **Latency is provider-bound**, typically 1–3 s. The UI shows a spinner and
+8. **Latency is provider-bound**, measured 2.3–5.5 s live. The UI shows a spinner and
    disables submit; there is no optimistic rendering.
 
 ---
 
-## 13. Remaining step: verify a real Gemini call
+## 13. Configuring the key, and running the live check
 
-Cannot be executed here — no API key is configured, and I will not ask for one
-to be pasted into the session.
+**Verified live on 2026-08-16.** The steps below are the ones that were run.
 
 ```bash
-# 1. provide the key (never commit it)
-echo "GEMINI_API_KEY=your-key-here" > 06_BACKEND/.env
+# 1. provide the key — this file is gitignored and never leaves the machine
+#    (create it if absent; the committed .env.example is the template)
+06_BACKEND/.env
+    GEMINI_API_KEY=<your key>
 
-# 2. restart the API
-python tasks.py api
+# 2. prove the whole path works, end to end, against the real API
+python tasks.py genai-check          # 6 live tests, ~22 s
 
-# 3. confirm it is picked up
-curl -s localhost:8000/api/v1/genai/status | python -m json.tool
-#    expect: "available": true, "model": "gemini-2.0-flash"
-
-# 4. ask a real question
-curl -s -X POST localhost:8000/api/v1/genai/ask \
-  -H 'Content-Type: application/json' \
-  -d '{"question":"Explain this forecast","store_id":"CA_3","item_id":"FOODS_3_090"}' \
-  | python -m json.tool
+# 3. run the product
+python tasks.py api                  # http://localhost:8000
+python tasks.py ui                   # http://localhost:5173/assistant
 ```
 
-**What to check in the first real answer:**
+`06_BACKEND/.env` is the location that matters: `tasks.py api` launches uvicorn
+with `06_BACKEND` as its working directory, and `env_file=".env"` resolves
+relative to that. A shell variable works too and takes precedence.
 
-1. `"grounded": true` — if false, inspect `ungrounded_numbers`. A persistent
-   failure means the model is doing arithmetic it was told not to do; lower
-   `NPN_GENAI_TEMPERATURE` or tighten the system instruction.
-2. The figures in the prose match `/genai/context-preview` for the same question.
-3. It does not describe the planning range as a confidence interval.
-4. Asking *"what if I cut the price 10%?"* should decline and explain why.
+**Four ways to supply the key, all verified:**
 
-If the model name is rejected, the SDK has moved on: set `NPN_GEMINI_MODEL` to a
-current model. That is a one-line environment change, not a code change.
+| Where | Name | Works |
+|---|---|---|
+| `06_BACKEND/.env` | `GEMINI_API_KEY` | ✅ |
+| `06_BACKEND/.env` | `NPN_GEMINI_API_KEY` | ✅ |
+| shell environment | `GEMINI_API_KEY` | ✅ |
+| shell environment | `NPN_GEMINI_API_KEY` | ✅ |
+
+The unprefixed name in `.env` needed a fix to work at all — see §16.
+
+**What a healthy first answer looks like:** `"grounded": true` with an empty
+`ungrounded_numbers`, figures matching `/genai/context-preview` for the same
+question, the planning range described as observed error rather than a
+confidence interval, and a decline on *"what if I cut the price 10%?"*. All four
+were observed.
+
+If the model id is rejected with `404 NOT_FOUND`, Google has retired it: set
+`NPN_GEMINI_MODEL` to a current one (`gemini-flash-latest` always resolves).
+That is an environment change, not a code change.
 
 ---
 
@@ -464,3 +523,68 @@ The frozen research layer. Verified after implementation by re-hashing all
 **0 deleted, 0 modified**. All GenAI work is confined to
 `06_BACKEND/app/{services,routers}/genai*`, `07_FRONTEND/src/pages/Assistant.tsx`,
 their tests, and this report.
+
+---
+
+## 16. Four defects the live run exposed
+
+None of these could have been found with a fake provider. They are recorded
+because each was a real bug, and three of them were invisible until a key
+existed on the machine.
+
+### 16.1 `GEMINI_API_KEY` in `.env` was silently ignored
+
+The settings class uses `env_prefix="NPN_"`, which pydantic-settings applies to
+dotenv keys as well as environment variables. A `.env` containing
+`GEMINI_API_KEY=…` therefore matched nothing, `extra="ignore"` swallowed it, and
+the app reported *"GEMINI_API_KEY is not set"* while staring at a file that set
+it. The unprefixed name only worked as a real shell variable, because a
+now-removed shim in `get_settings()` read `os.environ` directly — and
+`.env` files are not loaded into `os.environ`.
+
+**This is precisely what the committed `.env.example` instructed users to do.**
+
+Fixed with an explicit alias on the field, which bypasses the prefix in *both*
+sources:
+
+```python
+gemini_api_key: SecretStr | None = Field(
+    default=None,
+    validation_alias=AliasChoices("NPN_GEMINI_API_KEY", "GEMINI_API_KEY"),
+)
+```
+
+`validate_by_name=True` was added to the model config so `Settings(gemini_api_key=…)`
+keeps working by field name, and the `os.environ` shim was deleted as redundant.
+All four supply routes are now verified (§13).
+
+### 16.2 A configured key made the test suite issue live, billed calls
+
+Tests constructed `Settings()` directly, which reads `06_BACKEND/.env`. With a
+real key present, `test_ask_without_a_key_returns_503_with_a_remedy` — the test
+for the *no key* path — picked the key up and made a **real Gemini request**,
+then failed on a `ClientError`. Three tests broke this way, and the failure mode
+scales badly: a suite that costs money on developer machines but not in CI.
+
+Fixed with an `isolated_settings()` helper passing `_env_file=None`. The suite
+now behaves identically with and without a key: **121 passed in 3.1 s**, no
+network.
+
+### 16.3 The grounding check flagged a correct number
+
+The first live answer said *"25.63 units lower"* and was marked ungrounded. The
+context contained `forecast_total_vs_last_28_days: -25.63` — the same figure,
+written the way a person writes it. The check compared signed values only, so
+correct English looked like fabrication.
+
+Fixed by ignoring sign, which is sound because this check reads *numbers*, not
+claims — direction lives in the surrounding words and was never in scope. The
+context also now states `difference_direction: "lower"` in words, so the one
+thing the check cannot verify is handed over as a fact instead of inferred.
+
+### 16.4 The redaction patterns did not know the current key format
+
+`_SECRET_SHAPES` matched `AIza…`, the classic Google key. Current keys are
+issued as `AQ.…`. The exact configured key was always redacted by string match,
+so nothing leaked — but the shape-based net, which exists to catch a key *other*
+than the configured one, had a hole in it. Pattern added and verified.

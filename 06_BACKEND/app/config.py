@@ -24,7 +24,7 @@ from pathlib import Path
 
 from typing import Annotated
 
-from pydantic import Field, SecretStr, field_validator
+from pydantic import AliasChoices, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # 06_BACKEND/app/config.py -> 06_BACKEND/app -> 06_BACKEND -> project root
@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="NPN_", env_file=".env", extra="ignore",
         env_nested_delimiter="__",
+        # Fields that carry an explicit validation_alias (gemini_api_key) must
+        # still be settable by their field name, so Settings(gemini_api_key=...)
+        # keeps working in tests and in code.
+        validate_by_name=True,
     )
 
     app_name: str = "NPN Demand Forecasting API"
@@ -92,11 +96,28 @@ class Settings(BaseSettings):
 
     # --- GenAI assistant --------------------------------------------------
     # The key is a SecretStr so it cannot be printed, logged or serialised by
-    # accident: repr() and str() both render "**********". It is read from the
-    # environment (NPN_GEMINI_API_KEY) or the plain GEMINI_API_KEY alias, and it
-    # never leaves this process — the browser never sees it.
-    gemini_api_key: SecretStr | None = None
-    gemini_model: str = "gemini-2.0-flash"
+    # accident: repr() and str() both render "**********". It never leaves this
+    # process — the browser never sees it.
+    #
+    # Both names are accepted, from a real environment variable OR from the
+    # .env file: NPN_GEMINI_API_KEY for consistency with every other setting
+    # here, and the plain GEMINI_API_KEY because that is what Google's own
+    # tooling and most hosting providers use. The explicit alias is what makes
+    # the unprefixed name work in .env — env_prefix alone would silently ignore
+    # a `GEMINI_API_KEY=` line, which is exactly the failure mode ("I set the
+    # key and it still says missing") this setting exists to avoid.
+    gemini_api_key: SecretStr | None = Field(
+        default=None,
+        validation_alias=AliasChoices("NPN_GEMINI_API_KEY", "GEMINI_API_KEY"),
+    )
+    # Verified live against the API on 2026-08-16. Google retires model ids: the
+    # previous default (gemini-2.0-flash) now returns 404 NOT_FOUND, and so does
+    # gemini-2.5-flash even though `models.list()` still advertises it. A flash
+    # tier is the right choice here — this is an interactive explanation, where a
+    # ~1 s answer is worth more than a marginally better paragraph.
+    # Set NPN_GEMINI_MODEL=gemini-flash-latest for an alias that never 404s, at
+    # the cost of the model changing under you without notice.
+    gemini_model: str = "gemini-3.7-flash"
     genai_enabled: bool = True
     genai_timeout_seconds: float = 30.0
     genai_max_question_chars: int = 800
@@ -167,21 +188,14 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     """
-    Build settings, accepting the plain `GEMINI_API_KEY` environment variable in
-    addition to the prefixed `NPN_GEMINI_API_KEY`.
+    Cached settings.
 
-    The unprefixed name is what Google's own tooling and most hosting providers
-    use, so supporting it avoids a class of "the key is set but the app says it
-    is missing" deployment confusion.
+    Both spellings of the Gemini key are handled by the field's own
+    `AliasChoices`, so they work identically from a real environment variable
+    and from `.env`. Call `get_settings.cache_clear()` after changing the
+    environment in a test.
     """
-    import os
-
-    overrides: dict[str, object] = {}
-    if not os.environ.get("NPN_GEMINI_API_KEY"):
-        plain = os.environ.get("GEMINI_API_KEY", "").strip()
-        if plain:
-            overrides["gemini_api_key"] = plain
-    return Settings(**overrides)
+    return Settings()
 
 
 settings = get_settings()

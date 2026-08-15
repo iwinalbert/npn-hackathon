@@ -107,7 +107,8 @@ _INJECTION_PATTERNS = [
 ]
 
 _SECRET_SHAPES = [
-    re.compile(r"AIza[0-9A-Za-z_\-]{20,}"),          # Google API key shape
+    re.compile(r"AIza[0-9A-Za-z_\-]{20,}"),          # Google API key, classic
+    re.compile(r"AQ\.[0-9A-Za-z_\-]{20,}"),          # Google API key, current
     re.compile(r"sk-[A-Za-z0-9]{20,}"),              # generic vendor key shape
     re.compile(r"GEMINI_API_KEY\s*[=:]\s*\S+", re.I),
 ]
@@ -185,6 +186,12 @@ class GeminiProvider:
                 # Deterministic-ish and focused; this is an explanation task,
                 # not a creative one.
                 top_p=0.9,
+                # This assistant does not use tool-calling: context retrieval is
+                # deterministic and happens before the model is invoked (see
+                # services/genai_context.py). Saying so explicitly keeps the SDK
+                # from arranging a calling loop we would never use.
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                    disable=True),
             ),
         )
         text = getattr(response, "text", None)
@@ -251,14 +258,20 @@ def _check_grounding(answer: str, context: dict) -> tuple[bool, list[float]]:
     """
     Verify every number in the reply came from the context.
 
-    A heuristic, deliberately tolerant in three ways so it flags fabrication
+    A heuristic, deliberately tolerant in four ways so it flags fabrication
     rather than ordinary prose:
 
       * small integers 0-31 are ignored — they are days, weeks, counts, list
         positions and dates, not claims;
       * years 1900-2100 are ignored;
       * a value matches if it is within 1% (or 0.01 absolute) of any number in
-        the context, which absorbs the model rounding 2.0929 to 2.09.
+        the context, which absorbs the model rounding 2.0929 to 2.09;
+      * sign is ignored. The context stores a change as -25.63; correct English
+        for it is "25.63 units lower". The first live Gemini call was flagged
+        for exactly this, and the flag was wrong — the figure was in the
+        context, spelled the way a person would write it. Direction is carried
+        by the words around the number, and this check reads numbers, not
+        claims.
 
     Anything left over is a figure with no source, and the caller is told.
     """
@@ -266,6 +279,7 @@ def _check_grounding(answer: str, context: dict) -> tuple[bool, list[float]]:
     # Percentages: the context stores 0.7205, a reply may say 72.05%.
     allowed |= {round(v * 100, 4) for v in allowed if abs(v) <= 1}
     allowed |= {round(v / 100, 4) for v in allowed}
+    allowed |= {abs(v) for v in allowed}
 
     ungrounded: list[float] = []
     for n in _numbers_in(answer):

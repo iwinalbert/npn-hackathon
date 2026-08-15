@@ -1,0 +1,190 @@
+{
+  "row_count": 59181090,
+  "expected_row_count": 59181090,
+  "row_count_matches": true,
+  "columns": [
+    "id",
+    "item_id",
+    "dept_id",
+    "cat_id",
+    "store_id",
+    "state_id",
+    "d",
+    "date",
+    "wm_yr_wk",
+    "weekday",
+    "wday",
+    "month",
+    "year",
+    "event_name_1",
+    "event_type_1",
+    "event_name_2",
+    "event_type_2",
+    "snap_CA",
+    "snap_TX",
+    "snap_WI",
+    "sell_price",
+    "sales"
+  ],
+  "n_columns": 22,
+  "item_id_set_matches": true,
+  "store_id_set_matches": true,
+  "id_set_matches": true,
+  "n_unique_item_id": 3049,
+  "n_unique_store_id": 10,
+  "n_unique_id": 30490,
+  "sum_matches": true,
+  "zero_count_matches": true,
+  "max_matches": true,
+  "min_matches": true,
+  "raw_sum": 66927173,
+  "long_sum": 66927173,
+  "spot_checks": [
+    {
+      "id": "FOODS_3_027_WI_1_evaluation",
+      "d": "d_1892",
+      "expected": 0,
+      "actual": 0,
+      "match": true
+    },
+    {
+      "id": "HOUSEHOLD_2_088_TX_1_evaluation",
+      "d": "d_183",
+      "expected": 0,
+      "actual": 0,
+      "match": true
+    },
+    {
+      "id": "FOODS_1_052_TX_3_evaluation",
+      "d": "d_1021",
+      "expected": 0,
+      "actual": 0,
+      "match": true
+    },
+    {
+      "id": "FOODS_3_496_CA_1_evaluation",
+      "d": "d_1478",
+      "expected": 5,
+      "actual": 5,
+      "match": true
+    },
+    {
+      "id": "HOUSEHOLD_1_451_TX_1_evaluation",
+      "d": "d_1428",
+      "expected": 0,
+      "actual": 0,
+      "match": true
+    }
+  ],
+  "all_spot_checks_pass": true,
+  "date_checks": [
+    {
+      "d": "d_1",
+      "expected": "2011-01-29",
+      "actual": "2011-01-29",
+      "match": true
+    },
+    {
+      "d": "d_500",
+      "expected": "2012-06-11",
+      "actual": "2012-06-11",
+      "match": true
+    },
+    {
+      "d": "d_1000",
+      "expected": "2013-10-24",
+      "actual": "2013-10-24",
+      "match": true
+    },
+    {
+      "d": "d_1500",
+      "expected": "2015-03-08",
+      "actual": "2015-03-08",
+      "match": true
+    },
+    {
+      "d": "d_1941",
+      "expected": "2016-05-22",
+      "actual": "2016-05-22",
+      "match": true
+    }
+  ],
+  "all_date_checks_pass": true,
+  "distinct_d_count": 1941,
+  "max_d_numeric": 1941,
+  "no_future_days_beyond_1941": true,
+  "price_spot_checks": [
+    {
+      "store_id": "TX_1",
+      "item_id": "FOODS_3_657",
+      "wm_yr_wk": 11309,
+      "expected": 2.98,
+      "actual": 2.9800000190734863,
+      "match": true
+    },
+    {
+      "store_id": "CA_3",
+      "item_id": "FOODS_3_462",
+      "wm_yr_wk": 11425,
+      "expected": 1.0,
+      "actual": 1.0,
+      "match": true
+    },
+    {
+      "store_id": "WI_2",
+      "item_id": "FOODS_3_318",
+      "wm_yr_wk": 11240,
+      "expected": 1.38,
+      "actual": 1.3799999952316284,
+      "match": true
+    },
+    {
+      "store_id": "CA_1",
+      "item_id": "FOODS_3_399",
+      "wm_yr_wk": 11518,
+      "expected": 3.5,
+      "actual": 3.5,
+      "match": true
+    },
+    {
+      "store_id": "TX_2",
+      "item_id": "HOBBIES_1_393",
+      "wm_yr_wk": 11409,
+      "expected": 27.98,
+      "actual": 27.979999542236328,
+      "match": true
+    }
+  ],
+  "all_price_spot_checks_pass": true,
+  "duplicate_id_d_pairs": 0,
+  "n_missing_price": 12299413,
+  "pct_missing_price": 20.782673992655422,
+  "raw_checksum_verification": {
+    "calendar.csv": {
+      "expected": "3ffeab2991b0c8e861d008b39ea4c95c",
+      "actual": "3ffeab2991b0c8e861d008b39ea4c95c",
+      "match": true
+    },
+    "sales_train_evaluation.csv": {
+      "expected": "b806dfc9f30a745102b708c09951f6aa",
+      "actual": "b806dfc9f30a745102b708c09951f6aa",
+      "match": true
+    },
+    "sales_train_validation.csv": {
+      "expected": "26a366a25beb57b0a8f4c7b148758f94",
+      "actual": "26a366a25beb57b0a8f4c7b148758f94",
+      "match": true
+    },
+    "sample_submission.csv": {
+      "expected": "c281a69d7c011274899d92020a66e25b",
+      "actual": "c281a69d7c011274899d92020a66e25b",
+      "match": true
+    },
+    "sell_prices.csv": {
+      "expected": "08c591caa99e55daf3e0ccac913f7c85",
+      "actual": "08c591caa99e55daf3e0ccac913f7c85",
+      "match": true
+    }
+  },
+  "raw_dataset_untouched": true
+}

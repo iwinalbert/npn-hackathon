@@ -1,0 +1,160 @@
+{
+  "experiment_name": "exp_70_variance_reduction_ensemble",
+  "started_at": "2026-08-14T20:57:57",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Experiment #70. Attacks the variance component of MSE (99.89% of it) rather than bias or information, which is what every prior failed experiment attacked.",
+    "Equal weights fixed a priori \u2014 no weight fitting, so the validation window is used only to score, never to choose.",
+    "Materially different from the Phase 8 ensemble, which blended in L1 (a deliberately poor RMSE model) and therefore measured a metric trade-off rather than variance reduction."
+  ],
+  "model_type": "equal-weight ensemble of 6 LightGBM Tweedie models",
+  "objective": "tweedie (powers 1.1-1.3)",
+  "feature_set_label": "Champion 32 features; diversity via seed/leaves/subsampling",
+  "n_features": 32,
+  "validation_origin_day": "d_1913",
+  "validation_days": "d_1914 .. d_1941",
+  "validation_dates": "2016-04-25 .. 2016-05-22",
+  "horizon": 28,
+  "n_series": 30490,
+  "validation_rows": 853720,
+  "training_origins": [
+    "d_1493",
+    "d_1521",
+    "d_1549",
+    "d_1577",
+    "d_1605",
+    "d_1633",
+    "d_1661",
+    "d_1689",
+    "d_1717",
+    "d_1745",
+    "d_1773",
+    "d_1801",
+    "d_1829",
+    "d_1857",
+    "d_1885"
+  ],
+  "metrics": {
+    "RMSE": 2.1261078155775595,
+    "MAE": 1.0289640799247242,
+    "WAPE": 0.7131619484847223,
+    "bias": -0.08410757614588478,
+    "n": 853720,
+    "high_volume_RMSE": 6.0025293149419925,
+    "high_volume_MAE": 3.6270510279652535,
+    "high_volume_bias": -0.4824129812271515,
+    "high_volume_share_of_sq_error_pct": 61.59,
+    "mean_pred_on_zero_actual": 0.57935,
+    "mean_pred_on_positive_actual": 2.28981,
+    "pred_mean": 1.35871,
+    "pred_p50": 0.60422,
+    "pred_p99": 12.30218,
+    "pred_max": 139.1375,
+    "pct_predictions_below_0_5": 43.91
+  },
+  "members": [
+    {
+      "member": "m1_champion",
+      "power": 1.1,
+      "leaves": 128,
+      "seed": 42,
+      "RMSE": 2.121042941194765,
+      "MAE": 1.0319268155496617,
+      "train_s": 123.3
+    },
+    {
+      "member": "m2_wide",
+      "power": 1.1,
+      "leaves": 256,
+      "seed": 7,
+      "RMSE": 2.159176460629143,
+      "MAE": 1.0322443408265338,
+      "train_s": 184.0
+    },
+    {
+      "member": "m3_p12",
+      "power": 1.2,
+      "leaves": 160,
+      "seed": 101,
+      "RMSE": 2.1300712709483482,
+      "MAE": 1.0305565737150182,
+      "train_s": 155.3
+    },
+    {
+      "member": "m4_p13_small",
+      "power": 1.3,
+      "leaves": 96,
+      "seed": 202,
+      "RMSE": 2.127644791365557,
+      "MAE": 1.0313684167577626,
+      "train_s": 142.0
+    },
+    {
+      "member": "m5_deep",
+      "power": 1.1,
+      "leaves": 192,
+      "seed": 303,
+      "RMSE": 2.134215106651336,
+      "MAE": 1.0311442440098757,
+      "train_s": 173.6
+    },
+    {
+      "member": "m6_p12_wide",
+      "power": 1.2,
+      "leaves": 224,
+      "seed": 404,
+      "RMSE": 2.139858995310728,
+      "MAE": 1.0299818793443465,
+      "train_s": 190.5
+    }
+  ],
+  "delta_rmse_vs_best": 0.005065,
+  "delta_mae_vs_best": -0.002963,
+  "mean_pairwise_residual_corr": 0.9896887620536096,
+  "best_single_member_RMSE": 2.121042941194765,
+  "ensemble_beats_all_members": false,
+  "cumulative_by_n_members": [
+    {
+      "n_members": 1,
+      "RMSE": 2.121042941194765,
+      "MAE": 1.0319268155496617
+    },
+    {
+      "n_members": 2,
+      "RMSE": 2.1305178244200085,
+      "MAE": 1.0300576064363478
+    },
+    {
+      "n_members": 3,
+      "RMSE": 2.1271201509990365,
+      "MAE": 1.02938789647335
+    },
+    {
+      "n_members": 4,
+      "RMSE": 2.1250232401481584,
+      "MAE": 1.0293467226935622
+    },
+    {
+      "n_members": 5,
+      "RMSE": 2.124969025869003,
+      "MAE": 1.029253447999345
+    },
+    {
+      "n_members": 6,
+      "RMSE": 2.1261078155775595,
+      "MAE": 1.0289640799247242
+    }
+  ],
+  "training_seconds": 968.7,
+  "decision": "REJECT",
+  "decision_rule": "promote if dRMSE <= -0.01",
+  "finished_at": "2026-08-14T20:57:57",
+  "wall_seconds": 0.0
+}

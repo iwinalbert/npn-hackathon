@@ -1,0 +1,30 @@
+{
+  "champion": {
+    "RMSE": 2.121042941194765,
+    "MAE": 1.0319268155496617
+  },
+  "with_shape": {
+    "RMSE": 2.1163241923762475,
+    "MAE": 1.0298548416969369,
+    "WAPE": 0.7137793241672178,
+    "bias": -0.07292995184527891,
+    "n": 853720,
+    "high_volume_RMSE": 5.956549672398242,
+    "high_volume_MAE": 3.626650834421692,
+    "high_volume_bias": -0.3883416389038202,
+    "high_volume_share_of_sq_error_pct": 61.21,
+    "mean_pred_on_zero_actual": 0.58236,
+    "mean_pred_on_positive_actual": 2.31073,
+    "pred_mean": 1.36989,
+    "pred_p50": 0.60609,
+    "pred_p99": 12.494,
+    "pred_max": 151.5413,
+    "pct_predictions_below_0_5": 43.7
+  },
+  "delta": {
+    "RMSE": -0.004718748818517415,
+    "MAE": -0.00207197385272484
+  },
+  "gain_share_pct": 0.7132958667000526,
+  "decision": "REJECT"
+}

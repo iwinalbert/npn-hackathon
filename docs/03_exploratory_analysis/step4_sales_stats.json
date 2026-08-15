@@ -1,0 +1,28 @@
+{
+  "flat_stats": {
+    "count": 59181090,
+    "mean": 1.1308878055473464,
+    "std": 3.8700380872055162,
+    "min": 0,
+    "max": 763,
+    "median": 0.0,
+    "p1": 0.0,
+    "p5": 0.0,
+    "p25": 0.0,
+    "p50": 0.0,
+    "p75": 1.0,
+    "p90": 3.0,
+    "p95": 5.0,
+    "p99": 15.0,
+    "p99_9": 47.0,
+    "n_negative": 0,
+    "n_zero": 40241819,
+    "pct_zero": 67.99776584040612,
+    "n_missing": 0
+  },
+  "n_all_zero_series": 0,
+  "n_series_gt95pct_zero": 1534,
+  "n_series_gt50pct_zero": 23852,
+  "n_series_0pct_zero": 0,
+  "n_series_total": 30490
+}

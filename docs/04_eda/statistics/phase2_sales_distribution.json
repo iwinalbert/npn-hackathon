@@ -1,0 +1,294 @@
+{
+  "percentiles_all_rows": {
+    "p1": 0.0,
+    "p5": 0.0,
+    "p10": 0.0,
+    "p25": 0.0,
+    "p50": 0.0,
+    "p75": 1.0,
+    "p90": 3.0,
+    "p95": 5.0,
+    "p99": 15.0,
+    "p99.5": 22.0,
+    "p99.9": 47.0
+  },
+  "mean_vs_median": {
+    "mean": 1.1308878055473464,
+    "median": 0.0,
+    "mean_minus_median": 1.1308878055473464
+  },
+  "nonzero_percentiles": {
+    "p1": 1.0,
+    "p5": 1.0,
+    "p10": 1.0,
+    "p25": 1.0,
+    "p50": 2.0,
+    "p75": 4.0,
+    "p90": 7.0,
+    "p95": 11.0,
+    "p99": 28.0,
+    "p99.5": 38.0,
+    "p99.9": 72.0
+  },
+  "nonzero_mean": 3.5337776728576302,
+  "nonzero_median": 2.0,
+  "nonzero_std": 6.189441792856588,
+  "skewness_all_rows": 17.122571655232427,
+  "skewness_nonzero_rows": 11.868940392826659,
+  "n_series": 30490,
+  "series_total_sales_percentiles": {
+    "p1": 61.0,
+    "p5": 119.0,
+    "p10": 175.0,
+    "p25": 366.0,
+    "p50": 868.0,
+    "p75": 2072.0,
+    "p90": 4763.200000000004,
+    "p95": 8143.549999999999,
+    "p99": 21357.880000000005,
+    "p99.5": 30403.455000000053,
+    "p99.9": 63522.954000001824
+  },
+  "top_10pct_series_share_of_total_sales": 54.389309107677384,
+  "bottom_10pct_series_share_of_total_sales": 0.5230581007806799,
+  "n_series_cv_gt_2": 15673,
+  "pct_series_cv_gt_2": 51.40373893079698,
+  "category_summary": [
+    {
+      "cat_id": "FOODS",
+      "n_rows": 27892170,
+      "mean_sales": 1.6464271872715532,
+      "median_sales": 0.0,
+      "std_sales": 5.144376548546765,
+      "total_sales": 45922427,
+      "zero_pct": 61.77342243360771,
+      "pct_of_total_sales": 68.61551884165196
+    },
+    {
+      "cat_id": "HOUSEHOLD",
+      "n_rows": 20322270,
+      "mean_sales": 0.7264980732959457,
+      "median_sales": 0.0,
+      "std_sales": 2.087060007223475,
+      "total_sales": 14764090,
+      "zero_pct": 71.60219798280409,
+      "pct_of_total_sales": 22.059933713321495
+    },
+    {
+      "cat_id": "HOBBIES",
+      "n_rows": 10966650,
+      "mean_sales": 0.5690576429447461,
+      "median_sales": 0.0,
+      "std_sales": 2.0367390863191224,
+      "total_sales": 6240656,
+      "zero_pct": 77.1491658801913,
+      "pct_of_total_sales": 9.324547445026552
+    }
+  ],
+  "department_summary": [
+    {
+      "dept_id": "FOODS_3",
+      "n_rows": 15974430,
+      "mean_sales": 2.0618577313869726,
+      "median_sales": 0.0,
+      "std_sales": 6.311086722947118,
+      "total_sales": 32937002,
+      "zero_pct": 58.551203391920716,
+      "pct_of_total_sales": 49.21319775452043
+    },
+    {
+      "dept_id": "HOUSEHOLD_1",
+      "n_rows": 10326120,
+      "mean_sales": 1.135262131371706,
+      "median_sales": 0.0,
+      "std_sales": 2.749750611888226,
+      "total_sales": 11722853,
+      "zero_pct": 62.87691795175729,
+      "pct_of_total_sales": 17.515834711859114
+    },
+    {
+      "dept_id": "FOODS_2",
+      "n_rows": 7725180,
+      "mean_sales": 1.0090412132791728,
+      "median_sales": 0.0,
+      "std_sales": 2.6962930368806264,
+      "total_sales": 7795025,
+      "zero_pct": 67.77847247572225,
+      "pct_of_total_sales": 11.647025640840978
+    },
+    {
+      "dept_id": "HOBBIES_1",
+      "n_rows": 8074560,
+      "mean_sales": 0.7057987060595252,
+      "median_sales": 0.0,
+      "std_sales": 2.3150943358223413,
+      "total_sales": 5699014,
+      "zero_pct": 73.13436273927,
+      "pct_of_total_sales": 8.515246863930738
+    },
+    {
+      "dept_id": "FOODS_1",
+      "n_rows": 4192560,
+      "mean_sales": 1.2380025569103363,
+      "median_sales": 0.0,
+      "std_sales": 3.0554225715453143,
+      "total_sales": 5190400,
+      "zero_pct": 62.985812963917034,
+      "pct_of_total_sales": 7.755295446290552
+    },
+    {
+      "dept_id": "HOUSEHOLD_2",
+      "n_rows": 9996150,
+      "mean_sales": 0.30424083272059743,
+      "median_sales": 0.0,
+      "std_sales": 0.8329464776191869,
+      "total_sales": 3041237,
+      "zero_pct": 80.61549696633203,
+      "pct_of_total_sales": 4.5440990014623805
+    },
+    {
+      "dept_id": "HOBBIES_2",
+      "n_rows": 2892090,
+      "mean_sales": 0.18728393653032926,
+      "median_sales": 0.0,
+      "std_sales": 0.7538643126676635,
+      "total_sales": 541642,
+      "zero_pct": 88.35828068974341,
+      "pct_of_total_sales": 0.8093005810958129
+    }
+  ],
+  "store_summary": [
+    {
+      "store_id": "CA_3",
+      "n_rows": 5918109,
+      "mean_sales": 1.9201302307882466,
+      "median_sales": 0.0,
+      "std_sales": 6.190596227022564,
+      "total_sales": 11363540,
+      "zero_pct": 59.39976772986101,
+      "pct_of_total_sales": 16.978963088729294
+    },
+    {
+      "store_id": "CA_1",
+      "n_rows": 5918109,
+      "mean_sales": 1.3234376048159977,
+      "median_sales": 0.0,
+      "std_sales": 4.0524763858639155,
+      "total_sales": 7832248,
+      "zero_pct": 63.75904870964695,
+      "pct_of_total_sales": 11.702642811463141
+    },
+    {
+      "store_id": "TX_2",
+      "n_rows": 5918109,
+      "mean_sales": 1.23851081485657,
+      "median_sales": 0.0,
+      "std_sales": 4.411699190017845,
+      "total_sales": 7329642,
+      "zero_pct": 66.31417231416319,
+      "pct_of_total_sales": 10.951668315648115
+    },
+    {
+      "store_id": "WI_2",
+      "n_rows": 5918109,
+      "mean_sales": 1.131778410975533,
+      "median_sales": 0.0,
+      "std_sales": 3.8845586917404558,
+      "total_sales": 6697988,
+      "zero_pct": 70.48004692039298,
+      "pct_of_total_sales": 10.0078752766085
+    },
+    {
+      "store_id": "WI_3",
+      "n_rows": 5918109,
+      "mean_sales": 1.1055147852126415,
+      "median_sales": 0.0,
+      "std_sales": 4.061800088055841,
+      "total_sales": 6542557,
+      "zero_pct": 70.03160975913083,
+      "pct_of_total_sales": 9.77563627257945
+    },
+    {
+      "store_id": "TX_3",
+      "n_rows": 5918109,
+      "mean_sales": 1.0486356368225054,
+      "median_sales": 0.0,
+      "std_sales": 3.7940679027447883,
+      "total_sales": 6205940,
+      "zero_pct": 69.7150728383002,
+      "pct_of_total_sales": 9.272676137090087
+    },
+    {
+      "store_id": "CA_2",
+      "n_rows": 5918109,
+      "mean_sales": 0.983151036927505,
+      "median_sales": 0.0,
+      "std_sales": 2.7666391530641454,
+      "total_sales": 5818395,
+      "zero_pct": 68.81029058437417,
+      "pct_of_total_sales": 8.693621348685982
+    },
+    {
+      "store_id": "TX_1",
+      "n_rows": 5918109,
+      "mean_sales": 0.9619327727826574,
+      "median_sales": 0.0,
+      "std_sales": 3.324403922644645,
+      "total_sales": 5692823,
+      "zero_pct": 70.71407437747429,
+      "pct_of_total_sales": 8.505996510565298
+    },
+    {
+      "store_id": "WI_1",
+      "n_rows": 5918109,
+      "mean_sales": 0.8890518914065286,
+      "median_sales": 0.0,
+      "std_sales": 2.427169905533905,
+      "total_sales": 5261506,
+      "zero_pct": 68.75405640551737,
+      "pct_of_total_sales": 7.861539288384406
+    },
+    {
+      "store_id": "CA_4",
+      "n_rows": 5918109,
+      "mean_sales": 0.7067348708852778,
+      "median_sales": 0.0,
+      "std_sales": 2.0037534798122345,
+      "total_sales": 4182534,
+      "zero_pct": 71.99951876520016,
+      "pct_of_total_sales": 6.249380950245724
+    }
+  ],
+  "state_summary": [
+    {
+      "state_id": "CA",
+      "n_rows": 23672436,
+      "mean_sales": 1.233363435854257,
+      "median_sales": 0.0,
+      "std_sales": 4.099849515821865,
+      "total_sales": 29196717,
+      "zero_pct": 65.99215644727057,
+      "pct_of_total_sales": 43.62460819912414
+    },
+    {
+      "state_id": "TX",
+      "n_rows": 17754327,
+      "mean_sales": 1.083026408153911,
+      "median_sales": 0.0,
+      "std_sales": 3.8708189991426276,
+      "total_sales": 19228405,
+      "zero_pct": 68.91443984331256,
+      "pct_of_total_sales": 28.7303409633035
+    },
+    {
+      "state_id": "WI",
+      "n_rows": 17754327,
+      "mean_sales": 1.0421150291982344,
+      "median_sales": 0.0,
+      "std_sales": 3.5362245917792916,
+      "total_sales": 18502051,
+      "zero_pct": 69.75523769501373,
+      "pct_of_total_sales": 27.645050837572356
+    }
+  ]
+}

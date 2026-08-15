@@ -1,0 +1,277 @@
+{
+  "recursive": {
+    "RMSE": 2.118165243417899,
+    "MAE": 1.0716887947023863,
+    "WAPE": 0.7427739062136264,
+    "bias": 0.05380198479852797,
+    "n": 853720,
+    "high_volume_RMSE": 5.940179943757834,
+    "high_volume_MAE": 3.787484778705038,
+    "high_volume_bias": 0.1532094853374662,
+    "high_volume_share_of_sq_error_pct": 60.77,
+    "mean_pred_on_zero_actual": 0.68027,
+    "mean_pred_on_positive_actual": 2.4719,
+    "pred_mean": 1.49662,
+    "pred_p50": 0.67386,
+    "pred_p99": 12.80413,
+    "pred_max": 164.7195,
+    "pct_predictions_below_0_5": 40.28
+  },
+  "direct_RMSE": 2.121042941194765,
+  "direct_MAE": 1.0319268155496617,
+  "verdict": "recursive beats direct",
+  "by_horizon": [
+    {
+      "horizon_day": 1,
+      "recursive_RMSE": 1.799895130719963,
+      "direct_RMSE": 1.8329090741143959,
+      "recursive_MAE": 0.8994531274040339,
+      "direct_MAE": 0.9149116251229911,
+      "recursive_mean_pred": 1.246289516206076,
+      "gap_RMSE": -0.033013943394432754
+    },
+    {
+      "horizon_day": 2,
+      "recursive_RMSE": 1.6479155028778731,
+      "direct_RMSE": 1.6749192849016274,
+      "recursive_MAE": 0.8923770347704932,
+      "direct_MAE": 0.8660437766480814,
+      "recursive_mean_pred": 1.2194956429322246,
+      "gap_RMSE": -0.027003782023754308
+    },
+    {
+      "horizon_day": 3,
+      "recursive_RMSE": 1.7407801759255226,
+      "direct_RMSE": 1.7446097869498995,
+      "recursive_MAE": 0.9050676007942017,
+      "direct_MAE": 0.8813586267628731,
+      "recursive_mean_pred": 1.2112823450107468,
+      "gap_RMSE": -0.0038296110243769554
+    },
+    {
+      "horizon_day": 4,
+      "recursive_RMSE": 1.703395983709597,
+      "direct_RMSE": 1.7093041247660474,
+      "recursive_MAE": 0.9133623206105211,
+      "direct_MAE": 0.8863047733683176,
+      "recursive_mean_pred": 1.2350602688918295,
+      "gap_RMSE": -0.005908141056450322
+    },
+    {
+      "horizon_day": 5,
+      "recursive_RMSE": 1.9073944906076088,
+      "direct_RMSE": 1.944798425091245,
+      "recursive_MAE": 1.011633652288714,
+      "direct_MAE": 0.988116448999672,
+      "recursive_mean_pred": 1.4148480508193595,
+      "gap_RMSE": -0.0374039344836361
+    },
+    {
+      "horizon_day": 6,
+      "recursive_RMSE": 2.1052923953350318,
+      "direct_RMSE": 2.116576937166167,
+      "recursive_MAE": 1.1246202389949813,
+      "direct_MAE": 1.1028610455887176,
+      "recursive_mean_pred": 1.7132236422334124,
+      "gap_RMSE": -0.011284541831135364
+    },
+    {
+      "horizon_day": 7,
+      "recursive_RMSE": 2.20693945836886,
+      "direct_RMSE": 2.181166438944775,
+      "recursive_MAE": 1.1799512838676802,
+      "direct_MAE": 1.1412679954083307,
+      "recursive_mean_pred": 1.8371908469528477,
+      "gap_RMSE": 0.025773019424085053
+    },
+    {
+      "horizon_day": 8,
+      "recursive_RMSE": 2.029936368476062,
+      "direct_RMSE": 2.0067175976521554,
+      "recursive_MAE": 1.0456602398213146,
+      "direct_MAE": 1.0124107710724828,
+      "recursive_mean_pred": 1.4733119343859078,
+      "gap_RMSE": 0.023218770823906443
+    },
+    {
+      "horizon_day": 9,
+      "recursive_RMSE": 2.1655508825470897,
+      "direct_RMSE": 2.193682129192602,
+      "recursive_MAE": 1.054634611289526,
+      "direct_MAE": 1.0204217563135456,
+      "recursive_mean_pred": 1.4208670170341828,
+      "gap_RMSE": -0.028131246645512142
+    },
+    {
+      "horizon_day": 10,
+      "recursive_RMSE": 2.081738857263608,
+      "direct_RMSE": 2.077383890293362,
+      "recursive_MAE": 1.0068738748026098,
+      "direct_MAE": 0.9730966644801573,
+      "recursive_mean_pred": 1.301733498374035,
+      "gap_RMSE": 0.004354966970246288
+    },
+    {
+      "horizon_day": 11,
+      "recursive_RMSE": 2.0305258811118803,
+      "direct_RMSE": 2.014979837935064,
+      "recursive_MAE": 1.0300081236941079,
+      "direct_MAE": 0.9954276530009839,
+      "recursive_mean_pred": 1.4000343443245546,
+      "gap_RMSE": 0.015546043176816404
+    },
+    {
+      "horizon_day": 12,
+      "recursive_RMSE": 2.325686548412723,
+      "direct_RMSE": 2.3654126357687946,
+      "recursive_MAE": 1.1093669957633114,
+      "direct_MAE": 1.0652586602164644,
+      "recursive_mean_pred": 1.6195992683013025,
+      "gap_RMSE": -0.03972608735607164
+    },
+    {
+      "horizon_day": 13,
+      "recursive_RMSE": 2.4745672958368807,
+      "direct_RMSE": 2.524721833575403,
+      "recursive_MAE": 1.2349458301855563,
+      "direct_MAE": 1.1959582689406363,
+      "recursive_mean_pred": 1.8510542119088447,
+      "gap_RMSE": -0.05015453773852219
+    },
+    {
+      "horizon_day": 14,
+      "recursive_RMSE": 2.2007531308805555,
+      "direct_RMSE": 2.195129873784992,
+      "recursive_MAE": 1.1070569988737342,
+      "direct_MAE": 1.0716213706133157,
+      "recursive_mean_pred": 1.5457942186351192,
+      "gap_RMSE": 0.005623257095563439
+    },
+    {
+      "horizon_day": 15,
+      "recursive_RMSE": 2.2241568163636765,
+      "direct_RMSE": 2.284000282773779,
+      "recursive_MAE": 1.102551584025254,
+      "direct_MAE": 1.068128687110528,
+      "recursive_mean_pred": 1.5414218588228168,
+      "gap_RMSE": -0.05984346641010241
+    },
+    {
+      "horizon_day": 16,
+      "recursive_RMSE": 1.964167778769012,
+      "direct_RMSE": 1.9713760381278114,
+      "recursive_MAE": 1.010831825337395,
+      "direct_MAE": 0.978636183666776,
+      "recursive_mean_pred": 1.3150814847414705,
+      "gap_RMSE": -0.007208259358799429
+    },
+    {
+      "horizon_day": 17,
+      "recursive_RMSE": 2.1521780577768017,
+      "direct_RMSE": 2.209932725794315,
+      "recursive_MAE": 1.0426517771035384,
+      "direct_MAE": 1.0111230865857659,
+      "recursive_mean_pred": 1.3675628099283297,
+      "gap_RMSE": -0.05775466801751339
+    },
+    {
+      "horizon_day": 18,
+      "recursive_RMSE": 2.028585330610577,
+      "direct_RMSE": 1.9993563444517994,
+      "recursive_MAE": 1.0313563415559526,
+      "direct_MAE": 0.9915234657264677,
+      "recursive_mean_pred": 1.3965319673469647,
+      "gap_RMSE": 0.02922898615877778
+    },
+    {
+      "horizon_day": 19,
+      "recursive_RMSE": 2.1048134248361685,
+      "direct_RMSE": 2.1081595310075696,
+      "recursive_MAE": 1.093407700082069,
+      "direct_MAE": 1.050797272876353,
+      "recursive_mean_pred": 1.5004569775367087,
+      "gap_RMSE": -0.0033461061714010754
+    },
+    {
+      "horizon_day": 20,
+      "recursive_RMSE": 2.479266745554396,
+      "direct_RMSE": 2.5126606658546753,
+      "recursive_MAE": 1.237374173825759,
+      "direct_MAE": 1.1888962673007544,
+      "recursive_mean_pred": 1.8530229354558003,
+      "gap_RMSE": -0.03339392030027932
+    },
+    {
+      "horizon_day": 21,
+      "recursive_RMSE": 2.7853571167637643,
+      "direct_RMSE": 2.7976709725343265,
+      "recursive_MAE": 1.3227389237303524,
+      "direct_MAE": 1.2758513496228272,
+      "recursive_mean_pred": 1.9323913826151966,
+      "gap_RMSE": -0.01231385577056221
+    },
+    {
+      "horizon_day": 22,
+      "recursive_RMSE": 2.108646255384097,
+      "direct_RMSE": 2.0768097639040697,
+      "recursive_MAE": 1.0664912703975349,
+      "direct_MAE": 1.0182262541816989,
+      "recursive_mean_pred": 1.4095910386392876,
+      "gap_RMSE": 0.031836491480027096
+    },
+    {
+      "horizon_day": 23,
+      "recursive_RMSE": 1.944567702669144,
+      "direct_RMSE": 1.9182723985323538,
+      "recursive_MAE": 1.0095772438656785,
+      "direct_MAE": 0.9611860095113153,
+      "recursive_mean_pred": 1.297213829080842,
+      "gap_RMSE": 0.026295304136790154
+    },
+    {
+      "horizon_day": 24,
+      "recursive_RMSE": 1.906014057654057,
+      "direct_RMSE": 1.8592094453442713,
+      "recursive_MAE": 0.9836199202249379,
+      "direct_MAE": 0.9351948150213185,
+      "recursive_mean_pred": 1.2934385066096876,
+      "gap_RMSE": 0.04680461230978561
+    },
+    {
+      "horizon_day": 25,
+      "recursive_RMSE": 1.9412027128543707,
+      "direct_RMSE": 1.8622650950338004,
+      "recursive_MAE": 0.9912045356391185,
+      "direct_MAE": 0.9321960278779928,
+      "recursive_mean_pred": 1.304999945609564,
+      "gap_RMSE": 0.0789376178205703
+    },
+    {
+      "horizon_day": 26,
+      "recursive_RMSE": 2.002539267362105,
+      "direct_RMSE": 1.992543253856621,
+      "recursive_MAE": 1.0779221966079706,
+      "direct_MAE": 1.0132297612331913,
+      "recursive_mean_pred": 1.5074715566190302,
+      "gap_RMSE": 0.009996013505483958
+    },
+    {
+      "horizon_day": 27,
+      "recursive_RMSE": 2.3924753993239154,
+      "direct_RMSE": 2.34831399958544,
+      "recursive_MAE": 1.2501978045809312,
+      "direct_MAE": 1.1607099891767791,
+      "recursive_mean_pred": 1.8481507557347867,
+      "gap_RMSE": 0.04416139973847555
+    },
+    {
+      "horizon_day": 28,
+      "recursive_RMSE": 2.4299695382020468,
+      "direct_RMSE": 2.4172160272937404,
+      "recursive_MAE": 1.2723490215295419,
+      "direct_MAE": 1.1931922171203673,
+      "recursive_mean_pred": 1.8482861951736147,
+      "gap_RMSE": 0.012753510908306342
+    }
+  ]
+}

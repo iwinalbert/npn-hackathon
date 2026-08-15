@@ -1,0 +1,119 @@
+{
+  "classification": {
+    "ADI_cut": 1.32,
+    "CV2_cut": 0.49,
+    "history_days": 728,
+    "alpha_smoothing": 0.1
+  },
+  "champion_RMSE": 2.0920004037475435,
+  "regimes": [
+    {
+      "regime": "smooth",
+      "n_series": 2216,
+      "n_rows": 62048,
+      "zero_pct": 11.676444043321299,
+      "mean_actual": 5.993085997937081,
+      "RMSE": 4.166145140141681,
+      "MAE": 2.5700670450296546,
+      "bias": -0.00766285504770499,
+      "sq_error_share_pct": 28.824222087190464
+    },
+    {
+      "regime": "erratic",
+      "n_series": 673,
+      "n_rows": 18844,
+      "zero_pct": 14.673105497771175,
+      "mean_actual": 5.466514540437275,
+      "RMSE": 5.395711416239738,
+      "MAE": 3.3632357280832097,
+      "bias": -0.09811708236043303,
+      "sq_error_share_pct": 14.683565996477665
+    },
+    {
+      "regime": "intermittent",
+      "n_series": 23247,
+      "n_rows": 650916,
+      "zero_pct": 60.912775227525515,
+      "mean_actual": 0.8312516515187828,
+      "RMSE": 1.2789988660626495,
+      "MAE": 0.7378423269361946,
+      "bias": -0.009302795537365804,
+      "sq_error_share_pct": 28.498780875768574
+    },
+    {
+      "regime": "lumpy",
+      "n_series": 4342,
+      "n_rows": 121576,
+      "zero_pct": 47.705139172205044,
+      "mean_actual": 1.7737135618872146,
+      "RMSE": 2.932565722456716,
+      "MAE": 1.5466417130848196,
+      "bias": 0.01331118896821741,
+      "sq_error_share_pct": 27.983650925819664
+    },
+    {
+      "regime": "never sold",
+      "n_series": 12,
+      "n_rows": 336,
+      "zero_pct": 67.26190476190477,
+      "mean_actual": 0.5297619047619048,
+      "RMSE": 1.0428499585753432,
+      "MAE": 0.5968242261904761,
+      "bias": -0.41992226190476184,
+      "sq_error_share_pct": 0.009780114743622295
+    }
+  ],
+  "classical_methods_per_regime": [
+    {
+      "regime": "smooth",
+      "champion": 4.166145140141681,
+      "croston": 4.512107928970395,
+      "sba": 4.498210207704367,
+      "tsb": 4.564090059756124,
+      "rolling_mean_28": 4.619094147750408
+    },
+    {
+      "regime": "erratic",
+      "champion": 5.395711416239738,
+      "croston": 5.532230536793706,
+      "sba": 5.512610585024662,
+      "tsb": 5.591329732944585,
+      "rolling_mean_28": 5.717425440237537
+    },
+    {
+      "regime": "intermittent",
+      "champion": 1.2789988660626495,
+      "croston": 1.3780650175285822,
+      "sba": 1.3740910299592286,
+      "tsb": 1.3416723814132117,
+      "rolling_mean_28": 1.3625308291260292
+    },
+    {
+      "regime": "lumpy",
+      "champion": 2.932565722456716,
+      "croston": 3.140738009968172,
+      "sba": 3.1343379727109455,
+      "tsb": 3.021679805486492,
+      "rolling_mean_28": 3.0705806260144426
+    },
+    {
+      "regime": "never sold",
+      "champion": 1.0428499585753432,
+      "croston": 1.2732339073875223,
+      "sba": 1.2510598572321878,
+      "tsb": 1.0690449676496976,
+      "rolling_mean_28": 1.0690449676496976
+    },
+    {
+      "regime": "ALL",
+      "champion": 2.0920004037475435,
+      "croston": 2.237980117641023,
+      "sba": 2.2317236798555102,
+      "tsb": 2.2084427602338583,
+      "rolling_mean_28": 2.242952959753161
+    }
+  ],
+  "regimes_where_classical_wins": [],
+  "per_regime_rescale_oracle_RMSE": 2.0912082909497167,
+  "per_regime_rescale_oracle_gain": -0.0007921127978267606
+}

@@ -1,0 +1,21 @@
+Model,Objective,Features,RMSE,MAE,WAPE,Bias,Demand Accuracy,Precision,Recall,F1,Class,Source
+Naive — last value,none (arithmetic),—,2.8936,1.373,0.9516,0.1903,N/A,N/A,N/A,N/A,baseline,registry record (no prediction file on disk)
+Naive — rolling mean 7,none (arithmetic),—,2.2487,1.0683,0.7404,-0.1062,N/A,N/A,N/A,N/A,baseline,registry record (no prediction file on disk)
+Naive — rolling mean 28,none (arithmetic),—,2.243,1.0657,0.7386,-0.0564,N/A,N/A,N/A,N/A,baseline,registry record (no prediction file on disk)
+Naive — seasonal naive,none (arithmetic),—,2.6769,1.244,0.8622,-0.1062,0.657,0.6289,0.6027,0.6156,baseline,recomputed from predictions
+"LightGBM, L2 objective",L2 (squared error),32,2.1467,1.0411,0.7216,-0.059,0.6996,0.636,0.7967,0.7073,development,recomputed from predictions
+"LightGBM, Tweedie",Tweedie p=1.1,32,2.1256,1.0315,0.7149,-0.0795,0.7039,0.6421,0.7913,0.7089,development,recomputed from predictions
+"LightGBM, Tweedie + recency",Tweedie p=1.1,32,2.1258,1.032,0.7153,-0.0763,0.7038,0.6415,0.793,0.7093,development,recomputed from predictions
+"LightGBM, Tweedie 32f (champion v1)",Tweedie p=1.1,32,2.121,1.0319,0.7152,-0.0704,0.7038,0.6413,0.7939,0.7095,champion v1,recomputed from predictions
+Hurdle (two-stage),binary + Tweedie,32,2.1267,1.0324,0.7155,-0.0721,0.7025,0.6393,0.7967,0.7093,development,recomputed from predictions
+"LightGBM, Tweedie p=1.5",Tweedie p=1.5,32,2.1263,1.0289,0.7131,-0.0854,0.7057,0.6452,0.7865,0.7089,development,recomputed from predictions
+"LightGBM, Poisson",Poisson,32,2.1379,1.035,0.7173,-0.063,0.7018,0.6384,0.7971,0.709,development,recomputed from predictions
+"LightGBM, L1",L1 (absolute error),32,2.2432,0.9591,0.6648,-0.4756,0.7243,0.7408,0.6074,0.6675,development,recomputed from predictions
+Recursive one-step (member B),Tweedie p=1.1,26,2.1182,1.0717,0.7428,0.0538,0.6897,0.6216,0.8148,0.7053,ensemble member,recomputed from predictions
+"Team-style approach, frozen-origin",Tweedie p=1.1,—,2.1835,1.0498,0.7276,-0.0821,0.699,0.6369,0.7898,0.7052,reference,recomputed from predictions
+Shape only 36f,Tweedie p=1.1,36,2.1163,1.0299,0.7138,-0.0729,0.7043,0.642,0.7933,0.7097,development,recomputed from predictions
+Shape+Cycle 38f (champion v2),Tweedie p=1.1,38,2.1157,1.0287,N/A,N/A,N/A,N/A,N/A,N/A,champion v2,registry record (no prediction file on disk)
+Diversity blend w=0.50 (38f+26f),Tweedie p=1.1 ×2,38+26,2.092,1.0441,0.7236,-0.0081,0.6967,0.6305,0.8076,0.7082,champion v3,recomputed from predictions
+Diversity blend w=0.60 (38f+32f),Tweedie p=1.1 ×2,38+32,2.0929,1.0395,0.7205,-0.0224,0.698,0.6321,0.8068,0.7088,FINAL SHIPPED,recomputed from predictions
+  - member A: direct 38f (seed 42),Tweedie p=1.1,38,2.1211,1.0293,0.7134,-0.0724,0.7047,0.6429,0.7918,0.7096,member,recomputed from predictions
+  - member B2: recursive 32f (seed 42),Tweedie p=1.1,32,2.1185,1.0689,0.7408,0.0526,0.6879,0.6183,0.8233,0.7062,member,recomputed from predictions

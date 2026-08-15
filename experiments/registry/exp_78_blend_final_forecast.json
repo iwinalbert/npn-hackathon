@@ -1,0 +1,96 @@
+{
+  "experiment_name": "exp_78_blend_final_forecast",
+  "started_at": "2026-08-15T11:45:44",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Retrain of the accepted Experiment #77 blend at forecast origin d_1941. Across the four evaluation windows this configuration measured mean dRMSE -0.0242 and mean dMAE +0.0186 against member A alone; on the primary window it scored RMSE 2.0929 / MAE 1.0395.",
+    "No ground truth exists for d_1942..d_1969, so no accuracy figure applies to this forecast itself. The recursive member's 'future matrix equals real sales' check is vacuous at this origin for the same reason, and is reported as such."
+  ],
+  "model_type": "Blend: LightGBM direct (38 feat) + one-step recursive shape (32 feat)",
+  "objective": "tweedie (variance_power=1.1) for both members",
+  "feature_set_label": "diversity blend (upgraded member B') \u2014 final forecast",
+  "n_features": 38,
+  "forecast_origin_day": "d_1941",
+  "forecast_dates": "2016-05-23 .. 2016-06-19",
+  "horizon": 28,
+  "n_series": 30490,
+  "blend_weight": 0.6,
+  "direct_member": {
+    "hyperparameters": {
+      "objective": "tweedie",
+      "tweedie_variance_power": 1.1,
+      "metric": "rmse",
+      "learning_rate": 0.05,
+      "num_leaves": 128,
+      "max_depth": -1,
+      "min_data_in_leaf": 100,
+      "feature_fraction": 0.8,
+      "bagging_fraction": 0.8,
+      "bagging_freq": 1,
+      "lambda_l2": 1.0,
+      "max_cat_threshold": 32,
+      "verbosity": -1,
+      "num_threads": 0,
+      "seed": 42,
+      "deterministic": true,
+      "force_row_wise": true
+    },
+    "n_estimators": 400,
+    "training_seconds": 135.6,
+    "model_path": "models\\champion\\model_11_blend_direct_final_forecast.txt"
+  },
+  "recursive_member": {
+    "n_estimators": 400,
+    "training_seconds": 416.2,
+    "training_origins_count": 420,
+    "training_origins_span": "d_1521 .. d_1940",
+    "model_path": "models\\champion\\model_12_blend_recursive_shape_final.txt"
+  },
+  "recursive_leakage_checks": {
+    "future_matrix_equals_real_sales": false,
+    "pre_origin_history_intact": true,
+    "no_ground_truth_exists": true,
+    "passed": true
+  },
+  "prediction_path": "predictions\\final_forecast\\final_forecast_28day_v3_diversity_blend.csv",
+  "forecast_mean": 1.533315,
+  "direct_member_forecast_mean": 1.485133,
+  "recursive_member_forecast_mean": 1.605588,
+  "correlation_with_shape_cycle_forecast": 0.996248,
+  "structure_checks": [
+    {
+      "check": "rows_30490",
+      "passed": true
+    },
+    {
+      "check": "cols_F1_F28",
+      "passed": true
+    },
+    {
+      "check": "no_duplicate_ids",
+      "passed": true
+    },
+    {
+      "check": "no_nan",
+      "passed": true
+    },
+    {
+      "check": "no_negative",
+      "passed": true
+    },
+    {
+      "check": "ids_and_order_match_template",
+      "passed": true
+    }
+  ],
+  "validated_by": "exp_76_architectural_diversity_blend + exp_77_recursive_member_upgrade",
+  "finished_at": "2026-08-15T11:45:44",
+  "wall_seconds": 0.0
+}

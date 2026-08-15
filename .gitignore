@@ -1,0 +1,109 @@
+# =============================================================================
+# NPN_HACKATHON — .gitignore
+#
+# Policy, in one line: version the CODE, the PROVENANCE and the DOCUMENTATION;
+# never version the DATA, the MODEL BINARIES or the PREDICTION MATRICES.
+#
+# Full rationale, including how to reconstitute every excluded artefact:
+#   08_DOCUMENTATION/GIT_POLICY.md
+# =============================================================================
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+.venv/
+venv/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# --- Node / frontend --------------------------------------------------------
+node_modules/
+.vite/
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+
+# --- OS ---------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editors / tooling ------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+
+# --- Secrets and local config (NEVER COMMIT) --------------------------------
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+credentials*.json
+secrets*.json
+.claude/settings.local.json
+
+# --- Scratch / temporary ----------------------------------------------------
+*.log
+*.tmp
+*.bak
+nohup.out
+_*.png
+
+# =============================================================================
+# PROTECTED RESEARCH ARTEFACTS — excluded because of SIZE, not importance.
+# All of these remain on disk, untouched. Their integrity is tracked in git via
+# SHA-256 manifests (08_DOCUMENTATION/_integrity/) which ARE committed.
+# =============================================================================
+
+# --- Raw datasets (424 MB) — immutable competition inputs -------------------
+data/raw/*.csv
+
+# --- Processed panel (287 MB) — regenerable build output --------------------
+data/processed/*.parquet
+data/processed/*.csv
+
+# --- Model binaries (214 MB + 29 MB of frozen copies) -----------------------
+# Provenance preserved: 02_MODEL/FROZEN_CHAMPION/CHAMPION_MANIFEST.json holds
+# the SHA-256 of both frozen members and IS committed.
+models/**/*.txt
+02_MODEL/FROZEN_CHAMPION/*.txt
+
+# --- Prediction matrices (978 MB) -------------------------------------------
+predictions/validation/*.csv
+predictions/final_forecast/*.csv
+predictions/uc11_cache/
+MY_RESEARCH_PAPER/reproduction/*.csv
+05_REPORTS/FINAL_RESEARCH_REPORT/reproduction/*.csv
+
+# --- Deliverable copies of the forecast (17 MB each) ------------------------
+# The canonical forecast is excluded above; these are copies of it.
+03_FORECASTS/*.csv
+09_SUBMISSION/*.csv
+
+# =============================================================================
+# PRODUCT-GENERATED ARTEFACTS — rebuildable, never authored by hand
+# =============================================================================
+06_BACKEND/data/*.duckdb
+06_BACKEND/data/*.duckdb.wal
+06_BACKEND/.pytest_cache/
+
+# =============================================================================
+# EXPLICITLY KEPT (negations) — small, high-value provenance
+# =============================================================================
+!data/raw/README.md
+!data/processed/README.md
+!data/processed/PROCESSING_REPORT.md
+!data/processed/_audit/*.json
+!predictions/final_forecast/README.md
+!models/champion/README.md
+!02_MODEL/FROZEN_CHAMPION/CHAMPION_MANIFEST.json

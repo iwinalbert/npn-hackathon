@@ -1,0 +1,28 @@
+# Normalise line endings so a Windows-authored repo builds cleanly on Linux CI
+# and inside containers. Text is stored LF in the repository and checked out
+# native on Windows.
+* text=auto eol=lf
+
+# Windows-only shell scripts keep CRLF
+*.bat        text eol=crlf
+*.cmd        text eol=crlf
+
+# Shell scripts must stay LF or they will not execute in a container
+*.sh         text eol=lf
+Makefile     text eol=lf
+
+# Binary — never diffed, never line-ending converted
+*.pdf        binary
+*.docx       binary
+*.png        binary
+*.jpg        binary
+*.parquet    binary
+*.duckdb     binary
+*.woff2      binary
+
+# LightGBM boosters are text but are model artefacts: never diff them
+*.txt        -diff
+models/**    -diff -merge
+
+# Generated lockfiles: keep, but do not clutter diffs
+package-lock.json  -diff

@@ -1,0 +1,4 @@
+cat_id,Extremely sparse (top 5% of zero%),High-activity (bottom quartile of zero%),Regular/intermittent (middle 50%),"Sparse (top quartile, below p95)"
+FOODS,337,4869,7249,1915
+HOBBIES,521,713,2617,1799
+HOUSEHOLD,633,2047,5401,2389

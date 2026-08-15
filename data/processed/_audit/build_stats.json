@@ -1,0 +1,81 @@
+{
+  "n_series": 30490,
+  "n_days": 1941,
+  "source_file": "sales_train_evaluation.csv",
+  "d_range": [
+    "d_1",
+    "d_1941"
+  ],
+  "rows_after_calendar_join": 59181090,
+  "rows_missing_date_after_join": 0,
+  "rows_after_price_join": 59181090,
+  "rows_missing_price_after_join": 12299413,
+  "pct_missing_price_after_join": 20.782673992655422,
+  "final_shape": [
+    59181090,
+    22
+  ],
+  "final_columns": [
+    "id",
+    "item_id",
+    "dept_id",
+    "cat_id",
+    "store_id",
+    "state_id",
+    "d",
+    "date",
+    "wm_yr_wk",
+    "weekday",
+    "wday",
+    "month",
+    "year",
+    "event_name_1",
+    "event_type_1",
+    "event_name_2",
+    "event_type_2",
+    "snap_CA",
+    "snap_TX",
+    "snap_WI",
+    "sell_price",
+    "sales"
+  ],
+  "final_dtypes": {
+    "id": "category",
+    "item_id": "category",
+    "dept_id": "category",
+    "cat_id": "category",
+    "store_id": "category",
+    "state_id": "category",
+    "d": "str",
+    "date": "datetime64[us]",
+    "wm_yr_wk": "int32",
+    "weekday": "category",
+    "wday": "int8",
+    "month": "int8",
+    "year": "int16",
+    "event_name_1": "category",
+    "event_type_1": "category",
+    "event_name_2": "category",
+    "event_type_2": "category",
+    "snap_CA": "int8",
+    "snap_TX": "int8",
+    "snap_WI": "int8",
+    "sell_price": "float32",
+    "sales": "uint16"
+  },
+  "sales_check": {
+    "n_zero": 40241819,
+    "pct_zero": 67.99776584040612,
+    "min": 0,
+    "max": 763,
+    "mean": 1.1308878055473464,
+    "sum": 66927173
+  },
+  "date_range": [
+    "2011-01-29 00:00:00",
+    "2016-05-22 00:00:00"
+  ],
+  "output_file": "C:\\Users\\Rishi\\OneDrive\\Desktop\\NPN_HACKATHON\\processed_dataset\\sales_long_full.parquet",
+  "output_size_bytes": 301036127,
+  "output_size_mb": 287.09
+}

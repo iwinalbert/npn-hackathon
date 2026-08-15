@@ -1,0 +1,836 @@
+{
+  "data": {
+    "n_series": 30490,
+    "n_history_days": 1941,
+    "n_calendar_days": 1969,
+    "n_price_weeks": 282,
+    "sales_matrix_mb": 118.4,
+    "price_matrix_mb": 34.4,
+    "first_date": "2011-01-29",
+    "last_sales_date": "2016-05-22",
+    "last_calendar_date": "2016-06-19",
+    "load_seconds": 14.1
+  },
+  "validation_window": {
+    "forecast_origin_day": "d_1913",
+    "forecast_origin_date": "2016-04-24",
+    "training_days_available": "d_1 .. d_1913",
+    "training_dates_available": "2011-01-29 .. 2016-04-24",
+    "validation_days": "d_1914 .. d_1941",
+    "validation_dates": "2016-04-25 .. 2016-05-22",
+    "horizon_days": 28,
+    "validation_has_known_sales": true
+  },
+  "final_forecast_window": {
+    "forecast_origin_day": "d_1941",
+    "forecast_origin_date": "2016-05-22",
+    "training_days_available": "d_1 .. d_1941",
+    "training_dates_available": "2011-01-29 .. 2016-05-22",
+    "validation_days": "d_1942 .. d_1969",
+    "validation_dates": "2016-05-23 .. 2016-06-19",
+    "horizon_days": 28,
+    "validation_has_known_sales": false
+  },
+  "validation_frame": {
+    "rows": 853720,
+    "columns": 37,
+    "memory_mb": 93.1,
+    "build_seconds": 0.1
+  },
+  "training_origins": {
+    "n_origins": 6,
+    "origin_day_idxs": [
+      1744,
+      1772,
+      1800,
+      1828,
+      1856,
+      1884
+    ],
+    "origin_days": [
+      "d_1745",
+      "d_1773",
+      "d_1801",
+      "d_1829",
+      "d_1857",
+      "d_1885"
+    ],
+    "origin_dates": [
+      "2015-11-08",
+      "2015-12-06",
+      "2016-01-03",
+      "2016-01-31",
+      "2016-02-28",
+      "2016-03-27"
+    ],
+    "stride_days": 28,
+    "series_sampled_for_check": 2000
+  },
+  "training_frame_sample": {
+    "rows": 336000,
+    "columns": 37,
+    "note": "built on a 2,000-series sample for verification speed only"
+  },
+  "listing_feature_probe": [
+    {
+      "origin_day": "d_201",
+      "origin_date": "2011-08-17",
+      "pre_listing_pct": 47.84,
+      "price_missing_pct": 47.84,
+      "pre_listing_equals_price_missing": true,
+      "pre_listing_mean_sales": 0.0,
+      "pre_listing_zero_pct": 100.0,
+      "listed_mean_sales": 1.6815,
+      "listed_zero_pct": 56.96
+    },
+    {
+      "origin_day": "d_701",
+      "origin_date": "2012-12-29",
+      "pre_listing_pct": 27.68,
+      "price_missing_pct": 27.68,
+      "pre_listing_equals_price_missing": true,
+      "pre_listing_mean_sales": 0.0,
+      "pre_listing_zero_pct": 100.0,
+      "listed_mean_sales": 1.5181,
+      "listed_zero_pct": 59.79
+    },
+    {
+      "origin_day": "d_1401",
+      "origin_date": "2014-11-29",
+      "pre_listing_pct": 3.39,
+      "price_missing_pct": 3.39,
+      "pre_listing_equals_price_missing": true,
+      "pre_listing_mean_sales": 0.0,
+      "pre_listing_zero_pct": 100.0,
+      "listed_mean_sales": 1.121,
+      "listed_zero_pct": 64.51
+    },
+    {
+      "origin_day": "d_1913",
+      "origin_date": "2016-04-24",
+      "pre_listing_pct": 0.0,
+      "price_missing_pct": 0.0,
+      "pre_listing_equals_price_missing": true,
+      "pre_listing_mean_sales": null,
+      "pre_listing_zero_pct": null,
+      "listed_mean_sales": 1.4428,
+      "listed_zero_pct": 54.44
+    }
+  ],
+  "future_frame": {
+    "rows": 853720,
+    "columns": 36,
+    "has_calendar": true,
+    "has_snap": true,
+    "has_event_fields": true,
+    "price_present_pct": 100.0,
+    "target_column_absent": true
+  },
+  "metric_smoke_test": {
+    "predict_all_zeros": {
+      "RMSE": 3.91611096978578,
+      "MAE": 1.4428196598416343,
+      "WAPE": 1.0,
+      "bias": -1.4428196598416343,
+      "n": 853720
+    },
+    "predict_rolling_mean_28 (persistence rule, no fitting)": {
+      "RMSE": 2.2429529596664453,
+      "MAE": 1.065729312843381,
+      "WAPE": 0.7386434649499832,
+      "bias": -0.05638616812506053,
+      "n": 853720
+    }
+  },
+  "metric_smoke_test_disclaimer": "Arithmetic reference points used only to prove the metric code works on a real 853,720-row validation window. No model was trained. These are NOT comparable to the team's LightGBM+Tweedie benchmark (RMSE 2.0324 / MAE 1.0869) and no such comparison is claimed.",
+  "features": {
+    "n_features": 32,
+    "n_groups": 7,
+    "by_group": {
+      "A_calendar": [
+        "wday",
+        "month",
+        "year",
+        "is_weekend",
+        "event_name_1",
+        "event_type_1",
+        "event_name_2",
+        "event_type_2",
+        "snap"
+      ],
+      "B_historical_demand": [
+        "lag_1",
+        "lag_7",
+        "lag_14",
+        "lag_28",
+        "rolling_mean_7",
+        "rolling_mean_28",
+        "rolling_std_7",
+        "rolling_std_28"
+      ],
+      "C_recency": [
+        "days_since_last_sale",
+        "zero_streak_length",
+        "days_since_first_sale"
+      ],
+      "D_listing": [
+        "days_since_first_listing",
+        "pre_listing"
+      ],
+      "E_price": [
+        "sell_price",
+        "recent_avg_price",
+        "price_rel_to_recent_avg",
+        "price_is_missing"
+      ],
+      "F_hierarchy": [
+        "item_id",
+        "dept_id",
+        "cat_id",
+        "store_id",
+        "state_id"
+      ],
+      "G_horizon": [
+        "horizon"
+      ]
+    },
+    "categorical": [
+      "wday",
+      "month",
+      "year",
+      "event_name_1",
+      "event_type_1",
+      "event_name_2",
+      "event_type_2",
+      "item_id",
+      "dept_id",
+      "cat_id",
+      "store_id",
+      "state_id"
+    ],
+    "summary": [
+      {
+        "group": "A_calendar",
+        "feature": "wday",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 1.0,
+        "max": 7.0,
+        "mean": 4.0
+      },
+      {
+        "group": "A_calendar",
+        "feature": "month",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 4.0,
+        "max": 5.0,
+        "mean": 4.7857
+      },
+      {
+        "group": "A_calendar",
+        "feature": "year",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 2016.0,
+        "max": 2016.0,
+        "mean": 2016.0
+      },
+      {
+        "group": "A_calendar",
+        "feature": "is_weekend",
+        "dtype": "int8",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.2857
+      },
+      {
+        "group": "A_calendar",
+        "feature": "event_name_1",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 22.0,
+        "mean": 2.2143
+      },
+      {
+        "group": "A_calendar",
+        "feature": "event_type_1",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 3.0,
+        "mean": 0.2857
+      },
+      {
+        "group": "A_calendar",
+        "feature": "event_name_2",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      {
+        "group": "A_calendar",
+        "feature": "event_type_2",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      {
+        "group": "A_calendar",
+        "feature": "snap",
+        "dtype": "int8",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 1.0,
+        "mean": 0.3571
+      },
+      {
+        "group": "B_historical_demand",
+        "feature": "lag_1",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 130.0,
+        "mean": 1.6332
+      },
+      {
+        "group": "B_historical_demand",
+        "feature": "lag_7",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 98.0,
+        "mean": 1.2482
+      },
+      {
+        "group": "B_historical_demand",
+        "feature": "lag_14",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 122.0,
+        "mean": 1.3915
+      },
+      {
+        "group": "B_historical_demand",
+        "feature": "lag_28",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 61.0,
+        "mean": 1.1821
+      },
+      {
+        "group": "B_historical_demand",
+        "feature": "rolling_mean_7",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 108.7143,
+        "mean": 1.3366
+      },
+      {
+        "group": "B_historical_demand",
+        "feature": "rolling_mean_28",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 110.3571,
+        "mean": 1.3864
+      },
+      {
+        "group": "B_historical_demand",
+        "feature": "rolling_std_7",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 36.4641,
+        "mean": 1.0241
+      },
+      {
+        "group": "B_historical_demand",
+        "feature": "rolling_std_28",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 39.2032,
+        "mean": 1.2366
+      },
+      {
+        "group": "C_recency",
+        "feature": "days_since_last_sale",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 1662.0,
+        "mean": 7.0681
+      },
+      {
+        "group": "C_recency",
+        "feature": "zero_streak_length",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 1662.0,
+        "mean": 7.0681
+      },
+      {
+        "group": "C_recency",
+        "feature": "days_since_first_sale",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 67.0,
+        "max": 1912.0,
+        "mean": 1505.8057
+      },
+      {
+        "group": "D_listing",
+        "feature": "days_since_first_listing",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 72.0,
+        "max": 1940.0,
+        "mean": 1523.1083
+      },
+      {
+        "group": "D_listing",
+        "feature": "pre_listing",
+        "dtype": "int8",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      {
+        "group": "E_price",
+        "feature": "sell_price",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.1,
+        "max": 33.72,
+        "mean": 4.4821
+      },
+      {
+        "group": "E_price",
+        "feature": "recent_avg_price",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.2,
+        "max": 29.97,
+        "mean": 4.4813
+      },
+      {
+        "group": "E_price",
+        "feature": "price_rel_to_recent_avg",
+        "dtype": "float32",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0915,
+        "max": 2.8,
+        "mean": 1.0004
+      },
+      {
+        "group": "E_price",
+        "feature": "price_is_missing",
+        "dtype": "int8",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0
+      },
+      {
+        "group": "F_hierarchy",
+        "feature": "item_id",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 3048.0,
+        "mean": 1524.0
+      },
+      {
+        "group": "F_hierarchy",
+        "feature": "dept_id",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 6.0,
+        "mean": 3.161
+      },
+      {
+        "group": "F_hierarchy",
+        "feature": "cat_id",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 2.0,
+        "mean": 0.8721
+      },
+      {
+        "group": "F_hierarchy",
+        "feature": "store_id",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 9.0,
+        "mean": 4.5
+      },
+      {
+        "group": "F_hierarchy",
+        "feature": "state_id",
+        "dtype": "int16",
+        "categorical": true,
+        "missing_pct": 0.0,
+        "min": 0.0,
+        "max": 2.0,
+        "mean": 0.9
+      },
+      {
+        "group": "G_horizon",
+        "feature": "horizon",
+        "dtype": "int8",
+        "categorical": false,
+        "missing_pct": 0.0,
+        "min": 1.0,
+        "max": 28.0,
+        "mean": 14.5
+      }
+    ]
+  },
+  "checks": {
+    "total_checks": 46,
+    "passed": 46,
+    "failed": 0,
+    "all_passed": true,
+    "checks": [
+      {
+        "check": "series_count",
+        "passed": true,
+        "detail": "30,490 series (expected 30,490)"
+      },
+      {
+        "check": "history_day_count",
+        "passed": true,
+        "detail": "1,941 days (expected 1,941)"
+      },
+      {
+        "check": "total_units_match",
+        "passed": true,
+        "detail": "66,927,173 units (expected 66,927,173)"
+      },
+      {
+        "check": "zero_cell_count_match",
+        "passed": true,
+        "detail": "40,241,819 zero cells = 68.00% (expected 40,241,819)"
+      },
+      {
+        "check": "max_sales_match",
+        "passed": true,
+        "detail": "max 763 (expected 763)"
+      },
+      {
+        "check": "no_negative_sales",
+        "passed": true,
+        "detail": "min 0"
+      },
+      {
+        "check": "zeros_preserved_not_nan",
+        "passed": true,
+        "detail": "no zero was converted to NaN anywhere in loading"
+      },
+      {
+        "check": "day_index_to_date_mapping",
+        "passed": true,
+        "detail": "all 6 anchor dates correct",
+        "data": {
+          "idx_0": "d_1 = 2011-01-29",
+          "idx_1912": "d_1913 = 2016-04-24",
+          "idx_1913": "d_1914 = 2016-04-25",
+          "idx_1940": "d_1941 = 2016-05-22",
+          "idx_1941": "d_1942 = 2016-05-23",
+          "idx_1968": "d_1969 = 2016-06-19"
+        }
+      },
+      {
+        "check": "calendar_covers_forecast_horizon",
+        "passed": true,
+        "detail": "calendar has 1969 days vs 1941 sales days = 28 future days available"
+      },
+      {
+        "check": "validation_window_has_ground_truth",
+        "passed": true,
+        "detail": "d_1914 .. d_1941 (2016-04-25 .. 2016-05-22) are real observed sales"
+      },
+      {
+        "check": "row_count",
+        "passed": true,
+        "detail": "853,720 rows (expected 30,490 series x 28 days = 853,720)"
+      },
+      {
+        "check": "no_duplicate_series_day_rows",
+        "passed": true,
+        "detail": "0 duplicate (series, target_day) pairs"
+      },
+      {
+        "check": "validation_spans_exactly_28_days",
+        "passed": true,
+        "detail": "28 distinct target days (expected 28)"
+      },
+      {
+        "check": "every_series_present_on_every_day",
+        "passed": true,
+        "detail": "rows per target day: min 30,490, max 30,490 (expected 30,490 for all)"
+      },
+      {
+        "check": "horizon_values_1_to_28",
+        "passed": true,
+        "detail": "horizon values 1..28 (28 distinct)"
+      },
+      {
+        "check": "nonneg_lag_1",
+        "passed": true,
+        "detail": "min 0.000, max 130.000"
+      },
+      {
+        "check": "nonneg_lag_7",
+        "passed": true,
+        "detail": "min 0.000, max 98.000"
+      },
+      {
+        "check": "nonneg_lag_14",
+        "passed": true,
+        "detail": "min 0.000, max 122.000"
+      },
+      {
+        "check": "nonneg_lag_28",
+        "passed": true,
+        "detail": "min 0.000, max 61.000"
+      },
+      {
+        "check": "nonneg_rolling_mean_7",
+        "passed": true,
+        "detail": "min 0.000, max 108.714"
+      },
+      {
+        "check": "nonneg_rolling_mean_28",
+        "passed": true,
+        "detail": "min 0.000, max 110.357"
+      },
+      {
+        "check": "nonneg_rolling_std_7",
+        "passed": true,
+        "detail": "min 0.000, max 36.464"
+      },
+      {
+        "check": "nonneg_rolling_std_28",
+        "passed": true,
+        "detail": "min 0.000, max 39.203"
+      },
+      {
+        "check": "days_since_last_sale_in_range",
+        "passed": true,
+        "detail": "range [0, 1662], history length 1913"
+      },
+      {
+        "check": "days_since_last_sale_vs_zero_streak_length",
+        "passed": true,
+        "detail": "IDENTICAL by construction at a fixed origin \u2014 one of the two is redundant and should be dropped before training",
+        "data": {
+          "identical": true
+        }
+      },
+      {
+        "check": "snap_is_binary",
+        "passed": true,
+        "detail": "distinct SNAP values: [0, 1]"
+      },
+      {
+        "check": "snap_matched_to_series_own_state",
+        "passed": true,
+        "detail": "series in CA on 2016-04-25: feature=0, calendar snap_CA=0"
+      },
+      {
+        "check": "sell_price_positive_where_present",
+        "passed": true,
+        "detail": "853,720 priced rows, range [0.10, 33.72]"
+      },
+      {
+        "check": "price_missingness_reported",
+        "passed": true,
+        "detail": "0.00% of rows have no price (left as NaN, never imputed)",
+        "data": {
+          "missing_price_pct": 0.0
+        }
+      },
+      {
+        "check": "target_is_raw_nonneg_integers",
+        "passed": true,
+        "detail": "target range [0, 196], 54.44% zeros \u2014 preserved, not smoothed"
+      },
+      {
+        "check": "target_values_match_raw_source",
+        "passed": true,
+        "detail": "500 random rows spot-checked against sales_train_evaluation.csv, 0 mismatches"
+      },
+      {
+        "check": "no_future_sales_in_features",
+        "passed": true,
+        "detail": "all 32 features unchanged after overwriting every post-origin sales value with 9999",
+        "data": {
+          "features_tested": 32,
+          "features_changed": []
+        }
+      },
+      {
+        "check": "corruption_actually_applied",
+        "passed": true,
+        "detail": "target column did change, confirming the corruption reached the data (so the feature test above is meaningful)"
+      },
+      {
+        "check": "future_prices_are_used",
+        "passed": true,
+        "detail": "sell_price for horizon days responds to future price data (legitimate: sell_prices.csv covers the forecast weeks)"
+      },
+      {
+        "check": "price_corruption_does_not_touch_demand_features",
+        "passed": true,
+        "detail": "rolling_mean_28 unaffected by price changes, as expected"
+      },
+      {
+        "check": "training_targets_precede_validation",
+        "passed": true,
+        "detail": "latest training target is day index 1912 (d_1913); validation starts at 1913 (d_1914)"
+      },
+      {
+        "check": "training_origins_precede_validation_origin",
+        "passed": true,
+        "detail": "latest training origin is day index 1884 (d_1885), at least 28 days before the validation origin 1912 (d_1913)"
+      },
+      {
+        "check": "no_duplicate_training_rows",
+        "passed": true,
+        "detail": "0 duplicate (series, origin, target_day) rows"
+      },
+      {
+        "check": "listing_feature_activates_at_early_origins",
+        "passed": true,
+        "detail": "pre_listing is non-zero at d_201 (47.84%), d_701 (27.68%), d_1401 (3.39%)"
+      },
+      {
+        "check": "pre_listing_rows_have_no_sales",
+        "passed": true,
+        "detail": "d_201: 100.0% zeros (mean 0.0) vs 56.96% for listed rows; d_701: 100.0% zeros (mean 0.0) vs 59.79% for listed rows; d_1401: 100.0% zeros (mean 0.0) vs 64.51% for listed rows",
+        "data": {
+          "per_origin": [
+            {
+              "origin_day": "d_201",
+              "origin_date": "2011-08-17",
+              "pre_listing_pct": 47.84,
+              "price_missing_pct": 47.84,
+              "pre_listing_equals_price_missing": true,
+              "pre_listing_mean_sales": 0.0,
+              "pre_listing_zero_pct": 100.0,
+              "listed_mean_sales": 1.6815,
+              "listed_zero_pct": 56.96
+            },
+            {
+              "origin_day": "d_701",
+              "origin_date": "2012-12-29",
+              "pre_listing_pct": 27.68,
+              "price_missing_pct": 27.68,
+              "pre_listing_equals_price_missing": true,
+              "pre_listing_mean_sales": 0.0,
+              "pre_listing_zero_pct": 100.0,
+              "listed_mean_sales": 1.5181,
+              "listed_zero_pct": 59.79
+            },
+            {
+              "origin_day": "d_1401",
+              "origin_date": "2014-11-29",
+              "pre_listing_pct": 3.39,
+              "price_missing_pct": 3.39,
+              "pre_listing_equals_price_missing": true,
+              "pre_listing_mean_sales": 0.0,
+              "pre_listing_zero_pct": 100.0,
+              "listed_mean_sales": 1.121,
+              "listed_zero_pct": 64.51
+            }
+          ]
+        }
+      },
+      {
+        "check": "pre_listing_vs_price_is_missing_redundancy",
+        "passed": true,
+        "detail": "IDENTICAL at every tested origin \u2014 one of the two is redundant",
+        "data": {
+          "identical_everywhere": true
+        }
+      },
+      {
+        "check": "future_frame_row_count",
+        "passed": true,
+        "detail": "853,720 rows = 30,490 x 28"
+      },
+      {
+        "check": "future_frame_has_no_target",
+        "passed": true,
+        "detail": "no target column attached (correct: those sales do not exist)"
+      },
+      {
+        "check": "future_frame_has_calendar_and_snap",
+        "passed": true,
+        "detail": "calendar + state-matched SNAP available for all 28 future days"
+      },
+      {
+        "check": "future_frame_price_coverage",
+        "passed": true,
+        "detail": "100.0% of future rows have a known sell_price"
+      },
+      {
+        "check": "metrics_run_on_full_validation_window",
+        "passed": true,
+        "detail": "metrics computed over 853,720 predictions"
+      }
+    ]
+  },
+  "runtime_seconds": 17.1,
+  "environment": {
+    "python": "3.13.14",
+    "numpy": "2.5.1",
+    "pandas": "3.0.5"
+  }
+}

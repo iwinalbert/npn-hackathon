@@ -1,0 +1,77 @@
+{
+  "leakage_test": {
+    "origin": "d_1913",
+    "features_checked": 38,
+    "features_changed_under_future_sales_corruption": [],
+    "sales_corruption_passed": true,
+    "price_features_changed_under_future_price_corruption": [
+      "sell_price",
+      "recent_avg_price",
+      "price_rel_to_recent_avg"
+    ],
+    "price_mirror_passed": true
+  },
+  "reproduction": {
+    "expected_RMSE": 2.0929,
+    "expected_MAE": 1.0395,
+    "measured_RMSE": 2.0929394037324487,
+    "measured_MAE": 1.0395171989061582,
+    "reproduced": true,
+    "member_A_RMSE": 2.121086373183825,
+    "member_B2_RMSE": 2.118457485151806,
+    "recursive_leakage_checks": {
+      "future_matrix_equals_real_sales": false,
+      "pre_origin_history_intact": true,
+      "no_ground_truth_exists": false,
+      "passed": true
+    }
+  },
+  "member A (direct 38f)": {
+    "RMSE": 2.121086373183825,
+    "MAE": 1.0293068303162178,
+    "WAPE": 0.7133995044323113,
+    "bias": -0.07237680535329835,
+    "n": 853720,
+    "Accuracy": 0.7047252026425526,
+    "Precision": 0.6428829347810207,
+    "Recall": 0.7918122340904125,
+    "F1": 0.7096177416530739,
+    "TP": 308011,
+    "FP": 171098,
+    "FN": 80984,
+    "TN": 293627,
+    "high_volume_RMSE": 5.978722690861754
+  },
+  "member B' (recursive 32f)": {
+    "RMSE": 2.118457485151806,
+    "MAE": 1.0688754728073275,
+    "WAPE": 0.740824028503083,
+    "bias": 0.05258365336737337,
+    "n": 853720,
+    "Accuracy": 0.6878883006137844,
+    "Precision": 0.6182907075297757,
+    "Recall": 0.8232702219822877,
+    "F1": 0.7062071642159673,
+    "TP": 320248,
+    "FP": 197709,
+    "FN": 68747,
+    "TN": 267016,
+    "high_volume_RMSE": 5.954005460397616
+  },
+  "SHIPPED blend w=0.60": {
+    "RMSE": 2.0929394037324487,
+    "MAE": 1.0395171989061582,
+    "WAPE": 0.7204761813546794,
+    "bias": -0.02239262186502966,
+    "n": 853720,
+    "Accuracy": 0.6979653750644239,
+    "Precision": 0.6320648693067153,
+    "Recall": 0.8067558708980835,
+    "F1": 0.7088055236527118,
+    "TP": 313824,
+    "FP": 182682,
+    "FN": 75171,
+    "TN": 282043,
+    "high_volume_RMSE": 5.8661634705863035
+  }
+}

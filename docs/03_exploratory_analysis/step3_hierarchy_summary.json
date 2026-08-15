@@ -1,0 +1,43 @@
+{
+  "n_series_evaluation": 30490,
+  "n_series_validation": 30490,
+  "n_unique_item_id": 3049,
+  "n_unique_dept_id": 7,
+  "n_unique_cat_id": 3,
+  "n_unique_store_id": 10,
+  "n_unique_state_id": 3,
+  "store_ids": [
+    "CA_1",
+    "CA_2",
+    "CA_3",
+    "CA_4",
+    "TX_1",
+    "TX_2",
+    "TX_3",
+    "WI_1",
+    "WI_2",
+    "WI_3"
+  ],
+  "state_ids": [
+    "CA",
+    "TX",
+    "WI"
+  ],
+  "cat_ids": [
+    "FOODS",
+    "HOBBIES",
+    "HOUSEHOLD"
+  ],
+  "dept_ids": [
+    "FOODS_1",
+    "FOODS_2",
+    "FOODS_3",
+    "HOBBIES_1",
+    "HOBBIES_2",
+    "HOUSEHOLD_1",
+    "HOUSEHOLD_2"
+  ],
+  "base_ids_match_val_eval": true,
+  "duplicate_ids_evaluation": 0,
+  "duplicate_ids_validation": 0
+}

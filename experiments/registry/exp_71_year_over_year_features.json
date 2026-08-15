@@ -1,0 +1,191 @@
+{
+  "experiment_name": "exp_71_year_over_year_features",
+  "started_at": "2026-08-14T21:02:35",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Experiment #71. Prompted by Exp #70's finding that six diverse models have residuals correlated at 0.9897 \u2014 model variance is not the lever, so only new information can help.",
+    "Materially different from the Phase 2 feature tests: those re-encoded information already present, whereas a 364-day lookback is outside the champion's entire feature horizon (max 28 days).",
+    "Leakage corruption test passed on the new builder: all features unchanged when every post-origin sale is overwritten with 9999."
+  ],
+  "model_type": "LightGBM",
+  "objective": "tweedie (variance_power=1.1)",
+  "feature_set_label": "Champion 32 + 4 YoY features",
+  "n_features": 36,
+  "features": [
+    "wday",
+    "month",
+    "year",
+    "is_weekend",
+    "event_name_1",
+    "event_type_1",
+    "event_name_2",
+    "event_type_2",
+    "snap",
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "lag_28",
+    "rolling_mean_7",
+    "rolling_mean_28",
+    "rolling_std_7",
+    "rolling_std_28",
+    "days_since_last_sale",
+    "zero_streak_length",
+    "days_since_first_sale",
+    "days_since_first_listing",
+    "pre_listing",
+    "sell_price",
+    "recent_avg_price",
+    "price_rel_to_recent_avg",
+    "price_is_missing",
+    "item_id",
+    "dept_id",
+    "cat_id",
+    "store_id",
+    "state_id",
+    "horizon",
+    "lag_364",
+    "rolling_mean_7_lag364",
+    "yoy_level_ratio",
+    "rolling_mean_28_lag364"
+  ],
+  "validation_origin_day": "d_1913",
+  "validation_days": "d_1914 .. d_1941",
+  "validation_dates": "2016-04-25 .. 2016-05-22",
+  "horizon": 28,
+  "n_series": 30490,
+  "validation_rows": 853720,
+  "training_origins": [
+    "d_1493",
+    "d_1521",
+    "d_1549",
+    "d_1577",
+    "d_1605",
+    "d_1633",
+    "d_1661",
+    "d_1689",
+    "d_1717",
+    "d_1745",
+    "d_1773",
+    "d_1801",
+    "d_1829",
+    "d_1857",
+    "d_1885"
+  ],
+  "metrics": {
+    "RMSE": 2.1564051303020277,
+    "MAE": 1.0344184011917859,
+    "WAPE": 0.716942269351476,
+    "bias": -0.07080366372095852,
+    "n": 853720,
+    "high_volume_RMSE": 6.135061124007249,
+    "high_volume_MAE": 3.6775734067475354,
+    "high_volume_bias": -0.37575982875358177,
+    "high_volume_share_of_sq_error_pct": 62.55,
+    "mean_pred_on_zero_actual": 0.58468,
+    "mean_pred_on_positive_actual": 2.31263,
+    "pred_mean": 1.37202,
+    "pred_p50": 0.60965,
+    "pred_p99": 12.34502,
+    "pred_max": 151.5766,
+    "pct_predictions_below_0_5": 43.66
+  },
+  "hyperparameters": {
+    "objective": "tweedie",
+    "tweedie_variance_power": 1.1,
+    "metric": "rmse",
+    "learning_rate": 0.05,
+    "num_leaves": 128,
+    "max_depth": -1,
+    "min_data_in_leaf": 100,
+    "feature_fraction": 0.8,
+    "bagging_fraction": 0.8,
+    "bagging_freq": 1,
+    "lambda_l2": 1.0,
+    "max_cat_threshold": 32,
+    "verbosity": -1,
+    "num_threads": 0,
+    "seed": 42,
+    "deterministic": true,
+    "force_row_wise": true
+  },
+  "n_estimators": 400,
+  "training_seconds": 133.0,
+  "delta_rmse_vs_best": 0.035362,
+  "delta_mae_vs_best": 0.002492,
+  "new_feature_gain_share_pct": 2.555,
+  "new_feature_importance": [
+    {
+      "feature": "rolling_mean_7_lag364",
+      "gain": 3585140.170097351,
+      "pct": 1.474942306539056
+    },
+    {
+      "feature": "rolling_mean_28_lag364",
+      "gain": 1737424.734079361,
+      "pct": 0.7147841153032053
+    },
+    {
+      "feature": "lag_364",
+      "gain": 639193.6927375793,
+      "pct": 0.26296707374372524
+    },
+    {
+      "feature": "yoy_level_ratio",
+      "gain": 249350.12482452393,
+      "pct": 0.10258372916964588
+    }
+  ],
+  "top_features": [
+    {
+      "feature": "rolling_mean_28",
+      "gain": 145490432.72344208,
+      "pct": 59.85539874014242
+    },
+    {
+      "feature": "rolling_mean_7",
+      "gain": 48255066.92009735,
+      "pct": 19.85234504886659
+    },
+    {
+      "feature": "item_id",
+      "gain": 18728704.272304535,
+      "pct": 7.705070643620225
+    },
+    {
+      "feature": "rolling_std_28",
+      "gain": 13017920.57270813,
+      "pct": 5.355629315695899
+    },
+    {
+      "feature": "rolling_mean_7_lag364",
+      "gain": 3585140.170097351,
+      "pct": 1.474942306539056
+    },
+    {
+      "feature": "rolling_mean_28_lag364",
+      "gain": 1737424.734079361,
+      "pct": 0.7147841153032053
+    },
+    {
+      "feature": "days_since_last_sale",
+      "gain": 1560872.0005626678,
+      "pct": 0.6421495505040792
+    },
+    {
+      "feature": "is_weekend",
+      "gain": 1237381.6467132568,
+      "pct": 0.5090642076688422
+    }
+  ],
+  "decision": "REJECT",
+  "finished_at": "2026-08-14T21:02:35",
+  "wall_seconds": 0.0
+}

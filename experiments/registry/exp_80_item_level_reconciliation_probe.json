@@ -1,0 +1,92 @@
+{
+  "experiment_name": "exp_80_item_level_reconciliation_probe",
+  "started_at": "2026-08-15T18:50:35",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Inner-window go/no-go for hierarchical reconciliation. The four pre-registered proceed criteria (item model beats the bottom-up sum; dRMSE <= -0.005; alpha interior; corruption test passes) were fixed before the first run.",
+    "A Tweedie objective, which wins at the bottom level, was clearly WRONG at the aggregate level (item RMSE 10.79 vs 8.18 for L2): the aggregate target is neither sparse nor zero-inflated."
+  ],
+  "model_type": "Item-level aggregate LightGBM + top-down reconciliation",
+  "objective": "regression (L2) at the aggregate level",
+  "feature_set_label": "30 aggregate features (AGG_FEATURES)",
+  "n_features": 30,
+  "validation_days": "d_1886..d_1913",
+  "validation_origin_day": "d_1885",
+  "horizon": 28,
+  "n_series": 30490,
+  "metrics": {
+    "alpha": 0.55,
+    "RMSE": 2.051720301591735,
+    "dRMSE": -0.015967153698586145,
+    "MAE": 1.0192207251261145,
+    "dMAE": -0.01019387422186746
+  },
+  "item_level": {
+    "bottom_up_RMSE": 8.380676226844459,
+    "bottom_up_WAPE": 0.306243628266014,
+    "naive_rm28_RMSE": 10.071715548039004,
+    "models": {
+      "tweedie_1.1": {
+        "RMSE": 10.787154626481808,
+        "WAPE": 0.3039495881754565,
+        "rho_with_bottomup_error": 0.5509637795496148,
+        "objective": "tweedie",
+        "power": 1.1,
+        "training_rows": 2561160,
+        "training_origins": 30,
+        "training_origins_span": "d_1045..d_1857",
+        "training_seconds": 26.8
+      },
+      "tweedie_1.3": {
+        "RMSE": 10.75256559478506,
+        "WAPE": 0.30399457628973514,
+        "rho_with_bottomup_error": 0.557032333078387,
+        "objective": "tweedie",
+        "power": 1.3,
+        "training_rows": 2561160,
+        "training_origins": 30,
+        "training_origins_span": "d_1045..d_1857",
+        "training_seconds": 28.5
+      },
+      "regression_l2": {
+        "RMSE": 8.176114472165997,
+        "WAPE": 0.2998467594358193,
+        "rho_with_bottomup_error": 0.8718484862764172,
+        "objective": "regression",
+        "power": null,
+        "training_rows": 2561160,
+        "training_origins": 30,
+        "training_origins_span": "d_1045..d_1857",
+        "training_seconds": 18.2
+      }
+    },
+    "best": "regression_l2"
+  },
+  "criteria": {
+    "G1_item_model_beats_bottom_up": true,
+    "G2_dRMSE_at_most_-0.005": true,
+    "G3_alpha_interior": true,
+    "G4_corruption_test": true
+  },
+  "leakage_corruption_test": {
+    "features_checked": 30,
+    "features_that_changed": [],
+    "target_changed_as_expected": true,
+    "passed": true
+  },
+  "champion_reference": {
+    "RMSE": 2.0676874552903213,
+    "MAE": 1.029414599347982,
+    "high_volume_RMSE": 5.843623666789344
+  },
+  "decision": "PROCEED",
+  "finished_at": "2026-08-15T18:50:35",
+  "wall_seconds": 0.0
+}

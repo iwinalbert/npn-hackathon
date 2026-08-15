@@ -1,0 +1,22 @@
+# NPN Hackathon — M5 Retail Demand Forecasting
+# Reproducible dependency set for the forecasting pipeline.
+#
+# Captured from the working environment on 2026-08-14.
+# Python 3.13.14 (AMD64 / Windows 11).
+#
+# Install with:   python -m pip install -r requirements.txt
+
+# --- Core data handling ---
+pandas==3.0.5
+numpy==2.5.1
+pyarrow==25.0.1          # Parquet I/O (reads processed_dataset/sales_long_full.parquet)
+scipy==1.18.0
+
+# --- Modelling ---
+lightgbm==4.7.0          # Gradient-boosted trees; primary model family per FINAL_APPROACH Step 6
+scikit-learn==1.9.0      # Metrics / utility helpers
+
+# --- Charts & reporting ---
+matplotlib==3.11.1
+reportlab==5.0.0         # PDF report generation
+pypdf==6.15.0            # PDF verification (page count, text-layer integrity checks)

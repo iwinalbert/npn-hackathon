@@ -1,0 +1,36 @@
+{
+  "experiment_name": "model_00_baseline_rolling_mean_7",
+  "started_at": "2026-08-14T14:47:01",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [],
+  "model_type": "naive baseline (no fitting)",
+  "objective": "n/a",
+  "feature_groups": [
+    "none \u2014 arithmetic rule only"
+  ],
+  "description": "Repeat each series' own mean over the last 7 days",
+  "validation_origin_day": "d_1913",
+  "validation_dates": "2016-04-25 .. 2016-05-22",
+  "validation_days": "d_1914 .. d_1941",
+  "horizon": 28,
+  "n_series": 30490,
+  "validation_rows": 853720,
+  "metrics": {
+    "RMSE": 2.2486762344972537,
+    "MAE": 1.0682883667709808,
+    "WAPE": 0.740417112758387,
+    "bias": -0.10618000685860077,
+    "n": 853720
+  },
+  "training_rows": 0,
+  "training_seconds": 0.0,
+  "finished_at": "2026-08-14T14:47:01",
+  "wall_seconds": 0.0
+}

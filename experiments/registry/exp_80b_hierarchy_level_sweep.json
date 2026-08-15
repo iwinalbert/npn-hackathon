@@ -1,0 +1,157 @@
+{
+  "experiment_name": "exp_80b_hierarchy_level_sweep",
+  "started_at": "2026-08-15T18:50:35",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Selects the level, the aggregate objective and alpha on the inner window so the four-window validation inherits them as constants.",
+    "One of three negative controls FIRED: an oracle global rescale was worth -0.0230 against the method's -0.0160, which triggered Experiment #80c rather than a promotion."
+  ],
+  "model_type": "Aggregate model + reconciliation, three hierarchy levels",
+  "objective": "regression (L2) at the aggregate level",
+  "feature_set_label": "AGG_FEATURES at store_dept / item / item_state",
+  "n_features": 30,
+  "validation_origin_day": "origin d_1885",
+  "horizon": 28,
+  "n_series": 30490,
+  "per_level_best": {
+    "store_dept": {
+      "level": "store_dept",
+      "alpha": 0.85,
+      "RMSE": 2.055534783266249,
+      "MAE": 1.0185136936264185,
+      "highvol_RMSE": 5.796286535861707,
+      "agg_bottom_up_RMSE": 102.28975182312682,
+      "agg_model_RMSE": 96.61045744886238,
+      "n_groups": 70,
+      "dRMSE": -0.012152672292192968,
+      "dMAE": -0.010900905406051153
+    },
+    "item": {
+      "level": "item",
+      "alpha": 0.55,
+      "RMSE": 2.051720301854988,
+      "MAE": 1.0192207249399807,
+      "highvol_RMSE": 5.777621884295766,
+      "agg_bottom_up_RMSE": 8.380676225871765,
+      "agg_model_RMSE": 8.176114472165997,
+      "n_groups": 3049,
+      "dRMSE": -0.015967153703453807,
+      "dMAE": -0.010193874092488953
+    },
+    "item_state": {
+      "level": "item_state",
+      "alpha": 0.5,
+      "RMSE": 2.0539738685266276,
+      "MAE": 1.0210150739724897,
+      "highvol_RMSE": 5.791694789373816,
+      "agg_bottom_up_RMSE": 4.158255182713015,
+      "agg_model_RMSE": 4.137774925553588,
+      "n_groups": 9147,
+      "dRMSE": -0.013713587031814356,
+      "dMAE": -0.008399525059979984
+    }
+  },
+  "sequential": [
+    {
+      "first": "store_dept",
+      "second": "item",
+      "alpha2": 0.4,
+      "RMSE": 2.048103586534446,
+      "MAE": 1.015380206704172,
+      "highvol_RMSE": 5.764716483231667,
+      "dRMSE": -0.01958386902399578,
+      "dMAE": -0.014034392328297729
+    },
+    {
+      "first": "store_dept",
+      "second": "item_state",
+      "alpha2": 0.35,
+      "RMSE": 2.04995676157295,
+      "MAE": 1.01626941263075,
+      "highvol_RMSE": 5.7762822778395195,
+      "dRMSE": -0.017730693985491985,
+      "dMAE": -0.013145186401719577
+    },
+    {
+      "first": "item",
+      "second": "store_dept",
+      "alpha2": 0.5,
+      "RMSE": 2.048510741525457,
+      "MAE": 1.0166249355369046,
+      "highvol_RMSE": 5.765391819147578,
+      "dRMSE": -0.019176714032985043,
+      "dMAE": -0.012789663495565096
+    },
+    {
+      "first": "item",
+      "second": "item_state",
+      "alpha2": 0.25,
+      "RMSE": 2.0492261450053,
+      "MAE": 1.0176584942094467,
+      "highvol_RMSE": 5.76898214998547,
+      "dRMSE": -0.018461310553141708,
+      "dMAE": -0.011756104823023028
+    },
+    {
+      "first": "item_state",
+      "second": "store_dept",
+      "alpha2": 0.7,
+      "RMSE": 2.0492122259735113,
+      "MAE": 1.0166744500221108,
+      "highvol_RMSE": 5.772742248497371,
+      "dRMSE": -0.01847522958493064,
+      "dMAE": -0.012740149010358914
+    },
+    {
+      "first": "item_state",
+      "second": "item",
+      "alpha2": 0.35,
+      "RMSE": 2.0502735201780364,
+      "MAE": 1.0176805782166443,
+      "highvol_RMSE": 5.772999303712,
+      "dRMSE": -0.017413935380405476,
+      "dMAE": -0.011734020815825419
+    }
+  ],
+  "negative_controls": {
+    "C1_global_rescale": {
+      "alpha": 1.0,
+      "RMSE": 2.0447242842845026,
+      "MAE": 1.0036572285607885,
+      "dRMSE": -0.02296317127393932,
+      "agg_RMSE": 7.9574461825128795,
+      "why": "Ahat = 0.9139 x F"
+    },
+    "C2_naive_aggregate": {
+      "alpha": 0.15,
+      "RMSE": 2.0646224194651945,
+      "MAE": 1.0265494569703804,
+      "dRMSE": -0.0030650360932473752,
+      "agg_RMSE": 10.071715548039004,
+      "why": "Ahat = trailing 28-day aggregate mean"
+    },
+    "C3_direct_member_sum": {
+      "alpha": 0.2,
+      "RMSE": 2.067341950144975,
+      "MAE": 1.0263628561211722,
+      "dRMSE": -0.00034550541346689556,
+      "agg_RMSE": 8.634403325668412,
+      "why": "Ahat = bottom-up sum of member A"
+    }
+  },
+  "selected": {
+    "level": "item",
+    "alpha": 0.55,
+    "objective": "regression (L2)"
+  },
+  "decision": "SELECTION ONLY \u2014 no promotion from this run",
+  "finished_at": "2026-08-15T18:50:35",
+  "wall_seconds": 0.0
+}

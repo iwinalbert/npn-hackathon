@@ -1,0 +1,41 @@
+{
+  "frozen_champion": {
+    "blend": "0.60*direct(38f) + 0.40*recursive(32f)",
+    "blend_weight": 0.6,
+    "objective": "tweedie, variance_power=1.1 (both members)",
+    "n_estimators": 400,
+    "seed": 42,
+    "primary_window_RMSE": 2.0929394037324487,
+    "primary_window_MAE": 1.0395171989061582,
+    "forecast_origin": "d_1941",
+    "forecast_dates": "2016-05-23 .. 2016-06-19",
+    "status": "FROZEN"
+  },
+  "files": [
+    {
+      "canonical_source": "models/champion/model_11_blend_direct_final_forecast.txt",
+      "frozen_copy": "02_MODEL/FROZEN_CHAMPION/model_11_blend_direct_final_forecast.txt",
+      "sha256": "9a478605ba97b5c470b43a55cfb4d181e42f55efc3a2d2962c81158218baa7b1",
+      "copy_matches_source": true
+    },
+    {
+      "canonical_source": "models/champion/model_12_blend_recursive_shape_final.txt",
+      "frozen_copy": "02_MODEL/FROZEN_CHAMPION/model_12_blend_recursive_shape_final.txt",
+      "sha256": "d117ecd58758ce1f701f7eead26bcdcc65d9e26d01f687302b2bebc50b912ecd",
+      "copy_matches_source": true
+    },
+    {
+      "canonical_source": "predictions/final_forecast/final_forecast_28day_v3_diversity_blend.csv",
+      "frozen_copy": "03_FORECASTS/final_forecast_28day_v3_diversity_blend.csv",
+      "sha256": "c099766b85b3e3f5aa7e6b5d6b702201a958997587b303ffff1bae1e7fdf048f",
+      "copy_matches_source": true
+    },
+    {
+      "canonical_source": "predictions/final_forecast/final_forecast_28day_v3_diversity_blend.csv",
+      "frozen_copy": "09_SUBMISSION/final_forecast_28day_v3_diversity_blend.csv",
+      "sha256": "c099766b85b3e3f5aa7e6b5d6b702201a958997587b303ffff1bae1e7fdf048f",
+      "copy_matches_source": true
+    }
+  ],
+  "all_copies_verified_identical": true
+}

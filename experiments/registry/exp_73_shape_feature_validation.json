@@ -1,0 +1,125 @@
+{
+  "experiment_name": "exp_73_shape_feature_validation",
+  "started_at": "2026-08-14T22:15:01",
+  "random_seed": 42,
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "status": "completed",
+  "warnings": [],
+  "errors": [],
+  "notes": [
+    "Experiment #73. #72 met neither the pre-registered -0.010 magnitude threshold nor was it dismissible, since RMSE, MAE and high-volume error all moved the right way. This tests consistency instead of magnitude: 4 windows and 3 seeds, acceptance criteria fixed before running."
+  ],
+  "model_type": "validation of exp_72 (LightGBM Tweedie)",
+  "objective": "tweedie (variance_power=1.1)",
+  "feature_set_label": "Champion 32 vs Champion 32 + 4 shape features",
+  "n_features": 36,
+  "validation_origin_day": "d_1913",
+  "validation_days": "d_1914 .. d_1941",
+  "validation_dates": "2016-04-25 .. 2016-05-22",
+  "horizon": 28,
+  "n_series": 30490,
+  "validation_rows": 853720,
+  "training_origins": [
+    "d_1493",
+    "d_1521",
+    "d_1549",
+    "d_1577",
+    "d_1605",
+    "d_1633",
+    "d_1661",
+    "d_1689",
+    "d_1717",
+    "d_1745",
+    "d_1773",
+    "d_1801",
+    "d_1829",
+    "d_1857",
+    "d_1885"
+  ],
+  "metrics": {
+    "RMSE": 2.114843650145824,
+    "MAE": 1.02901168345063
+  },
+  "cross_window": [
+    {
+      "window": "primary_spring_2016",
+      "dates": "2016-04-25 .. 2016-05-22",
+      "champion_RMSE": 2.1263900158799247,
+      "shape_RMSE": 2.114843650145824,
+      "dRMSE": -0.011546365734100839,
+      "champion_MAE": 1.0315768605712046,
+      "shape_MAE": 1.02901168345063,
+      "dMAE": -0.00256517712057458
+    },
+    {
+      "window": "christmas_2015",
+      "dates": "2015-12-12 .. 2016-01-08",
+      "champion_RMSE": 2.2139941811833967,
+      "shape_RMSE": 2.1874963784336674,
+      "dRMSE": -0.02649780274972935,
+      "champion_MAE": 0.9271902456999017,
+      "shape_MAE": 0.923462507105964,
+      "dMAE": -0.003727738593937713
+    },
+    {
+      "window": "summer_2015",
+      "dates": "2015-07-16 .. 2015-08-12",
+      "champion_RMSE": 2.1375223578563554,
+      "shape_RMSE": 2.134027551616699,
+      "dRMSE": -0.0034948062396562563,
+      "champion_MAE": 0.9727314283473005,
+      "shape_MAE": 0.9690551365715944,
+      "dMAE": -0.003676291775706164
+    },
+    {
+      "window": "autumn_2015",
+      "dates": "2015-10-02 .. 2015-10-29",
+      "champion_RMSE": 2.1882924257132084,
+      "shape_RMSE": 2.1852205386179717,
+      "dRMSE": -0.0030718870952366473,
+      "champion_MAE": 0.9991847236792888,
+      "shape_MAE": 0.9974839976377653,
+      "dMAE": -0.0017007260415234926
+    }
+  ],
+  "window_wins": 4,
+  "mean_window_dRMSE": -0.011152715454680773,
+  "mean_window_dMAE": -0.0029174833829354874,
+  "seed_runs": [
+    {
+      "seed": 42,
+      "champion_RMSE": 2.1263900158799247,
+      "shape_RMSE": 2.114843650145824,
+      "dRMSE": -0.011546365734100839,
+      "dMAE": -0.00256517712057458
+    },
+    {
+      "seed": 7,
+      "champion_RMSE": 2.1285009885253996,
+      "shape_RMSE": 2.1214037820345193,
+      "dRMSE": -0.007097206490880303,
+      "dMAE": -0.0022109123191527136
+    },
+    {
+      "seed": 202,
+      "champion_RMSE": 2.1306182811041348,
+      "shape_RMSE": 2.113814414179552,
+      "dRMSE": -0.01680386692458269,
+      "dMAE": -0.0026242054426197647
+    }
+  ],
+  "seed_wins": 3,
+  "acceptance_criteria": {
+    "wins_at_least_3_of_4_windows": true,
+    "mean_window_dRMSE_at_most_-0.003": true,
+    "wins_at_least_2_of_3_seeds": true,
+    "mean_window_dMAE_not_positive": true
+  },
+  "accepted": true,
+  "decision": "NEW CHAMPION",
+  "finished_at": "2026-08-14T22:15:01",
+  "wall_seconds": 0.0
+}

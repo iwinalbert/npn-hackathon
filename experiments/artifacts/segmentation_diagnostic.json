@@ -1,0 +1,100 @@
+{
+  "q1_segment_oracle": [
+    {
+      "scheme": "global (single multiplier)",
+      "groups": 1,
+      "oracle_RMSE": 2.119479343782176,
+      "gain_vs_champion": -0.0015635989317761556
+    },
+    {
+      "scheme": "volume decile",
+      "groups": 10,
+      "oracle_RMSE": 2.119135070884441,
+      "gain_vs_champion": -0.001907871829511354
+    },
+    {
+      "scheme": "intermittency quintile (zero%)",
+      "groups": 5,
+      "oracle_RMSE": 2.118565611825773,
+      "gain_vs_champion": -0.002477330888179363
+    },
+    {
+      "scheme": "volatility quintile (CV)",
+      "groups": 5,
+      "oracle_RMSE": 2.1193724124305473,
+      "gain_vs_champion": -0.001670530283405025
+    },
+    {
+      "scheme": "spike-rate quintile",
+      "groups": 5,
+      "oracle_RMSE": 2.1182603304510703,
+      "gain_vs_champion": -0.0027826122628820116
+    },
+    {
+      "scheme": "category (3)",
+      "groups": 3,
+      "oracle_RMSE": 2.1185337361594563,
+      "gain_vs_champion": -0.0025092065544960462
+    },
+    {
+      "scheme": "department (7)",
+      "groups": 7,
+      "oracle_RMSE": 2.118324909454185,
+      "gain_vs_champion": -0.002718033259767161
+    },
+    {
+      "scheme": "store (10)",
+      "groups": 10,
+      "oracle_RMSE": 2.1156686363413217,
+      "gain_vs_champion": -0.005374306372630588
+    },
+    {
+      "scheme": "store x category (30)",
+      "groups": 30,
+      "oracle_RMSE": 2.11392145187371,
+      "gain_vs_champion": -0.007121490840242384
+    },
+    {
+      "scheme": "volume decile x weekday",
+      "groups": 70,
+      "oracle_RMSE": 2.118105977034301,
+      "gain_vs_champion": -0.0029369656796514043
+    },
+    {
+      "scheme": "PER-SERIES (30,490 groups)",
+      "groups": 30490,
+      "oracle_RMSE": 1.8822504815327974,
+      "gain_vs_champion": -0.23879246118115494
+    }
+  ],
+  "q2_level_only": 2.242952959753161,
+  "q2": [
+    {
+      "predictor": "level only",
+      "RMSE": 2.242952959753161
+    },
+    {
+      "predictor": "level x weekday ratio (8w history)",
+      "RMSE": 2.235234832208627
+    },
+    {
+      "predictor": "level x weekday ratio (13w history)",
+      "RMSE": 2.2174038427154428
+    },
+    {
+      "predictor": "level x weekday ratio (26w history)",
+      "RMSE": 2.2029833026556007
+    },
+    {
+      "predictor": "level x weekday ratio (52w history)",
+      "RMSE": 2.1851420835371327
+    },
+    {
+      "predictor": "ORACLE per-series x weekday",
+      "RMSE": 1.6763742185280044
+    }
+  ],
+  "q2_pct_of_oracle_gap_recovered": 10.203502533649468,
+  "q2b_var_explained_series_weekday_pct": 38.9801494037409,
+  "q2b_var_explained_weekday_only_pct": 0.01905123097420878
+}

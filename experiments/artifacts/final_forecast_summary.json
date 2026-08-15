@@ -1,0 +1,13 @@
+{
+  "final_model": "model_04_tweedie_recency_listing",
+  "validation_rmse": 2.121042941194765,
+  "validation_mae": 1.0319268155496617,
+  "forecast_window": "2016-05-23 .. 2016-06-19",
+  "forecast_days": "d_1942 .. d_1969",
+  "rows": 30490,
+  "structure_checks_passed": 10,
+  "files": [
+    "predictions\\final_forecast_28day.csv",
+    "predictions\\submission_m5_format.csv"
+  ]
+}

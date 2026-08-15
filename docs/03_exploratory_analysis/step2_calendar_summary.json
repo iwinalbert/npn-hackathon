@@ -1,0 +1,33 @@
+{
+  "n_rows": 1969,
+  "n_cols": 14,
+  "min_date": "2011-01-29",
+  "max_date": "2016-06-19",
+  "n_unique_dates": 1969,
+  "missing_dates_count": 0,
+  "duplicate_dates": 0,
+  "d_range": [
+    "d_1",
+    "d_1969"
+  ],
+  "years": [
+    2011,
+    2012,
+    2013,
+    2014,
+    2015,
+    2016
+  ],
+  "event_type_1_values": [
+    "Sporting",
+    "Cultural",
+    "National",
+    "Religious"
+  ],
+  "event_type_2_values": [
+    "Cultural",
+    "Religious"
+  ],
+  "n_event_name_1_notna": 162,
+  "n_event_name_2_notna": 5
+}

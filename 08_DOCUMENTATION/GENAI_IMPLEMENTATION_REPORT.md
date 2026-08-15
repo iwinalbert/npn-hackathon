@@ -323,9 +323,11 @@ frontend   44 passed   (was 30 → +14)
 | Key value in the built bundle | **none** (only the variable *name*, in instructional text) |
 | Frontend calling Gemini directly | **none** |
 | `GEMINI_API_KEY` in any Dockerfile | **none** — runtime injection only |
+| `docker compose up` | **NOT VERIFIED** — Docker is not installed here (`docker: command not found`). Static checks only: compose parses, `api.environment.GEMINI_API_KEY = ${GEMINI_API_KEY:-}`, `google-genai` reaches the image via `requirements.txt` |
 | Key-shaped strings in git history | **0** |
 | `.env` ignored / `.env.example` tracked | ✅ / ✅ |
-| Frozen artefacts | **0 deleted, 0 changed**; raw-data MD5 unchanged |
+| Frozen artefacts | 522 protected files re-hashed against `_integrity/manifest_after.json`: **0 deleted, 0 modified** |
+| Freeze regression guard | `test_integrity.py` **10 passed** — model SHA-256, served-vs-frozen forecast, chain total, RMSE 2.0929 / MAE 1.0395, blend weight, band coverage |
 
 ---
 
@@ -346,6 +348,18 @@ services:
 echo "GEMINI_API_KEY=your-key" > .env      # beside docker-compose.yml
 docker compose up --build
 ```
+
+**This has not been run.** Docker is not installed on the development machine,
+so the image is unbuilt and the container has never started — the same
+limitation recorded in the backend and frontend reports, unchanged by this work.
+What *was* checked without Docker: the compose file parses, the API service
+declares `GEMINI_API_KEY: ${GEMINI_API_KEY:-}` (substitution, not a literal),
+neither Dockerfile mentions `GEMINI` at all, and `google-genai==2.18.1` is in
+`requirements.txt` so it lands in both the `api` and `full` targets. To verify
+for real: run the two commands above, then
+`docker compose exec api printenv GEMINI_API_KEY` (set) and
+`docker run --rm npn-forecast-api:latest printenv GEMINI_API_KEY`
+(**must be empty** — proving the key is not in the image).
 
 Design properties that matter for deployment:
 
@@ -445,7 +459,8 @@ numbers, because it is never given them.**
 
 ## 15. What was not touched
 
-The frozen research layer. Verified after implementation: **0 files deleted,
-0 changed**, raw-data MD5 `1bce3321…` unchanged. All GenAI work is confined to
+The frozen research layer. Verified after implementation by re-hashing all
+**522** files recorded in `08_DOCUMENTATION/_integrity/manifest_after.json`:
+**0 deleted, 0 modified**. All GenAI work is confined to
 `06_BACKEND/app/{services,routers}/genai*`, `07_FRONTEND/src/pages/Assistant.tsx`,
 their tests, and this report.

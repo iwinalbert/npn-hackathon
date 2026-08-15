@@ -164,7 +164,13 @@ context before the reply is returned (`grounded`, `ungrounded_numbers`).
 ```bash
 # 06_BACKEND/.env — never committed, never baked into an image
 GEMINI_API_KEY=your-key-here
+
+python tasks.py genai-check      # 6 live tests against the real API, ~22 s
 ```
+
+`.env` is read relative to the **working directory**, and `tasks.py api` runs
+uvicorn from `06_BACKEND/` — so `06_BACKEND/.env` is the file that counts. Both
+`GEMINI_API_KEY` and `NPN_GEMINI_API_KEY` work, in `.env` or as a shell variable.
 
 Leave it unset and everything else works unchanged: `/genai/status` reports
 `available: false` with the reason, and `/genai/ask` returns 503 with a remedy.
@@ -225,8 +231,13 @@ and not a model-produced interval.
 ## Testing
 
 ```bash
-python tasks.py test        # 121 fast tests, ~3 s
+python tasks.py test         # 121 fast tests, ~3 s — no network, no cost
+python tasks.py genai-check  # 6 LIVE Gemini tests, ~22 s — needs a key
 ```
+
+The default run excludes both the `slow` and `live` markers. The live tests are
+the only ones that touch the real API; they skip themselves when no key is set,
+and they are the canary for Google retiring a model id.
 
 | File | Covers |
 |---|---|
@@ -239,6 +250,7 @@ python tasks.py test        # 121 fast tests, ~3 s
 | `test_inference.py` | availability, refusals, job lifecycle, **live verification MATCH** |
 | `test_deployment.py` | env config, no Windows paths, no baked paths, no eager ML imports, deps declared, 503 degradation, **portability proof** |
 | `test_genai.py` | context matches the endpoints it claims to quote, injection detection, **key never in any response or prompt**, missing-key degradation, hallucinated-number detection, **assistant cannot modify a forecast** |
+| `test_genai_live.py` | **opt-in (`-m live`)** — the real Gemini API: key authenticates, model id current, answers grounded, guardrails hold, forecast untouched |
 | `test_integrity.py` | **freeze regression guard** — see below |
 
 ### The freeze regression guard

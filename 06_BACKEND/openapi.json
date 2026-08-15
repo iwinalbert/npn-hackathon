@@ -1782,6 +1782,24 @@
           "disclaimer": {
             "type": "string",
             "title": "Disclaimer"
+          },
+          "refused": {
+            "type": "boolean",
+            "title": "Refused",
+            "description": "True when local policy answered the question and NO AI provider was called at all.",
+            "default": false
+          },
+          "refusal_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refusal Category",
+            "description": "Which policy applied: secret_extraction, instruction_override, forecast_mutation, model_mutation."
           }
         },
         "type": "object",

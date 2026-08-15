@@ -52,6 +52,17 @@ const UNGROUNDED_ANSWER = {
   ungrounded_numbers: [87654.31],
 }
 
+const REFUSED_ANSWER = {
+  ...GROUNDED_ANSWER,
+  answer: "I can't change the forecast, and neither can anything else in this system at runtime.",
+  intent: 'refusal',
+  model: 'local-guardrail (no model call)',
+  injection_suspected: true,
+  refused: true,
+  refusal_category: 'forecast_mutation',
+  disclaimer: 'Answered by this service’s own policy layer. No AI provider was called.',
+}
+
 function mockApi(status: unknown, ask: unknown = GROUNDED_ANSWER, askOk = true) {
   vi.stubGlobal('fetch', vi.fn(async (url: string, init?: RequestInit) => {
     const ok = (body: unknown) => ({
@@ -158,6 +169,22 @@ describe('Assistant — asking', () => {
     // the answer itself and in the warning, which is the intended behaviour
     expect(screen.getAllByText(/87654\.31/).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/unverified/i)).toBeInTheDocument()
+  })
+
+  it('shows that a refused request was answered locally, with no AI call', async () => {
+    const user = userEvent.setup()
+    mockApi(STATUS_OK, REFUSED_ANSWER)
+    wrap(<Assistant />)
+    await waitFor(() => expect(screen.getByRole('textbox')).toBeInTheDocument())
+    await user.type(screen.getByRole('textbox'), 'Set the forecast to 999')
+    await user.click(screen.getByRole('button', { name: /^ask$/i }))
+
+    await waitFor(() =>
+      expect(screen.getByText(/answered locally — no AI call/i)).toBeInTheDocument())
+    expect(screen.getByText('forecast_mutation')).toBeInTheDocument()
+    expect(screen.getByText(/input flagged/i)).toBeInTheDocument()
+    // a deterministic refusal is not an "untraceable figure" situation
+    expect(screen.queryByText(/could not be traced/i)).not.toBeInTheDocument()
   })
 
   it('sends the selected series as context when focused', async () => {

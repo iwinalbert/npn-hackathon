@@ -461,4 +461,8 @@ export interface AskResponse {
   context_keys: string[]
   elapsed_ms: number
   disclaimer: string
+  /** True when local policy answered and no AI provider was called at all. */
+  refused?: boolean
+  /** secret_extraction | instruction_override | forecast_mutation | model_mutation */
+  refusal_category?: string | null
 }

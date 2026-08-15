@@ -1,17 +1,20 @@
 """
 DuckDB access layer.
 
-TWO GUARANTEES THIS MODULE ENFORCES
------------------------------------
+THREE GUARANTEES THIS MODULE ENFORCES
+-------------------------------------
 1. **Read-only.** The product database is opened with ``read_only=True`` and the
-   research parquet is only ever read through ``read_parquet``. Nothing in the
-   API can write to the research tree even if a caller tried.
+   sidecar parquet files are only ever read. Nothing in the API can write to any
+   artefact, product-owned or research-owned.
 
-2. **No string-interpolated user input.** Every value is passed as a bound
-   parameter. The only identifiers ever interpolated are drawn from
-   ``SAFE_COLUMNS`` / ``SAFE_LEVELS``, which are module constants, never request
-   data. This is the single most important defence for an analytical API whose
-   whole job is turning URLs into SQL.
+2. **No string-interpolated user input.** Every value is a bound parameter. The
+   only identifiers ever interpolated are module constants (``SAFE_LEVELS``) and
+   artefact paths from settings — never request data.
+
+3. **No baked absolute paths.** Sidecar locations are resolved from settings on
+   every call, so the same database file works on a laptop and in a container
+   with the data mounted anywhere. (DuckDB bakes absolute paths into view SQL,
+   which is why this API defines no views over external files.)
 
 CONCURRENCY
 -----------
@@ -30,6 +33,7 @@ from typing import Any
 import duckdb
 
 from .config import settings
+from .errors import ServiceUnavailable
 
 # --- identifier whitelists --------------------------------------------------
 # Anything a request can influence must appear here, or it cannot reach SQL.
@@ -49,33 +53,40 @@ SAFE_LEVELS: dict[str, list[str]] = {
     "series": ["store_id", "item_id"],
 }
 
-SAFE_COLUMNS: frozenset[str] = frozenset(
+SAFE_SERIES_COLUMNS: frozenset[str] = frozenset(
     {"series_idx", "id", "item_id", "dept_id", "cat_id", "store_id", "state_id",
-     "mean_daily_sales", "total_units", "volume_tier", "regime", "adi", "cv2",
-     "zero_pct"}
+     "mean_daily_sales", "mean_daily_28d", "mean_daily_91d", "total_units",
+     "volume_tier", "regime", "adi", "cv2", "zero_pct"}
 )
+
+TABLES = ("series", "forecast", "calendar", "error_bands", "level_accuracy",
+          "window_metrics", "model_card")
 
 _lock = threading.Lock()
 _conn: duckdb.DuckDBPyConnection | None = None
 
 
-class DatabaseUnavailable(RuntimeError):
-    """Raised when the product database has not been built yet."""
+class DatabaseUnavailable(ServiceUnavailable):
+    """The product data layer has not been built, or is not readable."""
+
+    def __init__(self, message: str, **ctx):
+        super().__init__(message, remedy="python tasks.py build-db", **ctx)
 
 
-def _panel_source() -> str:
-    """
-    The history panel, referenced by path rather than through a baked view.
-
-    The build script also creates a ``panel`` view, but that view stores an
-    absolute path from build time. Referencing the parquet through settings
-    instead means the same database file works when the research tree is mounted
-    at a different location inside a container.
-    """
-    return f"read_parquet('{Path(settings.panel_parquet).as_posix()}')"
+def history_source() -> str:
+    """SQL fragment for the history sidecar, resolved fresh from settings."""
+    p = Path(settings.history_parquet)
+    if not p.exists():
+        raise DatabaseUnavailable(f"history sidecar not found at {p}")
+    return f"read_parquet('{p.as_posix()}')"
 
 
-PANEL = _panel_source()
+def backtest_source() -> str:
+    """SQL fragment for the backtest sidecar, resolved fresh from settings."""
+    p = Path(settings.backtest_parquet)
+    if not p.exists():
+        raise DatabaseUnavailable(f"backtest sidecar not found at {p}")
+    return f"read_parquet('{p.as_posix()}')"
 
 
 def get_connection() -> duckdb.DuckDBPyConnection:
@@ -87,18 +98,21 @@ def get_connection() -> duckdb.DuckDBPyConnection:
                 db = Path(settings.product_db)
                 if not db.exists():
                     raise DatabaseUnavailable(
-                        f"product database not found at {db}. "
-                        "Build it with: python 06_BACKEND/scripts/build_product_db.py"
-                    )
-                _conn = duckdb.connect(str(db), read_only=True)
+                        f"product database not found at {db}")
+                try:
+                    _conn = duckdb.connect(str(db), read_only=True)
+                except duckdb.Error as exc:                     # pragma: no cover
+                    raise DatabaseUnavailable(
+                        f"could not open {db}: {exc}") from exc
     return _conn
 
 
 def close_connection() -> None:
     global _conn
-    if _conn is not None:
-        _conn.close()
-        _conn = None
+    with _lock:
+        if _conn is not None:
+            _conn.close()
+            _conn = None
 
 
 def query(sql: str, params: list[Any] | None = None) -> list[dict[str, Any]]:
@@ -121,33 +135,50 @@ def validate_level(level: str) -> list[str]:
     """Map a level name to its grouping columns, or raise."""
     if level not in SAFE_LEVELS:
         raise ValueError(
-            f"unknown level '{level}'. Valid levels: {sorted(SAFE_LEVELS)}"
-        )
+            f"unknown level '{level}'. Valid levels: {sorted(SAFE_LEVELS)}")
     return SAFE_LEVELS[level]
 
 
 def health() -> dict[str, Any]:
-    """Readiness detail: what exists, what is queryable, how big."""
+    """
+    Readiness detail: which artefacts exist, which are queryable, row counts.
+
+    Never raises — readiness must be able to report a broken state rather than
+    become one.
+    """
     out: dict[str, Any] = {
-        "product_db_path": str(settings.product_db),
-        "product_db_exists": Path(settings.product_db).exists(),
-        "panel_parquet_exists": Path(settings.panel_parquet).exists(),
+        "data_dir": str(settings.data_dir),
+        "artefacts": {},
         "tables": {},
-        "panel_queryable": False,
+        "history_queryable": False,
+        "backtest_queryable": False,
+        "errors": [],
     }
-    if not out["product_db_exists"]:
+    for name, path in settings.required_artefacts.items():
+        p = Path(path)
+        out["artefacts"][name] = {
+            "path": str(p),
+            "exists": p.exists(),
+            "size_mb": round(p.stat().st_size / 1e6, 1) if p.exists() else None,
+        }
+
+    if not Path(settings.product_db).exists():
+        out["errors"].append("product.duckdb missing")
         return out
+
     try:
-        for t in ("series", "forecast", "backtest", "error_bands",
-                  "level_accuracy", "model_card"):
+        for t in TABLES:
             row = query_one(f"SELECT count(*) AS n FROM {t}")
-            out["tables"][t] = row["n"] if row else 0
+            out["tables"][t] = int(row["n"]) if row else 0
     except Exception as exc:                                   # noqa: BLE001
-        out["error"] = f"{type(exc).__name__}: {exc}"
+        out["errors"].append(f"product_db: {type(exc).__name__}: {exc}")
         return out
-    try:
-        query_one(f"SELECT 1 AS ok FROM {PANEL} LIMIT 1")
-        out["panel_queryable"] = True
-    except Exception as exc:                                   # noqa: BLE001
-        out["panel_error"] = f"{type(exc).__name__}: {exc}"
+
+    for label, fn in (("history_queryable", history_source),
+                      ("backtest_queryable", backtest_source)):
+        try:
+            query_one(f"SELECT 1 AS ok FROM {fn()} LIMIT 1")
+            out[label] = True
+        except Exception as exc:                               # noqa: BLE001
+            out["errors"].append(f"{label}: {type(exc).__name__}: {exc}")
     return out

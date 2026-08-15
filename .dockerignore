@@ -1,0 +1,42 @@
+# Build context is the PROJECT ROOT. Exclude everything large; the research data
+# is MOUNTED at runtime, never copied into the image.
+
+# --- research data: 1.7 GB, mounted read-only at runtime -------------------
+data/
+models/
+predictions/
+experiments/
+reports/
+docs/
+MY_RESEARCH_PAPER/
+05_REPORTS/
+09_SUBMISSION/
+02_MODEL/
+03_FORECASTS/
+01_DATA/
+04_EXPERIMENTS/
+99_ARCHIVE/
+scripts/
+
+# --- product data: built or mounted, never baked in ------------------------
+06_BACKEND/data/
+
+# --- frontend (its own image) ----------------------------------------------
+07_FRONTEND/
+
+# --- dev noise --------------------------------------------------------------
+.git/
+.gitignore
+.gitattributes
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/.venv/
+**/node_modules/
+**/.env
+**/.DS_Store
+*.log
+*.md
+!06_BACKEND/README.md
+08_DOCUMENTATION/
+.claude/

@@ -1,0 +1,115 @@
+# syntax=docker/dockerfile:1
+#
+# NPN Demand Forecasting API
+#
+# Two build targets:
+#
+#   --target api    minimal service. No ML libraries, no research tree needed.
+#                   Serves every endpoint except /inference/*, which reports
+#                   503 with a reason. Smallest and fastest to start.
+#
+#   --target full   adds lightgbm/numpy/pandas so live model verification works.
+#                   Requires the frozen model files and the research `pipeline`
+#                   package to be mounted at runtime. This is the default.
+#
+# Build:
+#   docker build -f 06_BACKEND/Dockerfile --target full -t npn-api:latest .
+#
+# The build context is the PROJECT ROOT, not 06_BACKEND, because the `full`
+# target needs the read-only `pipeline/` package. See .dockerignore — the 1.7 GB
+# of research data is excluded and mounted at runtime instead of being copied.
+
+# ---------------------------------------------------------------------------
+# Base
+# ---------------------------------------------------------------------------
+FROM python:3.13-slim AS base
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Non-root from the start. The API only ever reads its data, so it never needs
+# write access to any mounted volume.
+RUN groupadd --gid 10001 app \
+ && useradd --uid 10001 --gid app --create-home --shell /usr/sbin/nologin app
+
+WORKDIR /app
+
+# ---------------------------------------------------------------------------
+# Dependencies — separate layer so code changes do not reinstall the world
+# ---------------------------------------------------------------------------
+FROM base AS deps-api
+COPY 06_BACKEND/requirements.txt ./requirements.txt
+RUN pip install --require-hashes=false -r requirements.txt
+
+FROM base AS deps-full
+# libgomp1 is LightGBM's OpenMP runtime; the wheel will not import without it.
+RUN apt-get update \
+ && apt-get install --no-install-recommends -y libgomp1 \
+ && rm -rf /var/lib/apt/lists/*
+COPY 06_BACKEND/requirements.txt 06_BACKEND/requirements-inference.txt ./
+RUN pip install -r requirements-inference.txt
+
+# ---------------------------------------------------------------------------
+# api — minimal runtime
+# ---------------------------------------------------------------------------
+FROM deps-api AS api
+
+COPY --chown=app:app 06_BACKEND/app ./app
+COPY --chown=app:app 06_BACKEND/scripts ./scripts
+
+ENV NPN_ENVIRONMENT=production \
+    NPN_DATA_DIR=/data/product \
+    NPN_ENABLE_INFERENCE=false \
+    NPN_LOG_LEVEL=INFO \
+    PORT=8000
+
+USER app
+EXPOSE 8000
+
+# Uses /ready, not /health: readiness proves the data layer is actually
+# queryable, whereas liveness only proves the process is up.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD python -c "import urllib.request,sys,json;\
+r=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready',timeout=4));\
+sys.exit(0 if r.get('ready') else 1)"
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
+     "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]
+
+# ---------------------------------------------------------------------------
+# full — adds live inference (DEFAULT TARGET)
+# ---------------------------------------------------------------------------
+FROM deps-full AS full
+
+COPY --chown=app:app 06_BACKEND/app ./app
+COPY --chown=app:app 06_BACKEND/scripts ./scripts
+# The frozen research feature pipeline, read-only. Required to rebuild features
+# for live inference. It is NOT modified — the container runs as a non-root user
+# with no write access to it.
+COPY --chown=app:app pipeline /research/pipeline
+
+ENV NPN_ENVIRONMENT=production \
+    NPN_DATA_DIR=/data/product \
+    NPN_PROJECT_ROOT=/research \
+    NPN_MODEL_DIRECT=/research/models/champion/model_11_blend_direct_final_forecast.txt \
+    NPN_MODEL_RECURSIVE=/research/models/champion/model_12_blend_recursive_shape_final.txt \
+    NPN_FORECAST_CSV=/research/predictions/final_forecast/final_forecast_28day_v3_diversity_blend.csv \
+    NPN_ENABLE_INFERENCE=true \
+    NPN_LOG_LEVEL=INFO \
+    PYTHONPATH=/research
+
+USER app
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD python -c "import urllib.request,sys,json;\
+r=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready',timeout=4));\
+sys.exit(0 if r.get('ready') else 1)"
+
+# Single worker by design: DuckDB opens the database read-only per process, and
+# each additional worker adds a full copy of the model + panel during inference.
+# Scale with replicas behind a load balancer rather than in-process workers.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
+     "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*"]

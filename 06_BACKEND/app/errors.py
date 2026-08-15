@@ -1,8 +1,10 @@
 """
 Error types and their HTTP mapping.
 
-The API returns a consistent problem shape for every failure so the frontend can
-render one error component rather than guessing at response bodies.
+Every failure returns the same JSON shape so the frontend can render one error
+component instead of guessing at response bodies:
+
+    {"error": "not_found", "message": "...", "context": {...}, "request_id": "..."}
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ class ApiError(Exception):
     def __init__(self, message: str, **context: Any):
         super().__init__(message)
         self.message = message
-        self.context = context
+        self.context = {k: v for k, v in context.items() if v is not None}
 
     def to_payload(self) -> dict[str, Any]:
         payload: dict[str, Any] = {"error": self.error_type,
@@ -47,3 +49,8 @@ class ServiceUnavailable(ApiError):
 class Conflict(ApiError):
     status_code = 409
     error_type = "conflict"
+
+
+class NotImplementedYet(ApiError):
+    status_code = 501
+    error_type = "not_implemented"

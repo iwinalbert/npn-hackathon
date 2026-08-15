@@ -18,15 +18,20 @@ def health() -> dict:
 @router.get("/ready", summary="Readiness — are the data artefacts usable?")
 def ready() -> dict:
     """
-    Readiness deliberately reports DEGRADED rather than failing outright when the
-    history panel is missing: forecasts and backtests still work without it, and
-    a partially-useful API beats a dead one during a demo.
+    Readiness reports DEGRADED rather than failing outright when a sidecar is
+    missing: the frozen forecast still serves without history or backtest data,
+    and a partially-useful API beats a dead one. Orchestrators should treat
+    ready=false as unhealthy and degraded=true as a warning.
     """
     detail = db.health()
-    core_ok = detail.get("product_db_exists") and detail.get("tables")
+    core_ok = bool(detail.get("tables"))
+    sidecars_ok = (detail.get("history_queryable")
+                   and detail.get("backtest_queryable"))
     return {
         "ready": bool(core_ok),
-        "degraded": bool(core_ok and not detail.get("panel_queryable")),
+        "degraded": bool(core_ok and not sidecars_ok),
+        "environment": settings.environment,
+        "version": settings.version,
         "detail": detail,
         "cache": cache_stats(),
     }

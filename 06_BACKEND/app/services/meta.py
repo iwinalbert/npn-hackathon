@@ -17,7 +17,7 @@ experiment, and nothing is asserted that the evidence does not support.
 from __future__ import annotations
 
 from ..cache import ttl_cache
-from ..db import query, query_one
+from ..db import backtest_source, query, query_one
 
 _INT_FIELDS = {"n_estimators", "seed", "validation_n", "horizon_days", "n_series"}
 _FLOAT_FIELDS = {"blend_weight_direct", "blend_weight_recursive",
@@ -84,8 +84,9 @@ def capabilities() -> dict:
                       "series priced for all 28 forecast days")},
         {"name": "Empirical backtest error bands",
          "category": "implemented",
-         "detail": ("Observed p05-p95 of (actual - predicted) by volume tier and "
-                    "horizon, from held-out windows. Measured error, NOT a "
+         "detail": ("Observed p05-p95 of (actual - predicted) by demand regime "
+                    "and horizon, variance-stabilised by sqrt(forecast). "
+                    "Measured coverage 90.0%. Measured error, NOT a "
                     "model-produced prediction interval."),
          "evidence": "6.8M backtest rows across 8 disjoint origins"},
         {"name": "Historical validation replay",
@@ -175,11 +176,15 @@ def provenance() -> dict:
     """Where every served number comes from."""
     card = model_card()
     counts = {}
-    for t in ("series", "forecast", "backtest", "error_bands", "level_accuracy"):
+    for t in ("series", "forecast", "calendar", "error_bands",
+              "level_accuracy", "window_metrics"):
         row = query_one(f"SELECT count(*) AS n FROM {t}")
         counts[t] = int(row["n"]) if row else 0
+    counts["backtest"] = int(
+        query_one(f"SELECT count(*) AS n FROM {backtest_source()}")["n"])
     origins = query(
-        "SELECT DISTINCT origin_idx FROM backtest ORDER BY origin_idx")
+        f"SELECT DISTINCT origin_idx FROM {backtest_source()} "
+        "ORDER BY origin_idx")
     return {
         "model_direct_sha256": card.get("model_direct_sha256"),
         "model_recursive_sha256": card.get("model_recursive_sha256"),
@@ -190,8 +195,12 @@ def provenance() -> dict:
         "sources": {
             "forecast": ("predictions/final_forecast/"
                          "final_forecast_28day_v3_diversity_blend.csv"),
-            "history": "data/processed/sales_long_full.parquet (read-only)",
-            "backtest": "predictions/uc11_cache/ (8 champion reproductions)",
+            "history": ("06_BACKEND/data/history.parquet — product-owned "
+                        "sidecar built read-only from "
+                        "data/processed/sales_long_full.parquet"),
+            "backtest": ("06_BACKEND/data/backtest.parquet — product-owned "
+                         "sidecar built read-only from predictions/uc11_cache/ "
+                         "(8 champion reproductions)"),
             "level_accuracy": "experiments/artifacts/uc11_hierarchy_levels.csv",
             "model": ("models/champion/model_11_blend_direct_final_forecast.txt "
                       "+ model_12_blend_recursive_shape_final.txt"),

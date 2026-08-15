@@ -1,27 +1,132 @@
-# 07_FRONTEND — workspace (empty, not yet built)
+# 07_FRONTEND — Retail Demand Forecasting
 
-Frontend development happens **here**. Nothing has been implemented yet.
+React + TypeScript application over the frozen forecasting model.
 
-## Ground rules
+```
+Status: complete — 8 pages, 30 tests passing, production build verified
+```
 
-1. The frontend talks to `06_BACKEND/`. It should not read `data/`, `models/`
-   or `predictions/` directly.
-2. The model is frozen — see `02_MODEL/MODEL_FREEZE.md`.
+Full implementation report:
+[`08_DOCUMENTATION/FRONTEND_IMPLEMENTATION_REPORT.md`](../08_DOCUMENTATION/FRONTEND_IMPLEMENTATION_REPORT.md)
 
-## Things the data will force you to handle
+---
 
-| Reality | Consequence for the UI |
+## Quick start
+
+```bash
+# 1. the API must be running (it serves all data)
+python tasks.py build-db      # once
+python tasks.py api           # http://localhost:8000
+
+# 2. the frontend
+python tasks.py ui            # http://localhost:5173
+```
+
+`npm run dev` proxies `/api` to `http://127.0.0.1:8000`, so the browser sees a
+single origin and CORS is never exercised in development either.
+
+| Command | What it does |
 |---|---|
-| 68% of historical store-item-days are zero | Charts of a single series will look mostly flat at zero. Sparklines at item or store level read far better than at store-item level |
-| Forecasts are continuous, actuals are integers | A forecast of 0.63 units is meaningful (an expected value), not a rounding error. Decide deliberately whether to round in the UI, and say which you are showing |
-| Accuracy varies ~28% → ~95% by aggregation level | Never show a single global "accuracy" number. Show the one matching the current view's aggregation level |
-| No ground truth exists for the forecast window | Do not render an "accuracy" or "error" panel against the delivered forecast. Any accuracy shown is from the `d_1914–d_1941` validation window and must be labelled as such |
-| 30,490 series | Any "all series" table needs virtualisation or server-side paging |
-| Point forecasts only, no intervals | Do not render confidence bands. The model does not produce them, and inventing them would misrepresent it |
+| `python tasks.py ui` | dev server with hot reload |
+| `python tasks.py ui-build` | production build into `dist/` |
+| `python tasks.py ui-test` | 30 tests |
+| `npm run typecheck` | TypeScript, no emit |
+| `npm run preview` | serve the built bundle locally |
 
-## Useful groupings
+---
 
-3 states → 10 stores → 3 categories → 7 departments → 3,049 items →
-30,490 store-item series. Aggregates are exact sums of the bottom-level forecast
-(the forecast is coherent by construction), so a store total is just the sum of
-its rows.
+## Stack, and why
+
+| Choice | Reason |
+|---|---|
+| **React 18 + TypeScript** | Typed API responses catch a backend contract change at compile time rather than as a blank chart |
+| **Vite** | Fast builds, native code-splitting, `import.meta.env` for configuration |
+| **Tailwind** | A constrained palette enforced in one config file; no bespoke CSS to drift |
+| **Recharts** | Declarative composition, good defaults, and the one chart shape this product needs most (history flowing into forecast) is straightforward to build correctly |
+| **TanStack Query** | Caching, dedup and loading/error state for free. The model is frozen, so most responses are immutable — long stale times are correct, not lazy |
+
+**Deliberately not used:** a component library (would fight the deliberately
+restrained visual language), Redux (the app is read-mostly; server cache is the
+only real state), and a charting library with a canvas renderer (unnecessary at
+these data volumes after server-side windowing).
+
+---
+
+## Pages
+
+| Route | Purpose |
+|---|---|
+| `/` | Overview — the 30-second answer: what is forecast, how well, on what data |
+| `/forecast` | Search a store-item, see its history flow into the 28-day forecast, plus a planning view |
+| `/hierarchy` | Drill from chain to item; shows that aggregates are exact sums of bottom-level forecasts |
+| `/insights` | Portfolio summary and the products rising or falling fastest |
+| `/accuracy` | Measured performance: 8 windows, horizon, regimes, volume tiers, occurrence, member split |
+| `/validation` | Replay a historical window where the true outcome is known |
+| `/model` | Architecture, specification, and a live re-run of the frozen model |
+| `/methodology` | Data, intermittent demand, covariates, capability matrix, honest limitations |
+
+Overview loads eagerly; every other route is lazy-loaded so the 112 KB chart
+bundle is not on the critical path.
+
+---
+
+## Configuration
+
+| Variable | Default | Notes |
+|---|---|---|
+| `VITE_API_BASE_URL` | *(unset)* | Leave unset behind a shared proxy — the client falls back to same-origin `/api/v1`. Set only for a split-origin deployment |
+| `VITE_DEV_API_TARGET` | `http://127.0.0.1:8000` | Dev-server proxy target only |
+| `API_HOST` *(container)* | `api:8000` | Where nginx proxies `/api/` at runtime |
+
+**No API host is compiled into the bundle by default.** A test asserts that
+`API_BASE` never matches `localhost`, an IP, or an absolute URL.
+
+---
+
+## Deployment
+
+```bash
+docker compose up --build     # http://localhost:8080
+```
+
+Multi-stage build: node compiles the bundle, nginx serves the static output and
+proxies `/api/` to the API service over the internal network.
+
+- `NGINX_ENVSUBST_FILTER=API_HOST` — only `API_HOST` is substituted into the
+  nginx template, so nginx's own `$host` / `$uri` variables are never clobbered.
+- Hashed assets cached for a year; `index.html` never cached.
+- `try_files` fallback so client-side routes survive a hard refresh.
+- `proxy_read_timeout 180s` because live model verification takes ~45 s.
+- `/healthz` for container health checks.
+
+**The Docker image has not been built** — Docker is unavailable on the
+development machine. See the implementation report for the exact command to run
+and what to check.
+
+---
+
+## Two things this UI will not do
+
+**It will not show a price what-if slider.** The research measured the frozen
+model's response to simulated price changes and found it non-monotone and
+sometimes economically backwards. The model uses price as forecasting context,
+not as a causal lever, so no such control is offered and `/methodology` says so.
+
+**It will not present validation accuracy as live accuracy.** Every figure comes
+from held-out windows with known outcomes. The delivered 28-day forecast has no
+recorded outcome, so no accuracy is ever quoted against it.
+
+---
+
+## Testing
+
+```bash
+python tasks.py ui-test
+```
+
+30 tests across three files: pure formatting/transform logic, the API client
+(URL building, error mapping, network failure), and component rendering against
+a mocked API. The load-bearing assertions are the honesty ones — that the app
+renders exactly the numbers the API returned, that a failed request produces an
+error state rather than a plausible-looking placeholder, and that backend
+caveats reach the screen.

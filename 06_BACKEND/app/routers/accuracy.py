@@ -78,3 +78,19 @@ def aggregate_backtest(
     origin_idx: int = Query(default=PRIMARY),
 ) -> dict:
     return svc.aggregate_backtest(level, node_id, origin_idx)
+
+
+@router.get("/occurrence",
+            summary="Demand-occurrence diagnostics (did it spot the selling days?)")
+def occurrence(origin_idx: int = Query(default=PRIMARY)) -> dict:
+    """
+    Classification-style diagnostics from thresholding the point forecast at
+    0.5 units. The model was never trained to classify — these describe a
+    behaviour, they are not the task metric.
+    """
+    return svc.occurrence(origin_idx)
+
+
+@router.get("/volume-tiers", summary="Accuracy by demand volume")
+def volume_tiers(origin_idx: int = Query(default=PRIMARY)) -> dict:
+    return svc.by_volume_tier(origin_idx)

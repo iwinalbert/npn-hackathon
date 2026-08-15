@@ -78,8 +78,8 @@ The delivery layer therefore holds **copies and pointers**, never relocations.
 | `03_FORECASTS/` | The shipped 28-day forecast | Copy; flags the stale M5 submission |
 | `04_EXPERIMENTS/` | `EXPERIMENT_CLASSIFICATION.md` — all 86 records sorted | Index only; registry not moved |
 | `05_REPORTS/` | `FINAL_RESEARCH_REPORT/` — paper, reports, figures | Copies |
-| `06_BACKEND/` | **Backend workspace — build here** | Empty scaffold |
-| `07_FRONTEND/` | **Frontend workspace — build here** | Empty scaffold |
+| `06_BACKEND/` | FastAPI service — 28 endpoints, 80 tests | `python tasks.py api` |
+| `07_FRONTEND/` | React + TypeScript app — 8 pages, 30 tests | `python tasks.py ui` |
 | `08_DOCUMENTATION/` | Structure, audit, integrity manifests | |
 | `09_SUBMISSION/` | Copies of final deliverables only | Originals untouched |
 | `99_ARCHIVE/` | Deliberately empty | Nothing was archived or deleted; reasons documented |
@@ -108,18 +108,24 @@ The delivery layer therefore holds **copies and pointers**, never relocations.
 ## Where the next phase happens
 
 ```
-06_BACKEND/     <- API development
-07_FRONTEND/    <- UI development
+06_BACKEND/     FastAPI + DuckDB over the frozen model      python tasks.py api
+07_FRONTEND/    React + TypeScript product UI               python tasks.py ui
 ```
+
+Run the whole stack with `docker compose up --build` (http://localhost:8080),
+or verify everything with `python tasks.py verify-all`.
 
 Both have READMEs covering what data is available, what to serve, and the
 data-shape realities that will otherwise bite (68% zeros, accuracy varying
 ~28%→~95% by aggregation level, no ground truth for the forecast window, point
 forecasts with no intervals).
 
-**The backend consumes the forecast CSV, not the model binaries.** All 853,720
-predictions are precomputed; running the recursive member is a 28-step rollout
-that takes minutes and is not a request-time operation.
+**The backend serves precomputed forecasts, not live inference, on the request
+path.** All 853,720 predictions already exist, and the forecast is a fixed
+quantity because the model is frozen and its covariates are published. Live
+inference is still available on demand at `POST /api/v1/inference/verify`, which
+reloads the frozen model and re-derives the forecast in ~45 s to prove the
+published artefact is reproducible.
 
 ---
 

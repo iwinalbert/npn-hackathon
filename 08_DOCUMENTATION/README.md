@@ -2,6 +2,10 @@
 
 | File | What it is |
 |---|---|
+| [`PRODUCT_ARCHITECTURE_PLAN.md`](PRODUCT_ARCHITECTURE_PLAN.md) | the architecture proposed and approved before implementation |
+| [`BACKEND_IMPLEMENTATION_REPORT.md`](BACKEND_IMPLEMENTATION_REPORT.md) | Phase 2 backend: data layer, API, model serving, deployment |
+| [`FRONTEND_IMPLEMENTATION_REPORT.md`](FRONTEND_IMPLEMENTATION_REPORT.md) | frontend: pages, design system, integrity rules, deployment |
+| [`GIT_POLICY.md`](GIT_POLICY.md) | what is versioned, what is excluded, and why |
 | [`ORGANIZATION_AUDIT.md`](ORGANIZATION_AUDIT.md) | what this reorganisation changed, copied and deliberately left alone, plus verification results and issues found |
 | [`../PROJECT_STRUCTURE.md`](../PROJECT_STRUCTURE.md) | top-level map — lives at the project root so it is the first thing seen |
 | `_integrity/manifest_before.json` | SHA-256 of 520 protected files, before |

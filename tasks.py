@@ -63,6 +63,59 @@ def openapi() -> int:
     return 0
 
 
+def _npm(*args: str) -> int:
+    """Run npm in the frontend directory. Uses shell=True on Windows because
+    npm ships as npm.cmd there and is not directly executable otherwise."""
+    import platform
+    cmd = ["npm", *args]
+    if platform.system() == "Windows":
+        print(f"$ {' '.join(cmd)}   (in {FRONTEND})", flush=True)
+        return subprocess.call(" ".join(cmd), cwd=str(FRONTEND), shell=True)
+    return _run(cmd, cwd=FRONTEND)
+
+
+def ui() -> int:
+    """Run the frontend dev server on http://localhost:5173."""
+    return _npm("run", "dev")
+
+
+def ui_build() -> int:
+    """Build the production frontend bundle into 07_FRONTEND/dist."""
+    return _npm("run", "build")
+
+
+def ui_test() -> int:
+    """Run the frontend test suite."""
+    return _npm("run", "test")
+
+
+def ui_install() -> int:
+    """Install frontend dependencies."""
+    return _npm("ci")
+
+
+def verify_all() -> int:
+    """Run every check: backend tests, frontend tests, build, integrity."""
+    steps = [
+        ("backend tests", test),
+        ("frontend tests", ui_test),
+        ("frontend build", ui_build),
+        ("artefact integrity", verify_integrity),
+    ]
+    failures = []
+    bar = "=" * 60
+    for name, fn in steps:
+        print(f"\n{bar}\n{name}\n{bar}", flush=True)
+        if fn() != 0:
+            failures.append(name)
+    print(f"\n{bar}")
+    if failures:
+        print(f"FAILED: {', '.join(failures)}")
+        return 1
+    print("ALL CHECKS PASSED")
+    return 0
+
+
 def clean_db() -> int:
     """Delete the product database. It is always rebuildable."""
     removed = 0
@@ -79,6 +132,11 @@ COMMANDS = {
     "build-db": build_db,
     "api": api,
     "test": test,
+    "ui": ui,
+    "ui-install": ui_install,
+    "ui-build": ui_build,
+    "ui-test": ui_test,
+    "verify-all": verify_all,
     "verify-integrity": verify_integrity,
     "openapi": openapi,
     "clean-db": clean_db,

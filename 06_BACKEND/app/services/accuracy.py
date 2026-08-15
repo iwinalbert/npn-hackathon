@@ -331,3 +331,130 @@ def error_bands(regime: str | None = None) -> list[dict]:
              "q95": round(float(r["q95"]), 4),
              "n": int(r["n"]),
              "normalised_sd": round(float(r["norm_sd"]), 4)} for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# Demand-occurrence and volume-tier behaviour
+# ---------------------------------------------------------------------------
+
+#: The occurrence threshold used throughout the research: a point forecast that
+#: rounds to at least one unit counts as "demand predicted". It is the only
+#: non-arbitrary cut for a count target and was fixed once, never tuned.
+OCCURRENCE_THRESHOLD = 0.5
+
+
+@ttl_cache()
+def occurrence(origin_idx: int = 1912) -> dict:
+    """
+    Demand-occurrence diagnostics: did the model spot the days that sold?
+
+    THESE MODELS WERE NEVER TRAINED TO CLASSIFY. They minimise Tweedie deviance
+    on a zero-inflated count target, so these figures are a by-product of
+    thresholding a regression output at 0.5 units. They are reported because
+    they describe a real behaviour — the recursive member is notably
+    higher-recall than the direct one — but they are NOT the task metric and a
+    model can improve F1 while getting worse at forecasting quantity.
+    """
+    w = _require_window(origin_idx)
+    t = OCCURRENCE_THRESHOLD
+    r = query_one(
+        f"""
+        SELECT count(*) AS n,
+               sum(CASE WHEN y_true > 0 THEN 1 ELSE 0 END) AS actual_pos,
+               sum(CASE WHEN p_blend >= {t} THEN 1 ELSE 0 END) AS pred_pos,
+               sum(CASE WHEN y_true > 0 AND p_blend >= {t} THEN 1 ELSE 0 END) AS tp,
+               sum(CASE WHEN y_true = 0 AND p_blend >= {t} THEN 1 ELSE 0 END) AS fp,
+               sum(CASE WHEN y_true > 0 AND p_blend < {t} THEN 1 ELSE 0 END) AS fn,
+               sum(CASE WHEN y_true = 0 AND p_blend < {t} THEN 1 ELSE 0 END) AS tn
+        FROM {backtest_source()} WHERE origin_idx = ?
+        """,
+        [origin_idx],
+    )
+    n = int(r["n"]); tp = int(r["tp"]); fp = int(r["fp"])
+    fn = int(r["fn"]); tn = int(r["tn"])
+    ap = int(r["actual_pos"]); pp = int(r["pred_pos"])
+    precision = tp / pp if pp else 0.0
+    recall = tp / ap if ap else 0.0
+    f1 = (2 * precision * recall / (precision + recall)
+          if (precision + recall) else 0.0)
+    base_rate = ap / n if n else 0.0
+    return {
+        "origin_idx": origin_idx,
+        "origin_day": w["origin_day"],
+        "window": f"{w['window_start']} to {w['window_end']}",
+        "threshold": t,
+        "rule": ("actual event = actual sales > 0; predicted event = point "
+                 "forecast >= 0.5 units (i.e. it rounds to at least one unit)"),
+        "n": n,
+        "confusion_matrix": {
+            "true_positive": tp, "false_positive": fp,
+            "false_negative": fn, "true_negative": tn,
+        },
+        "accuracy": round((tp + tn) / n, 4) if n else 0.0,
+        "precision": round(precision, 4),
+        "recall": round(recall, 4),
+        "f1": round(f1, 4),
+        "base_rate": round(base_rate, 4),
+        "always_predict_no_demand_accuracy": round(1 - base_rate, 4),
+        "caveat": ("The model was never trained to classify. These are a "
+                   "by-product of thresholding a regression output, not the "
+                   "task metric. Compare accuracy against the "
+                   "'always predict no demand' baseline, not against zero."),
+    }
+
+
+@ttl_cache()
+def by_volume_tier(origin_idx: int = 1912) -> dict:
+    """
+    Accuracy by demand volume, showing where the squared error actually lives.
+
+    NOTE ON TIER DEFINITION: tiers here are assigned from each series' mean
+    daily sales over its FULL history. The research reports used tiers assigned
+    from history up to each window's own origin, so the high-volume RMSE quoted
+    in FINAL_MODEL_PERFORMANCE_REPORT (5.8662) differs very slightly from the
+    figure computed here. Both are correct measurements of slightly different
+    groupings; the definition is stated rather than the difference hidden.
+    """
+    w = _require_window(origin_idx)
+    rows = query(
+        f"""
+        SELECT s.volume_tier,
+               count(*)                              AS n,
+               count(DISTINCT b.series_idx)          AS n_series,
+               sqrt(avg((b.y_true - b.p_blend) ^ 2)) AS rmse,
+               avg(abs(b.y_true - b.p_blend))        AS mae,
+               avg(b.p_blend - b.y_true)             AS bias,
+               avg(b.y_true)                         AS mean_actual,
+               sum((b.y_true - b.p_blend) ^ 2)       AS sq_error
+        FROM {backtest_source()} b
+        JOIN series s USING (series_idx)
+        WHERE b.origin_idx = ?
+        GROUP BY 1
+        """,
+        [origin_idx],
+    )
+    order = {"very low": 0, "low": 1, "medium": 2, "high": 3}
+    rows.sort(key=lambda r: order.get(r["volume_tier"], 9))
+    total_sq = sum(float(r["sq_error"]) for r in rows) or 1.0
+    tiers = [{
+        "volume_tier": r["volume_tier"],
+        "n": int(r["n"]), "n_series": int(r["n_series"]),
+        "rmse": round(float(r["rmse"]), 4),
+        "mae": round(float(r["mae"]), 4),
+        "bias": round(float(r["bias"]), 4),
+        "mean_actual": round(float(r["mean_actual"]), 4),
+        "share_of_squared_error_pct": round(
+            100 * float(r["sq_error"]) / total_sq, 2),
+        "share_of_rows_pct": round(100 * int(r["n"]) / sum(
+            int(x["n"]) for x in rows), 2),
+    } for r in rows]
+    return {
+        "origin_idx": origin_idx,
+        "origin_day": w["origin_day"],
+        "tiers": tiers,
+        "tier_definition": ("Mean daily sales over the series' full history: "
+                            "very low <=0.2, low <=1.0, medium <=3.0, high >3.0"),
+        "note": ("A small number of high-volume series carry most of the "
+                 "squared error. Aggregate RMSE improvements that come only "
+                 "from easy low-volume rows are not real improvements."),
+    }

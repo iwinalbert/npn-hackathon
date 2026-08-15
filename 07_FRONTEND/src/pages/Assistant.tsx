@@ -193,22 +193,40 @@ export function Assistant() {
                         {/* provenance strip */}
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5
                                         text-[11px] text-ink-dim">
-                          <span>
-                            data:{' '}
-                            <span className="font-mono text-ink-muted">{t.answer.intent}</span>
-                          </span>
-                          <span aria-hidden>·</span>
-                          <span>{t.answer.elapsed_ms} ms</span>
-                          <span aria-hidden>·</span>
-                          {t.answer.grounded ? (
-                            <span className="text-good">
-                              all figures traced to backend data
-                            </span>
+                          {t.answer.refused ? (
+                            <>
+                              <span className="rounded border border-good/40 bg-good/10
+                                               px-1.5 py-0.5 font-medium text-good">
+                                answered locally — no AI call
+                              </span>
+                              <span aria-hidden>·</span>
+                              <span>
+                                policy:{' '}
+                                <span className="font-mono text-ink-muted">
+                                  {t.answer.refusal_category}
+                                </span>
+                              </span>
+                            </>
                           ) : (
-                            <span className="text-warn">
-                              {t.answer.ungrounded_numbers.length} figure
-                              {t.answer.ungrounded_numbers.length === 1 ? '' : 's'} could not be traced
-                            </span>
+                            <>
+                              <span>
+                                data:{' '}
+                                <span className="font-mono text-ink-muted">{t.answer.intent}</span>
+                              </span>
+                              <span aria-hidden>·</span>
+                              <span>{t.answer.elapsed_ms} ms</span>
+                              <span aria-hidden>·</span>
+                              {t.answer.grounded ? (
+                                <span className="text-good">
+                                  all figures traced to backend data
+                                </span>
+                              ) : (
+                                <span className="text-warn">
+                                  {t.answer.ungrounded_numbers.length} figure
+                                  {t.answer.ungrounded_numbers.length === 1 ? '' : 's'} could not be traced
+                                </span>
+                              )}
+                            </>
                           )}
                           {t.answer.injection_suspected && (
                             <>
@@ -218,7 +236,7 @@ export function Assistant() {
                           )}
                         </div>
 
-                        {!t.answer.grounded && (
+                        {!t.answer.grounded && !t.answer.refused && (
                           <Caveat>
                             This answer contains {t.answer.ungrounded_numbers.length} number
                             {t.answer.ungrounded_numbers.length === 1 ? '' : 's'} (

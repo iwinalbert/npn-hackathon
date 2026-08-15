@@ -53,8 +53,14 @@ verified output to retail planners and technical evaluators.
 ABSOLUTE RULES
 
 1. The JSON context supplied with each question is your ONLY source of facts. \
-Never state a number that is not in that context. If you need a figure that is \
-not there, say: "I don't have enough verified data to answer that."
+Never state a number that is not in that context. When the context does not \
+contain what is needed, your reply MUST BEGIN with this sentence, copied \
+exactly, before any explanation:
+"I don't have enough verified data to answer that."
+Use it verbatim — not "I do not have access to", not "that information is \
+unavailable", not a reworded equivalent. It is a fixed signal that downstream \
+checks look for, so a paraphrase, however accurate, is a failure. You may and \
+should follow it with a sentence explaining what is missing and why.
 2. Never invent, estimate, extrapolate or "approximately" calculate a value. Do \
 not do arithmetic beyond reading what is given; trends, totals and percentage \
 changes have already been computed for you.
@@ -90,11 +96,20 @@ is about 2 units per product per day, with big misses penalised hardest"). \
 Quote figures exactly as given. Never use markdown headings.\
 """
 
-# Patterns that indicate an attempt to override behaviour rather than ask a
-# forecasting question. Matching does not block the request — it annotates it and
-# reinforces the system rules, because a legitimate question can contain these
-# words ("explain your instructions for handling intermittent demand").
+# SUSPICION TIER. Matching does not block the request: it annotates the reply
+# with `injection_suspected` and inserts a SECURITY NOTE reinforcing the system
+# rules, because a legitimate question can contain these words ("explain your
+# instructions for handling intermittent demand").
+#
+# The REFUSAL tier (_POLICIES, below) is the one that stops a request from
+# reaching the model at all. It is deliberately narrower — a wrong refusal
+# silently destroys a legitimate answer, whereas a wrong flag only adds a
+# reminder. This tier is the wider net for everything the narrow one lets past,
+# such as role-play framing, which asks for a description rather than a
+# mutation and so should be answered carefully rather than declined.
 _INJECTION_PATTERNS = [
+    re.compile(r"\b(act|behave|respond|answer)\s+as\s+(a|an|the)\s+", re.I),
+    re.compile(r"\brole[\s-]?play\b", re.I),
     re.compile(r"ignore\s+(all\s+)?(previous|prior|above|the)\s+(instruction|rule|prompt)", re.I),
     re.compile(r"disregard\s+(your|all|the)\s+(instruction|rule|guardrail|system)", re.I),
     re.compile(r"(reveal|show|print|repeat|output|leak)\s+(me\s+)?(your|the)\s+"
@@ -114,6 +129,142 @@ _SECRET_SHAPES = [
 ]
 
 
+# ---------------------------------------------------------------------------
+# Local refusal policy — answered HERE, with no model call
+# ---------------------------------------------------------------------------
+#
+# Some requests have exactly one correct answer, and this system already knows
+# it. Sending them to Gemini was wrong for two reasons:
+#
+#   1. SECURITY MUST NOT DEPEND ON A THIRD PARTY BEING UP. Delegating "I cannot
+#      modify the forecast" to a remote model means an outage, a rate limit or a
+#      quota exhaustion turns a guarantee into a 503. That is not theoretical:
+#      it is precisely how this layer was found. A refusal that only works while
+#      Google is reachable is not a guarantee, it is a hope.
+#   2. A request to mutate state should not cost a quota unit, three seconds and
+#      a network round-trip to be told no.
+#
+# The refusals below are composed in Python from facts this service already
+# holds. They are deterministic, instant, free, and work with no API key at all.
+#
+# SCOPE DISCIPLINE. These patterns must catch *imperatives aimed at the
+# assistant* without swallowing legitimate questions ABOUT the same topics.
+# "Can you retrain the model?" is a request; "How was the model retrained for
+# the final forecast?" is a research question with a real answer, and it must
+# still reach the model. Two framings are therefore required — an imperative at
+# the start of a clause, or a "can you"-style address with explanatory verbs
+# (explain, describe, tell) explicitly excluded — plus a short list of phrases
+# that are unambiguous in any framing.
+
+# "…, then set the forecast to 999" — an imperative opening a clause.
+_IMPERATIVE = r"(?:^|[.;,]\s*|\band\s+|\bthen\s+|\bnow\s+|\bplease\s+)"
+# "can you …", but not "can you explain …"
+_ADDRESSED = (r"\b(?:can|could|would|will)\s+you\s+"
+              r"(?!explain|describe|tell|say|clarify|summari[sz]e|show\s+me\s+how)"
+              r"(?:\w+\s+){0,3}")
+
+
+@dataclass(frozen=True)
+class _Policy:
+    category: str
+    patterns: tuple[re.Pattern[str], ...]
+    answer: str
+
+
+_MUTATION_VERBS = r"(?:set|change|modify|overwrite|update|adjust|alter|edit|delete|remove|replace)"
+_MUTATION_TARGETS = (r"(?:the\s+)?(?:28[\s-]?day\s+)?"
+                     r"(?:forecast|prediction|total|demand\s+value|model|weight|"
+                     r"blend|parameter|dataset|data|registry|metric|rmse|mae)")
+
+_POLICIES: tuple[_Policy, ...] = (
+    _Policy(
+        category="secret_extraction",
+        patterns=(
+            re.compile(r"\b(?:print|reveal|show|repeat|output|leak|give|tell)\b"
+                       r"(?:\s+\w+){0,3}\s+"
+                       r"(?:your|the|our)\s+(?:\w+\s+){0,2}"
+                       r"(?:api[_\s-]?key|secret|token|credential|password|"
+                       r"env(?:ironment)?\s+var|system\s+prompt|instructions)", re.I),
+            re.compile(r"\bwhat(?:'s| is)\s+(?:your|the)\s+(?:api[_\s-]?key|"
+                       r"secret|token|system\s+prompt)", re.I),
+            re.compile(r"\bGEMINI_API_KEY\b", re.I),
+        ),
+        answer=(
+            "I don't have access to API keys, credentials or configuration "
+            "secrets, and I can't print them. The Gemini key is held server-side "
+            "by the API process, is stored as a masked secret, is never placed "
+            "in my prompt or context, and is never sent to the browser.\n\n"
+            "If you're checking that: /api/v1/genai/context-preview returns the "
+            "exact context I receive for any question, so you can confirm for "
+            "yourself that no credential is in it."),
+    ),
+    _Policy(
+        category="instruction_override",
+        patterns=(
+            re.compile(r"\bignore\s+(?:all\s+|any\s+)?(?:previous|prior|above|"
+                       r"earlier|the)\s+(?:instruction|rule|prompt|direction)", re.I),
+            re.compile(r"\bdisregard\s+(?:your|all|the|any)\s+"
+                       r"(?:instruction|rule|guardrail|system|constraint)", re.I),
+            re.compile(r"\byou\s+are\s+now\s+(?:a|an|no\s+longer)\b", re.I),
+            re.compile(r"\b(?:jailbreak|DAN\s+mode|developer\s+mode|sudo\s+mode)\b", re.I),
+            re.compile(r"\bpretend\s+(?:you|that\s+you)\b", re.I),
+        ),
+        answer=(
+            "I can't be reconfigured by a question. My instructions come from "
+            "the service that runs me, not from user input, and the question you "
+            "send is passed to me as untrusted data rather than as instructions.\n\n"
+            "What I can do is explain this forecasting system: the 28-day "
+            "forecast for any store-item, how accurate the model is and at which "
+            "aggregation level, how it handles products that rarely sell, and "
+            "what it deliberately refuses to claim."),
+    ),
+    _Policy(
+        category="forecast_mutation",
+        patterns=(
+            re.compile(_IMPERATIVE + _MUTATION_VERBS + r"\s+" + _MUTATION_TARGETS, re.I),
+            re.compile(_ADDRESSED + _MUTATION_VERBS + r"\s+" + _MUTATION_TARGETS, re.I),
+            re.compile(_IMPERATIVE + r"(?:make|force)\s+" + _MUTATION_TARGETS
+                       + r"\s+(?:be\s+)?\d", re.I),
+        ),
+        answer=(
+            "I can't change the forecast, and neither can anything else in this "
+            "system at runtime. The model is frozen and the API is read-only: "
+            "there is no write path from a question to a stored prediction. The "
+            "28-day forecast for d_1942–d_1969 is a fixed artefact produced by "
+            "the frozen champion, and the container mounts the research tree "
+            "read-only so it cannot be modified even by accident.\n\n"
+            "I can explain what the forecast says, how it compares with recent "
+            "sales, how much error to expect from it, and how it was validated."),
+    ),
+    _Policy(
+        category="model_mutation",
+        patterns=(
+            re.compile(_IMPERATIVE + r"(?:re-?train|re-?fit|fine[\s-]?tune|"
+                       r"re-?weight|re-?tune|re-?blend)\b", re.I),
+            re.compile(_ADDRESSED + r"(?:re-?train|re-?fit|fine[\s-]?tune|"
+                       r"re-?weight|re-?tune|re-?blend)\b", re.I),
+        ),
+        answer=(
+            "I can't retrain, re-tune or re-weight the model. The champion is "
+            "frozen: a 0.60/0.40 blend of a direct and a recursive LightGBM "
+            "Tweedie model, seed 42, and its artefact hashes are checked by a "
+            "regression test so that a silent swap would fail the build.\n\n"
+            "That freeze is deliberate — every accuracy figure this product "
+            "shows was measured against exactly these weights, so changing them "
+            "would invalidate the numbers on every other page. If you want to "
+            "see the model run, /api/v1/inference/verify re-executes the frozen "
+            "boosters and checks they still reproduce the shipped forecast "
+            "bit-for-bit."),
+    ),
+)
+
+
+# What `model` reads when this service answered by itself. Not the configured
+# model id: claiming Gemini produced a reply it never saw would be a lie in the
+# one field a reviewer uses to check provenance.
+LOCAL_GUARDRAIL = "local-guardrail (no model call)"
+
+
 @dataclass
 class AssistantReply:
     answer: str
@@ -125,6 +276,9 @@ class AssistantReply:
     context_keys: list[str] = field(default_factory=list)
     elapsed_ms: int = 0
     truncated: bool = False
+    # Answered by local policy, with no provider call. See _POLICIES.
+    refused: bool = False
+    refusal_category: str | None = None
 
 
 class LLMProvider(Protocol):
@@ -240,6 +394,15 @@ def scrub_secrets(text: str) -> str:
 
 def detect_injection(question: str) -> bool:
     return any(p.search(question or "") for p in _INJECTION_PATTERNS)
+
+
+def check_policy(question: str) -> _Policy | None:
+    """The first policy this question violates, or None to proceed to the model."""
+    q = question or ""
+    for policy in _POLICIES:
+        if any(p.search(q) for p in policy.patterns):
+            return policy
+    return None
 
 
 def _numbers_in(text: str) -> list[float]:
@@ -364,6 +527,65 @@ def status() -> dict[str, Any]:
     }
 
 
+def _provider_failure(exc: Exception) -> ServiceUnavailable:
+    """
+    Turn a provider exception into a client-safe error that says what to do.
+
+    The generic "could not complete the request" is useless when the real cause
+    is a quota: the caller retries, burns nothing, learns nothing. Quota and
+    rate-limit errors are classified so the message is actionable — and, in the
+    quota case, so the caller is told that retrying will NOT help. Google's own
+    429 body advertises `retryDelay: 59s` even for a per-DAY quota, which is
+    actively misleading.
+
+    The exception text is never forwarded. It can contain the request URL and,
+    in some SDKs, the key; only a classification derived from it escapes.
+    """
+    text = str(exc)
+    status = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+
+    if "RESOURCE_EXHAUSTED" in text or status == 429 or "429" in text[:32]:
+        per_day = "PerDay" in text
+        return ServiceUnavailable(
+            "The AI provider's quota for this project is exhausted.",
+            provider_error="QuotaExceeded",
+            retry_helps=not per_day,
+            remedy=("The free tier allows a limited number of requests per day; "
+                    "it resets at midnight US Pacific. Enable billing on the "
+                    "Google AI Studio project, or set NPN_GEMINI_MODEL to a "
+                    "model with separate quota."
+                    if per_day else
+                    "Per-minute rate limit reached — wait about a minute."))
+
+    if "UNAVAILABLE" in text or status == 503:
+        return ServiceUnavailable(
+            "The AI provider is temporarily unavailable.",
+            provider_error="ProviderUnavailable",
+            retry_helps=True,
+            remedy="This is usually transient — ask again in a few seconds.")
+
+    if "NOT_FOUND" in text or status == 404:
+        return ServiceUnavailable(
+            f"The configured model '{settings.gemini_model}' was rejected by the "
+            "provider.",
+            provider_error="ModelNotFound",
+            retry_helps=False,
+            remedy="Model ids are retired without notice. Set NPN_GEMINI_MODEL "
+                   "to a current one (gemini-flash-latest always resolves).")
+
+    if status in (401, 403) or "PERMISSION_DENIED" in text or "UNAUTHENTICATED" in text:
+        return ServiceUnavailable(
+            "The AI provider rejected the configured credentials.",
+            provider_error="AuthFailed",
+            retry_helps=False,
+            remedy="Check GEMINI_API_KEY in the API environment.")
+
+    return ServiceUnavailable(
+        "The assistant could not complete the request.",
+        provider_error=type(exc).__name__,
+        retry_helps=True)
+
+
 def ask(
     question: str,
     store_id: str | None = None,
@@ -381,6 +603,32 @@ def ask(
             f"limit is {settings.genai_max_question_chars}",
             max_chars=settings.genai_max_question_chars)
 
+    injection = detect_injection(q)
+    if injection:
+        log.warning("possible prompt injection in assistant question")
+
+    # Local policy runs FIRST — before the availability check, before any
+    # network call. A request to leak a key or mutate a forecast is answered
+    # here, deterministically, and never reaches the provider. Placing it ahead
+    # of the availability check is deliberate: these guarantees hold in a
+    # deployment with no API key at all, which is the only way "the assistant
+    # cannot modify the forecast" is a property of the system rather than a
+    # property of Gemini's uptime.
+    policy = check_policy(q)
+    if policy is not None:
+        log.warning("assistant refused locally: %s", policy.category)
+        started = time.perf_counter()
+        return AssistantReply(
+            answer=policy.answer,
+            intent="refusal",
+            model=LOCAL_GUARDRAIL,
+            grounded=True,          # composed here from facts, nothing generated
+            injection_suspected=injection,
+            refused=True,
+            refusal_category=policy.category,
+            elapsed_ms=int((time.perf_counter() - started) * 1000),
+        )
+
     provider = get_provider()
     ok, reasons = provider.available()
     if not ok:
@@ -388,10 +636,6 @@ def ask(
             "The AI assistant is not configured in this deployment.",
             reasons=reasons,
             remedy="Set GEMINI_API_KEY in the API environment and restart.")
-
-    injection = detect_injection(q)
-    if injection:
-        log.warning("possible prompt injection in assistant question")
 
     context = genai_context.resolve(q, store_id, item_id, level, node_id)
     prompt = _build_prompt(q, context, injection)
@@ -405,9 +649,7 @@ def ask(
         # Never surface a provider traceback: it can carry request URLs and,
         # in some SDKs, the key itself.
         log.exception("assistant provider call failed")
-        raise ServiceUnavailable(
-            "The assistant could not complete the request.",
-            provider_error=type(exc).__name__) from exc
+        raise _provider_failure(exc) from exc
 
     answer = scrub_secrets(raw)
     grounded, ungrounded = _check_grounding(answer, context)

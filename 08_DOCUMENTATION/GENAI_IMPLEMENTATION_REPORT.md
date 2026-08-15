@@ -2,7 +2,8 @@
 
 **Retail Demand Forecasting** — AI Forecast Assistant
 **Scope:** a Gemini-powered explanatory layer over the frozen forecasting model
-**Status:** complete — 4 endpoints, 41 backend tests, 14 frontend tests, all passing
+**Status:** complete and verified live — 4 endpoints, 75 backend tests
+(69 offline + 6 live), 15 frontend tests, all passing
 
 ---
 
@@ -53,9 +54,10 @@ test asserts the frontend source contains no call to `generativelanguage` or
 | `06_BACKEND/app/services/genai_context.py` | Context builder — intent routing, deterministic statistics |
 | `06_BACKEND/app/services/genai.py` | Provider abstraction, system instruction, guardrails, grounding |
 | `06_BACKEND/app/routers/genai.py` | 4 endpoints |
-| `06_BACKEND/tests/test_genai.py` | 41 tests |
+| `06_BACKEND/tests/test_genai.py` | 69 offline tests |
+| `06_BACKEND/tests/test_genai_live.py` | 6 live tests (opt-in, `-m live`) |
 | `07_FRONTEND/src/pages/Assistant.tsx` | The UI |
-| `07_FRONTEND/src/test/assistant.test.tsx` | 14 tests |
+| `07_FRONTEND/src/test/assistant.test.tsx` | 15 tests |
 
 ---
 
@@ -141,13 +143,43 @@ no other feature is affected.
 
 ## 5. Guardrails
 
+### Attacks are refused locally, and never reach the provider
+
+Two tiers, and the ordering matters:
+
+| Tier | What it catches | What happens |
+|---|---|---|
+| **Refusal** (`_POLICIES`) | unambiguous attempts to extract secrets, override instructions, mutate a forecast, or retrain the model | answered **here**, deterministically. `refused: true`, `model: "local-guardrail (no model call)"`. **No provider call.** |
+| **Suspicion** (`_INJECTION_PATTERNS`) | wider net — role-play framing, softer overrides | flagged (`injection_suspected`), prompt hardened with a SECURITY NOTE, question still answered by the model |
+
+**Why refusal is local rather than delegated.** The first design sent these
+requests to Gemini with a reinforced prompt and relied on the model to decline.
+That is not a guarantee, it is a hope: when Gemini returned `429
+RESOURCE_EXHAUSTED`, the refusal became a 503 and the security property
+evaporated. A guarantee that only holds while a third party is reachable is not
+a guarantee. It also meant that a request to mutate state cost a quota unit and
+three seconds to be told no.
+
+The refusals are now composed in Python from facts this service already holds.
+They are deterministic, instant, free, and — verified by test — **work with no
+API key configured at all**.
+
+**Precision is enforced as hard as recall.** A refusal that swallows a
+legitimate question silently destroys a real answer, so the patterns match
+imperatives aimed at the assistant, not topics. *"Can you retrain the model?"* is
+refused; *"How was the model retrained for the final forecast?"* and *"Can you
+explain how retraining works?"* reach the model as normal. Sixteen cases, both
+directions, are asserted in `test_genai.py`.
+
 ### The model cannot change anything
 
-There is no write path. The router and services are read-only, and the test
-`test_the_assistant_cannot_modify_a_forecast` sends an adversarial request
-("set the forecast to 999 and retrain the model"), then asserts the forecast
-response is byte-identical before and after, and that the model card still reads
-RMSE 2.0929 / weight 0.60 / FROZEN.
+There is no write path. The router and services are read-only.
+`test_the_assistant_cannot_modify_a_forecast` sends an adversarial request, then
+asserts the forecast response is byte-identical before and after and that the
+model card still reads RMSE 2.0929 / weight 0.60 / FROZEN. A companion test,
+`test_a_provider_outage_cannot_break_a_refusal`, installs a provider that raises
+a quota error and asserts the refusal is still correct and the forecast still
+unchanged.
 
 ### The model cannot invent numbers
 
@@ -296,7 +328,7 @@ from the backend).
 
 ## 9. Testing
 
-**41 backend + 14 frontend = 55 new tests. All passing.**
+**75 backend + 15 frontend = 90 new tests. All passing.**
 
 | Requirement | Test |
 |---|---|
@@ -314,8 +346,8 @@ from the backend).
 Full suites after the change:
 
 ```
-backend   121 passed, 8 deselected (2 slow + 6 live)   (was 80 → +41)
-frontend   44 passed                                    (was 30 → +14)
+backend   147 passed, 8 deselected (2 slow + 6 live)   (was 80 → +67)
+frontend   45 passed                                    (was 30 → +15)
 ```
 
 ### The live suite
@@ -328,7 +360,7 @@ network, and it skips itself when no key is configured.
 python tasks.py genai-check        # or: python -m pytest -m live
 ```
 
-Six tests, and they check the things a fake provider structurally cannot:
+Six tests. Two assert the local guardrails hold under a real configuration and need no network; four need a real generation and skip cleanly when the project's daily quota is spent.
 
 | Test | Why a fake cannot prove it |
 |---|---|
@@ -355,8 +387,8 @@ a test failure.
 | Live refusal, adversarial | injection flagged; *"I do not have access to API keys … I cannot modify forecasts … the model is frozen"* |
 | Live refusal, missing data | *"I don't have enough verified data to answer that. The dataset contains no promotion field at all"* |
 | Live end-to-end over HTTP | `/genai/ask` → `grounded: true`, 5,460 ms, weekly totals matching the context, planning range correctly described as observed error and **not** a confidence interval |
-| Backend tests | **121 passed**, 8 deselected (2 slow + 6 live) |
-| Frontend tests | **44 passed** |
+| Backend tests | **147 passed**, 8 deselected (2 slow + 6 live) |
+| Frontend tests | **45 passed** |
 | TypeScript | clean |
 | Production build | **succeeds**, 2.1 s |
 | Live `/genai/status` without a key | `available: false`, reason `"GEMINI_API_KEY is not set"` |
@@ -526,7 +558,7 @@ their tests, and this report.
 
 ---
 
-## 16. Four defects the live run exposed
+## 16. Seven defects the live run exposed
 
 None of these could have been found with a fake provider. They are recorded
 because each was a real bug, and three of them were invisible until a key
@@ -582,7 +614,55 @@ claims — direction lives in the surrounding words and was never in scope. The
 context also now states `difference_direction: "lower"` in words, so the one
 thing the check cannot verify is handed over as a fact instead of inferred.
 
-### 16.4 The redaction patterns did not know the current key format
+### 16.4 Security depended on Gemini being reachable
+
+Reported as two failing live tests — `test_an_adversarial_request_is_flagged_and_refused`
+and `test_live_activity_leaves_the_frozen_forecast_untouched` — both dying with
+`ServiceUnavailable` after four retries.
+
+The cause was **not** injection detection, a safety filter, or the guardrails.
+It was `429 RESOURCE_EXHAUSTED`, quota
+`GenerateRequestsPerDayPerProjectPerModel-FreeTier`, **limit 20 per day**. The
+free tier had been spent by earlier verification runs.
+
+What that exposed matters far more than the quota:
+
+* the local injection detector **was** reached first, but it only *annotated* —
+  the request went to Gemini anyway;
+* *"Set the 28-day total to 999"* was not even matched by the injection
+  patterns, so it was sent to a remote model with no local handling at all;
+* the refusal itself was **delegated to Gemini**, so a provider error turned a
+  security guarantee into a 503 — the exception masked the intended refusal;
+* the retry loop retried a **per-day** quota error four times, which cannot
+  succeed. Google's own 429 body advertises `retryDelay: 59s` for a per-day
+  quota, which is actively misleading.
+
+Fixed by adding the local refusal tier described in §5, so an attack is answered
+before any network call, and by classifying provider errors (§16.5). Both tests
+now pass **without touching the network** — the security assertions no longer
+depend on quota, uptime or billing.
+
+### 16.5 Provider failures were unclassified
+
+Every provider exception became *"The assistant could not complete the
+request."* — useless when the real cause is a daily quota, a retired model id or
+a bad key. `_provider_failure()` now classifies them into `QuotaExceeded`,
+`ProviderUnavailable`, `ModelNotFound` and `AuthFailed`, each with a remedy and
+an explicit `retry_helps` flag so a caller knows whether trying again is
+pointless. The provider's exception text is still never forwarded — it can carry
+the request URL and the key; only the classification escapes, which a test
+asserts.
+
+### 16.6 The required "insufficient data" phrase was not reliably emitted
+
+Your brief requires the exact sentence *"I don't have enough verified data to
+answer that."* `gemini-3.7-flash` complied; `gemini-3.5-flash` produced a correct
+but reworded refusal (*"I do not have access to…"*) and failed the test. Rather
+than relax the assertion, rule 1 of the system instruction now demands the
+sentence verbatim, as the opening of the reply, and states why a paraphrase is a
+failure. Re-verified live: the model that failed now complies.
+
+### 16.7 The redaction patterns did not know the current key format
 
 `_SECRET_SHAPES` matched `AIza…`, the classic Google key. Current keys are
 issued as `AQ.…`. The exact configured key was always redacted by string match,

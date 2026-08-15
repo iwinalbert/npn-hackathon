@@ -1,0 +1,25 @@
+# NPN_HACKATHON — product API dependencies
+# Pinned to the versions verified working on 2026-08-15 (Python 3.13.14).
+#
+# NOTE: the research pipeline has its own requirements.txt at the project root.
+# This file covers the PRODUCT API only. The inference worker additionally needs
+# the research pipeline's dependencies (lightgbm, pandas, numpy) — marked below.
+
+# --- API ---
+fastapi==0.135.1
+uvicorn[standard]==0.42.0
+pydantic==2.12.5
+pydantic-settings==2.7.0
+
+# --- Data layer ---
+duckdb==1.5.5
+
+# --- Inference worker (imports the frozen research pipeline) ---
+lightgbm==4.7.0
+pandas==3.0.5
+numpy==2.5.1
+pyarrow==25.0.1
+
+# --- Testing ---
+pytest==8.4.2
+httpx==0.28.1

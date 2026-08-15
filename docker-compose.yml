@@ -1,14 +1,14 @@
-# NPN_HACKATHON — product stack
+# Retail Demand Forecasting — full product stack
 #
-#   docker compose up --build
+#   python tasks.py build-db      # once: build the 130 MB product data layer
+#   docker compose up --build     # then: http://localhost:8080
 #
-# Prerequisite: build the product data layer once on the host, so the container
-# mounts data rather than rebuilding it:
+# The browser talks only to the frontend container. nginx proxies /api to the
+# API service on the internal network, so there is one origin, no CORS in play,
+# and no API host baked into the JavaScript bundle.
 #
-#   python tasks.py build-db
-#
-# The research tree is mounted READ-ONLY (:ro). The container runs as a non-root
-# user, so the frozen model artefacts cannot be modified even by accident.
+# The research tree is mounted READ-ONLY (:ro) and both containers run as
+# non-root, so the frozen model artefacts cannot be modified even by accident.
 
 services:
   api:
@@ -19,13 +19,18 @@ services:
     image: npn-forecast-api:latest
     container_name: npn-api
     restart: unless-stopped
+    # Not published to the host by default: the frontend reaches it over the
+    # internal network. Uncomment to hit the API or /docs directly.
     ports:
       - "8000:8000"
     environment:
       NPN_ENVIRONMENT: production
       NPN_DATA_DIR: /data/product
       NPN_PROJECT_ROOT: /research
-      NPN_CORS_ORIGINS: "http://localhost:5173,http://localhost:4173"
+      # Same-origin through the nginx proxy means CORS is not exercised in this
+      # topology. These entries only matter if a browser is pointed straight at
+      # the API, e.g. during frontend development with `npm run dev`.
+      NPN_CORS_ORIGINS: "http://localhost:5173,http://localhost:4173,http://localhost:8080"
       NPN_LOG_LEVEL: INFO
       NPN_ENABLE_INFERENCE: "true"
     volumes:
@@ -50,6 +55,34 @@ services:
           # Idle ~200 MB; a live inference job peaks near 1 GB because it loads
           # the 59.2M-row panel to rebuild features.
           memory: 2G
+
+  frontend:
+    build:
+      context: ./07_FRONTEND
+      dockerfile: Dockerfile
+    image: npn-forecast-frontend:latest
+    container_name: npn-frontend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Where nginx proxies /api/. Service name + internal port, not localhost.
+      API_HOST: api:8000
+    depends_on:
+      api:
+        # Wait for the API's data layer to be queryable, not merely for the
+        # process to exist — otherwise the first page load races the DB open.
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]
+      interval: 30s
+      timeout: 4s
+      start_period: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
 
 volumes:
   npn-scratch:

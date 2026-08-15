@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { color-scheme: dark; }
+
+  html, body, #root { height: 100%; }
+
+  body {
+    @apply bg-base text-ink antialiased;
+    font-feature-settings: 'tnum' 1, 'cv05' 1;
+  }
+
+  /* Visible, consistent focus for keyboard users on every interactive element. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-forecast ring-offset-2 ring-offset-base rounded-sm;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { @apply bg-base; }
+  ::-webkit-scrollbar-thumb { @apply bg-line rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-line-strong; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface border border-line rounded-card;
+  }
+  .card-hover {
+    @apply transition-colors hover:border-line-strong hover:bg-elevated;
+  }
+  /* Numbers line up in tables and metrics */
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  .skeleton {
+    @apply relative overflow-hidden bg-elevated rounded;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.04), transparent);
+    transform: translateX(-100%);
+    animation: shimmer 1.4s infinite;
+  }
+}

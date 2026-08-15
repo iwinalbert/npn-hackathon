@@ -1082,6 +1082,97 @@
         }
       }
     },
+    "/api/v1/accuracy/occurrence": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "Demand-occurrence diagnostics (did it spot the selling days?)",
+        "description": "Classification-style diagnostics from thresholding the point forecast at\n0.5 units. The model was never trained to classify \u2014 these describe a\nbehaviour, they are not the task metric.",
+        "operationId": "occurrence_api_v1_accuracy_occurrence_get",
+        "parameters": [
+          {
+            "name": "origin_idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1912,
+              "title": "Origin Idx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Occurrence Api V1 Accuracy Occurrence Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/accuracy/volume-tiers": {
+      "get": {
+        "tags": [
+          "accuracy"
+        ],
+        "summary": "Accuracy by demand volume",
+        "operationId": "volume_tiers_api_v1_accuracy_volume_tiers_get",
+        "parameters": [
+          {
+            "name": "origin_idx",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1912,
+              "title": "Origin Idx"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Volume Tiers Api V1 Accuracy Volume Tiers Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/insights/top-movers": {
       "get": {
         "tags": [
@@ -1408,10 +1499,304 @@
           }
         }
       }
+    },
+    "/api/v1/genai/status": {
+      "get": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Is the AI assistant configured here?",
+        "description": "Reports availability and the assistant's own refusals.\n\nReturns `available: false` with reasons rather than failing when no API key\nis configured, so the rest of the application is unaffected.",
+        "operationId": "status_api_v1_genai_status_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Status Api V1 Genai Status Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/genai/suggestions": {
+      "get": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Starter questions for the current view",
+        "operationId": "suggestions_api_v1_genai_suggestions_get",
+        "parameters": [
+          {
+            "name": "store_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Store Id"
+            }
+          },
+          {
+            "name": "item_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Suggestions Api V1 Genai Suggestions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/genai/ask": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Ask a question about the forecasts",
+        "description": "Answer a question using only data retrieved from this backend.\n\nReturns 503 when the assistant is not configured, 400 for an empty or\nover-long question.",
+        "operationId": "ask_api_v1_genai_ask_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/genai/context-preview": {
+      "post": {
+        "tags": [
+          "assistant"
+        ],
+        "summary": "Show the context a question would use",
+        "description": "Return the exact structured context the assistant would receive, without\ncalling the model.\n\nThis exists for transparency and for debugging: an evaluator can see that\nthe assistant is handed a few kilobytes of verified numbers rather than the\ndataset, and can check any figure in an answer against its source. It works\nwith no API key configured.",
+        "operationId": "context_preview_api_v1_genai_context_preview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Context Preview Api V1 Genai Context Preview Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AskRequest": {
+        "properties": {
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Question",
+            "description": "A natural-language question about the forecasts or model.",
+            "examples": [
+              "Explain this forecast in plain language"
+            ]
+          },
+          "store_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Store Id",
+            "description": "Selected store, e.g. CA_3. Supplies series context."
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id",
+            "description": "Selected item, e.g. FOODS_3_090."
+          },
+          "level": {
+            "type": "string",
+            "title": "Level",
+            "description": "Aggregation level for scope questions.",
+            "default": "total"
+          },
+          "node_id": {
+            "type": "string",
+            "title": "Node Id",
+            "description": "Node within that level.",
+            "default": "ALL"
+          }
+        },
+        "type": "object",
+        "required": [
+          "question"
+        ],
+        "title": "AskRequest"
+      },
+      "AskResponse": {
+        "properties": {
+          "answer": {
+            "type": "string",
+            "title": "Answer"
+          },
+          "intent": {
+            "type": "string",
+            "title": "Intent",
+            "description": "Which family of data was retrieved to answer."
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "grounded": {
+            "type": "boolean",
+            "title": "Grounded",
+            "description": "True when every figure in the answer traces to the supplied context."
+          },
+          "ungrounded_numbers": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Ungrounded Numbers",
+            "description": "Figures with no source in the context. Should be empty."
+          },
+          "injection_suspected": {
+            "type": "boolean",
+            "title": "Injection Suspected",
+            "description": "True when the question matched a prompt-injection pattern."
+          },
+          "context_keys": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Context Keys",
+            "description": "Top-level keys of the context the model was given."
+          },
+          "elapsed_ms": {
+            "type": "integer",
+            "title": "Elapsed Ms"
+          },
+          "disclaimer": {
+            "type": "string",
+            "title": "Disclaimer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "answer",
+          "intent",
+          "model",
+          "grounded",
+          "injection_suspected",
+          "context_keys",
+          "elapsed_ms",
+          "disclaimer"
+        ],
+        "title": "AskResponse"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {

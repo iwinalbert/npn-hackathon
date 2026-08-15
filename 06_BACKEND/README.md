@@ -15,7 +15,7 @@ Full implementation report: [`08_DOCUMENTATION/BACKEND_IMPLEMENTATION_REPORT.md`
 ```bash
 python tasks.py build-db     # build the 130 MB data layer (~10 s, one time)
 python tasks.py api          # http://localhost:8000  · docs at /docs
-python tasks.py test         # 78 fast tests, ~9 s
+python tasks.py test         # 121 fast tests, ~3 s
 
 cd 06_BACKEND && python -m pytest -m slow    # +2 slow tests (~60 s):
                                              # portability proof + live inference
@@ -134,6 +134,8 @@ is ever opened in write mode.
 | GET | `/api/v1/accuracy/levels` | measured accuracy at every aggregation level |
 | GET | `/api/v1/accuracy/horizon` | how error grows across the 28 days |
 | GET | `/api/v1/accuracy/regimes` | accuracy per Syntetos-Boylan demand regime |
+| GET | `/api/v1/accuracy/occurrence` | did-it-sell-at-all classification quality |
+| GET | `/api/v1/accuracy/volume-tiers` | accuracy per volume tier |
 | GET | `/api/v1/accuracy/members` | direct vs recursive vs blend decomposition |
 | GET | `/api/v1/accuracy/error-bands` | the empirical band table |
 | GET | `/api/v1/accuracy/backtest/{store}/{item}` | predicted vs actual, one series |
@@ -144,9 +146,31 @@ is ever opened in write mode.
 | GET | `/api/v1/inference/status` | can live inference run here, and what it refuses |
 | POST | `/api/v1/inference/verify` | re-run the frozen model and verify (~48 s) |
 | GET | `/api/v1/inference/jobs` · `/jobs/{id}` | job list and polling |
+| GET | `/api/v1/genai/status` | is the AI assistant configured, and what it refuses |
+| GET | `/api/v1/genai/suggestions` | starter questions for the current selection |
+| POST | `/api/v1/genai/ask` | answer a question from verified context |
+| POST | `/api/v1/genai/context-preview` | the exact context a question would use — **no key needed** |
 
 Interactive documentation at `/docs`; schema at `06_BACKEND/openapi.json`
 (`python tasks.py openapi`).
+
+## AI Forecast Assistant (optional)
+
+`/genai/*` puts a Gemini-backed explanatory layer over the same read-only
+services. It has no write path: it receives a 5–9 KB JSON context that this
+backend computed, and every number in its reply is checked back against that
+context before the reply is returned (`grounded`, `ungrounded_numbers`).
+
+```bash
+# 06_BACKEND/.env — never committed, never baked into an image
+GEMINI_API_KEY=your-key-here
+```
+
+Leave it unset and everything else works unchanged: `/genai/status` reports
+`available: false` with the reason, and `/genai/ask` returns 503 with a remedy.
+`POST /genai/context-preview` works **without** a key — it shows exactly what
+would be sent to the model. Full design in
+[`08_DOCUMENTATION/GENAI_IMPLEMENTATION_REPORT.md`](../08_DOCUMENTATION/GENAI_IMPLEMENTATION_REPORT.md).
 
 ## Live model serving
 
@@ -201,7 +225,7 @@ and not a model-produced interval.
 ## Testing
 
 ```bash
-python tasks.py test        # 45 tests
+python tasks.py test        # 121 fast tests, ~3 s
 ```
 
 | File | Covers |
@@ -214,6 +238,7 @@ python tasks.py test        # 45 tests
 | `test_insights.py` | totals agree across endpoints, movers ranking, planning caveats |
 | `test_inference.py` | availability, refusals, job lifecycle, **live verification MATCH** |
 | `test_deployment.py` | env config, no Windows paths, no baked paths, no eager ML imports, deps declared, 503 degradation, **portability proof** |
+| `test_genai.py` | context matches the endpoints it claims to quote, injection detection, **key never in any response or prompt**, missing-key degradation, hallucinated-number detection, **assistant cannot modify a forecast** |
 | `test_integrity.py` | **freeze regression guard** — see below |
 
 ### The freeze regression guard
@@ -270,3 +295,6 @@ endpoint.
   (a 10% cut predicted −74% demand on one high-volume series). It is a
   forecaster that uses price as context, not a causal elasticity model.
   See `08_DOCUMENTATION/PRODUCT_ARCHITECTURE_PLAN.md` §14.3.
+* let the AI assistant write anything. It reads a context this backend computed
+  and returns prose; it cannot reach a forecast, a model file or a registry
+  record, and it is never given the API key it would need to be asked to leak.

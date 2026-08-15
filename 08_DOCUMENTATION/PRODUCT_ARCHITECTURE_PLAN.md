@@ -8,6 +8,16 @@
 > aggregation, external covariates (price/promo/holiday) and intermittent demand,
 > producing accurate 28-day-ahead forecasts per store/item."*
 
+> **Addendum — 2026-08. This document is the pre-implementation proposal and is
+> kept as written.** Everything in it was built. One component was added
+> afterwards and is therefore *not* described below: an **AI Forecast Assistant**
+> (a Gemini-backed explanatory layer over the same read-only API — 4 endpoints
+> under `/genai`, one React page, no write path to the model). Its architecture,
+> key handling and guardrails are documented in
+> [`GENAI_IMPLEMENTATION_REPORT.md`](GENAI_IMPLEMENTATION_REPORT.md). It changes
+> nothing about §2 (the inference boundary), §9 (data storage) or §28 (what must
+> remain untouched); it consumes the API described in §10 rather than extending it.
+
 ---
 
 # 1. Current-state assessment

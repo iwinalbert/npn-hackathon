@@ -3,7 +3,7 @@
 React + TypeScript application over the frozen forecasting model.
 
 ```
-Status: complete — 8 pages, 30 tests passing, production build verified
+Status: complete — 9 pages, 44 tests passing, production build verified
 ```
 
 Full implementation report:
@@ -64,9 +64,26 @@ these data volumes after server-side windowing).
 | `/validation` | Replay a historical window where the true outcome is known |
 | `/model` | Architecture, specification, and a live re-run of the frozen model |
 | `/methodology` | Data, intermittent demand, covariates, capability matrix, honest limitations |
+| `/assistant` | AI Forecast Assistant — ask about a forecast in plain language |
 
 Overview loads eagerly; every other route is lazy-loaded so the 112 KB chart
 bundle is not on the critical path.
+
+### The assistant page
+
+Optional: it is driven by `/genai/*`, and if the API has no `GEMINI_API_KEY` the
+page explains why it is unavailable and states that the rest of the application
+works without it — no broken input box, no silent failure.
+
+**No key or AI SDK exists in this bundle.** Questions go to the FastAPI backend,
+which holds the key and calls Gemini server-side. A test asserts the rendered DOM
+never contains anything key-shaped.
+
+Every answer carries a provenance strip: which data family it drew on, how long
+it took, and whether **every number in the reply traced back to backend data**.
+When a figure cannot be traced, the UI names it and marks it unverified rather
+than hiding it. Design in
+[`08_DOCUMENTATION/GENAI_IMPLEMENTATION_REPORT.md`](../08_DOCUMENTATION/GENAI_IMPLEMENTATION_REPORT.md).
 
 ---
 
@@ -124,9 +141,10 @@ recorded outcome, so no accuracy is ever quoted against it.
 python tasks.py ui-test
 ```
 
-30 tests across three files: pure formatting/transform logic, the API client
-(URL building, error mapping, network failure), and component rendering against
-a mocked API. The load-bearing assertions are the honesty ones — that the app
-renders exactly the numbers the API returned, that a failed request produces an
-error state rather than a plausible-looking placeholder, and that backend
-caveats reach the screen.
+44 tests across four files: pure formatting/transform logic, the API client
+(URL building, error mapping, network failure), component rendering against a
+mocked API, and the assistant. The load-bearing assertions are the honesty ones
+— that the app renders exactly the numbers the API returned, that a failed
+request produces an error state rather than a plausible-looking placeholder,
+that backend caveats reach the screen, and that an AI answer containing an
+untraceable number is flagged as unverified instead of shown as fact.

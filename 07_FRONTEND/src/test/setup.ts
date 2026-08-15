@@ -16,6 +16,12 @@ class ResizeObserverStub {
 }
 ;(globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = ResizeObserverStub
 
+// jsdom does not implement scrollIntoView. The assistant uses it to keep the
+// newest answer in view; without a stub the component throws during render.
+if (!HTMLElement.prototype.scrollIntoView) {
+  HTMLElement.prototype.scrollIntoView = () => {}
+}
+
 Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
   configurable: true, value: 800,
 })

@@ -15,3 +15,8 @@ uvicorn[standard]==0.42.0
 pydantic==2.12.5
 pydantic-settings==2.7.0
 duckdb==1.5.5
+
+# --- AI assistant (optional at runtime) ---
+# The service degrades gracefully when GEMINI_API_KEY is unset, but the SDK must
+# be importable. ~3 small packages; no ML or native dependencies.
+google-genai==2.18.1

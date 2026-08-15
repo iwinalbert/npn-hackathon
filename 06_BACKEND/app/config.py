@@ -24,7 +24,7 @@ from pathlib import Path
 
 from typing import Annotated
 
-from pydantic import Field, field_validator
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 # 06_BACKEND/app/config.py -> 06_BACKEND/app -> 06_BACKEND -> project root
@@ -90,6 +90,19 @@ class Settings(BaseSettings):
     inference_job_ttl_seconds: int = 3600
     inference_timeout_seconds: int = 600
 
+    # --- GenAI assistant --------------------------------------------------
+    # The key is a SecretStr so it cannot be printed, logged or serialised by
+    # accident: repr() and str() both render "**********". It is read from the
+    # environment (NPN_GEMINI_API_KEY) or the plain GEMINI_API_KEY alias, and it
+    # never leaves this process — the browser never sees it.
+    gemini_api_key: SecretStr | None = None
+    gemini_model: str = "gemini-2.0-flash"
+    genai_enabled: bool = True
+    genai_timeout_seconds: float = 30.0
+    genai_max_question_chars: int = 800
+    genai_max_output_tokens: int = 900
+    genai_temperature: float = 0.2
+
     # --- observability ----------------------------------------------------
     log_level: str = "INFO"
     slow_request_ms: int = 1000
@@ -136,10 +149,39 @@ class Settings(BaseSettings):
         """The frozen blend weight. Constant by definition — MODEL_FREEZE.md."""
         return 0.60
 
+    @property
+    def gemini_key_value(self) -> str | None:
+        """
+        The raw key, for the one place that needs it: constructing the client.
+
+        Nothing else in the codebase should call this, and no response schema
+        contains it. A test asserts the key never appears in any API response.
+        """
+        return self.gemini_api_key.get_secret_value() if self.gemini_api_key else None
+
+    @property
+    def genai_configured(self) -> bool:
+        return bool(self.genai_enabled and self.gemini_key_value)
+
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    """
+    Build settings, accepting the plain `GEMINI_API_KEY` environment variable in
+    addition to the prefixed `NPN_GEMINI_API_KEY`.
+
+    The unprefixed name is what Google's own tooling and most hosting providers
+    use, so supporting it avoids a class of "the key is set but the app says it
+    is missing" deployment confusion.
+    """
+    import os
+
+    overrides: dict[str, object] = {}
+    if not os.environ.get("NPN_GEMINI_API_KEY"):
+        plain = os.environ.get("GEMINI_API_KEY", "").strip()
+        if plain:
+            overrides["gemini_api_key"] = plain
+    return Settings(**overrides)
 
 
 settings = get_settings()

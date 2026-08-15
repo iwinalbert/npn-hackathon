@@ -20,6 +20,7 @@ const NAV = [
       { to: '/forecast', label: 'Forecast', desc: 'History and 28-day forecast per store-item' },
       { to: '/hierarchy', label: 'Hierarchy', desc: 'Roll up from item to chain' },
       { to: '/insights', label: 'Insights', desc: 'What needs attention' },
+      { to: '/assistant', label: 'AI Assistant', desc: 'Ask about forecasts in plain language' },
     ],
   },
   {

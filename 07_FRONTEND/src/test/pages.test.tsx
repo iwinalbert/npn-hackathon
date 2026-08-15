@@ -163,9 +163,14 @@ describe('AppShell navigation', () => {
   it('exposes every top-level destination as a link', async () => {
     mockApi()
     wrap(<AppShell />)
+    // Each nav link's accessible name is "<label><description>", and several
+    // descriptions share words with other labels, so match on the leading
+    // label rather than a loose substring.
+    const names = screen.getAllByRole('link').map((el) => el.textContent ?? '')
     for (const label of ['Overview', 'Forecast', 'Hierarchy', 'Insights',
-                         'Accuracy', 'Validation', 'Model', 'Methodology']) {
-      expect(screen.getByRole('link', { name: new RegExp(label, 'i') })).toBeInTheDocument()
+                         'AI Assistant', 'Accuracy', 'Validation', 'Model',
+                         'Methodology']) {
+      expect(names.some((n) => n.startsWith(label))).toBe(true)
     }
   })
 

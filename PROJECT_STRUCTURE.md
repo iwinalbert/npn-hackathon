@@ -78,8 +78,8 @@ The delivery layer therefore holds **copies and pointers**, never relocations.
 | `03_FORECASTS/` | The shipped 28-day forecast | Copy; flags the stale M5 submission |
 | `04_EXPERIMENTS/` | `EXPERIMENT_CLASSIFICATION.md` — all 86 records sorted | Index only; registry not moved |
 | `05_REPORTS/` | `FINAL_RESEARCH_REPORT/` — paper, reports, figures | Copies |
-| `06_BACKEND/` | FastAPI service — 28 endpoints, 80 tests | `python tasks.py api` |
-| `07_FRONTEND/` | React + TypeScript app — 8 pages, 30 tests | `python tasks.py ui` |
+| `06_BACKEND/` | FastAPI service — 34 endpoints, 121 tests | `python tasks.py api` |
+| `07_FRONTEND/` | React + TypeScript app — 9 pages, 44 tests | `python tasks.py ui` |
 | `08_DOCUMENTATION/` | Structure, audit, integrity manifests | |
 | `09_SUBMISSION/` | Copies of final deliverables only | Originals untouched |
 | `99_ARCHIVE/` | Deliberately empty | Nothing was archived or deleted; reasons documented |

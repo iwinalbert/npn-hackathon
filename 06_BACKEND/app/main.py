@@ -40,8 +40,8 @@ from fastapi.responses import JSONResponse
 from . import db
 from .config import settings
 from .errors import ApiError
-from .routers import (accuracy, health, hierarchy, inference, insights, meta,
-                      series)
+from .routers import (accuracy, genai, health, hierarchy, inference, insights,
+                      meta, series)
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -184,7 +184,7 @@ async def unhandled_handler(request: Request, exc: Exception):
 
 
 for r in (health.router, meta.router, hierarchy.router, series.router,
-          accuracy.router, insights.router, inference.router):
+          accuracy.router, insights.router, inference.router, genai.router):
     app.include_router(r, prefix=settings.api_prefix)
 
 

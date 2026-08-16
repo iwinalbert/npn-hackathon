@@ -1,42 +1,73 @@
-# Build context is the PROJECT ROOT. Exclude everything large; the research data
-# is MOUNTED at runtime, never copied into the image.
+# Build context for the BACKEND image is the REPOSITORY ROOT.
+#
+# It has to be: the `full` target does `COPY 03_RESEARCH/pipeline` to get the
+# frozen feature pipeline, so a context rooted at 01_PROJECT/ could not reach it.
+# The cost is that the context root also contains ~2.3 GB of research data,
+# documentation and node_modules — none of which belongs in an image.
+#
+# This file is therefore written as an ALLOW-LIST: exclude each top-level area
+# wholesale, then re-include only the paths a COPY instruction actually names.
+# A deny-list would silently start shipping anything added later; this fails the
+# other way, which is the right direction for an image that must not contain
+# datasets or secrets.
+#
+# Exactly five things are needed by 01_PROJECT/backend/Dockerfile:
+#   01_PROJECT/backend/requirements.txt
+#   01_PROJECT/backend/requirements-inference.txt
+#   01_PROJECT/backend/app/
+#   01_PROJECT/backend/scripts/
+#   03_RESEARCH/pipeline/
+#
+# The frontend image uses its own context (01_PROJECT/frontend) and its own
+# .dockerignore; nothing here applies to it.
 
-# --- research data: 1.7 GB, mounted read-only at runtime -------------------
-data/
-models/
-predictions/
-experiments/
-reports/
-docs/
-MY_RESEARCH_PAPER/
-05_REPORTS/
-09_SUBMISSION/
-02_MODEL/
-03_FORECASTS/
-01_DATA/
-04_EXPERIMENTS/
-99_ARCHIVE/
-scripts/
+# --- 01_PROJECT: only the backend source and its two requirement files -----
+01_PROJECT/**
+!01_PROJECT/backend/app/**
+!01_PROJECT/backend/scripts/**
+!01_PROJECT/backend/requirements.txt
+!01_PROJECT/backend/requirements-inference.txt
 
-# --- product data: built or mounted, never baked in ------------------------
-06_BACKEND/data/
+# The generated product data layer (~130 MB) is MOUNTED at runtime, never baked
+# in: it is rebuildable from the frozen artefacts and would make the image stale
+# the moment it is rebuilt.
+01_PROJECT/backend/data/**
 
-# --- frontend (its own image) ----------------------------------------------
-07_FRONTEND/
+# --- 02_DOCUMENTATION: reports and PDFs, ~84 MB, never needed at runtime ---
+02_DOCUMENTATION/**
 
-# --- dev noise --------------------------------------------------------------
-.git/
+# --- 03_RESEARCH: ~2 GB. Only the feature pipeline is copied; the datasets,
+#     model binaries and predictions are mounted read-only at runtime. --------
+03_RESEARCH/**
+!03_RESEARCH/pipeline/**
+
+# --- repository-level files that are not build inputs ----------------------
+.git/**
 .gitignore
 .gitattributes
-**/__pycache__/
-**/*.pyc
-**/.pytest_cache/
-**/.venv/
-**/node_modules/
-**/.env
-**/.DS_Store
-*.log
+.claude/**
+tasks.py
+Makefile
+docker-compose.yml
+README.md
 *.md
-!06_BACKEND/README.md
-08_DOCUMENTATION/
-.claude/
+
+# --- never, under any circumstances, into an image -------------------------
+**/.env
+**/.env.*
+!.env.example
+**/*.key
+**/*.pem
+
+# --- build noise ------------------------------------------------------------
+**/__pycache__/**
+**/*.py[cod]
+**/.pytest_cache/**
+**/.ruff_cache/**
+**/.mypy_cache/**
+**/node_modules/**
+**/.venv/**
+**/dist/**
+**/coverage/**
+**/*.log
+**/.DS_Store

@@ -15,9 +15,10 @@
 # Build:
 #   docker build -f 01_PROJECT/backend/Dockerfile --target full -t npn-api:latest .
 #
-# The build context is the PROJECT ROOT, not 06_BACKEND, because the `full`
-# target needs the read-only `pipeline/` package. See .dockerignore — the 1.7 GB
-# of research data is excluded and mounted at runtime instead of being copied.
+# The build context is the REPOSITORY ROOT — not 01_PROJECT/backend — because
+# the `full` target needs 03_RESEARCH/pipeline. The root .dockerignore is an
+# allow-list that reduces that context from 2,582 MB to 0.4 MB: the datasets,
+# model binaries and predictions are mounted read-only at runtime, never copied.
 
 # ---------------------------------------------------------------------------
 # Base
@@ -89,6 +90,27 @@ COPY --chown=app:app 01_PROJECT/backend/scripts ./scripts
 # for live inference. It is NOT modified — the container runs as a non-root user
 # with no write access to it.
 COPY --chown=app:app 03_RESEARCH/pipeline /research/pipeline
+
+# `pipeline/config.py` calls mkdir(parents=True, exist_ok=True) on seven
+# directories AT IMPORT TIME. With NPN_PROJECT_ROOT=/research that means
+# /research/{experiments/artifacts,experiments/registry,reports,
+# models/experiments,models/champion,predictions/validation,
+# predictions/final_forecast}.
+#
+# Three of those do not otherwise exist in this image, and /research would be
+# owned by root — so importing the pipeline as uid 10001 would fail with
+# PermissionError the first time /inference/verify ran. Creating them here,
+# owned by app, fixes that, and has a second effect worth stating: Docker seeds
+# a NAMED volume from the image path it is mounted over, so the scratch volumes
+# inherit app ownership instead of being created root-owned and unwritable.
+#
+# The two read-only bind mounts land on directories that now already exist, and
+# `exist_ok=True` means Python never attempts mkdir on them.
+RUN mkdir -p /research/experiments/artifacts /research/experiments/registry \
+             /research/reports \
+             /research/models/champion /research/models/experiments \
+             /research/predictions/validation /research/predictions/final_forecast \
+ && chown -R app:app /research
 
 ENV NPN_ENVIRONMENT=production \
     NPN_DATA_DIR=/data/product \

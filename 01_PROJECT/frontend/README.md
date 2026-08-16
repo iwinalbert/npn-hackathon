@@ -133,8 +133,9 @@ proxies `/api/` to the API service over the internal network.
 - `/healthz` for container health checks.
 
 **The Docker image has not been built** — Docker is unavailable on the
-development machine. See the implementation report for the exact command to run
-and what to check.
+development machine. See
+[`02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md`](../../02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md)
+for the exact commands and what to check.
 
 ---
 

@@ -13,8 +13,10 @@ This runner exposes the same commands everywhere with no extra tooling.
 from __future__ import annotations
 
 import os
+import platform
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -61,6 +63,74 @@ def _whats_on(port: int) -> str | None:
     return detail
 
 
+def _listener_pids(port: int) -> list[int]:
+    """
+    PIDs to stop in order to free `port`.
+
+    Includes the listener's *children*, because that is the failure this exists
+    for. `uvicorn --reload` binds the socket in a reloader parent and serves
+    from a spawned worker that inherits the handle. Kill the parent — close the
+    terminal, tear down a shell session — and on Windows the worker survives,
+    keeps the port, and keeps serving whatever code it loaded at startup. It
+    answers /health perfectly while missing every route added since, and netstat
+    still attributes the socket to the dead parent, so the obvious `taskkill`
+    reports "process not found".
+    """
+    pids: list[int] = []
+    if platform.system() == "Windows":
+        out = subprocess.run(["netstat", "-ano"], capture_output=True,
+                             text=True).stdout
+        for line in out.splitlines():
+            parts = line.split()
+            if (len(parts) >= 5 and parts[0] == "TCP"
+                    and parts[1].endswith(f":{port}") and parts[3] == "LISTENING"):
+                pids.append(int(parts[4]))
+        for pid in list(pids):
+            kids = subprocess.run(
+                ["powershell", "-NoProfile", "-Command",
+                 f"(Get-CimInstance Win32_Process -Filter 'ParentProcessId={pid}'"
+                 f" | Select-Object -ExpandProperty ProcessId) -join ' '"],
+                capture_output=True, text=True).stdout.split()
+            pids += [int(k) for k in kids if k.isdigit()]
+    else:
+        out = subprocess.run(["lsof", "-ti", f"tcp:{port}"],
+                             capture_output=True, text=True).stdout
+        pids += [int(p) for p in out.split() if p.isdigit()]
+    return sorted(set(pids))
+
+
+def stop_api() -> int:
+    """Free the API port (default 8000), including an orphaned --reload worker."""
+    port = int(sys.argv[2]) if len(sys.argv) > 2 else 8000
+
+    if not _whats_on(port) and not _listener_pids(port):
+        print(f"nothing is listening on port {port}")
+        return 0
+
+    for pid in _listener_pids(port):
+        if platform.system() == "Windows":
+            rc = subprocess.run(["taskkill", "/PID", str(pid), "/F"],
+                                capture_output=True, text=True)
+            ok = rc.returncode == 0
+        else:
+            import signal
+            try:
+                os.kill(pid, signal.SIGKILL)
+                ok = True
+            except OSError:
+                ok = False
+        # A dead parent whose socket a child inherited is the normal case here,
+        # so "not found" is expected noise rather than a failure.
+        print(f"  pid {pid}: {'stopped' if ok else 'already gone'}")
+
+    time.sleep(1.5)
+    if _listener_pids(port) or _whats_on(port):
+        print(f"port {port} is STILL occupied — run as Administrator, or reboot")
+        return 1
+    print(f"port {port} is free")
+    return 0
+
+
 def api() -> int:
     """Run the API on http://localhost:8000, or `api <port>`. Docs at /docs."""
     port = sys.argv[2] if len(sys.argv) > 2 else "8000"
@@ -70,9 +140,9 @@ def api() -> int:
         bar = "!" * 70
         print(f"\n{bar}")
         print(f"Port {port} is ALREADY serving an API: {existing}")
-        print("Stop that process first, or run this pair instead:")
-        print(f"    python tasks.py api {int(port) + 1}")
-        print(f"    python tasks.py ui  {int(port) + 1}")
+        print("Free it, then start again:")
+        print(f"    python tasks.py stop-api {port}")
+        print(f"    python tasks.py api {'' if port == '8000' else port}".rstrip())
         print(f"{bar}\n")
         return 1
 
@@ -113,7 +183,6 @@ def openapi() -> int:
 def _npm(*args: str) -> int:
     """Run npm in the frontend directory. Uses shell=True on Windows because
     npm ships as npm.cmd there and is not directly executable otherwise."""
-    import platform
     cmd = ["npm", *args]
     if platform.system() == "Windows":
         print(f"$ {' '.join(cmd)}   (in {FRONTEND})", flush=True)
@@ -185,6 +254,7 @@ def clean_db() -> int:
 COMMANDS = {
     "build-db": build_db,
     "api": api,
+    "stop-api": stop_api,
     "test": test,
     "genai-check": genai_check,
     "ui": ui,

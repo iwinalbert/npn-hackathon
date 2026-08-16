@@ -3,7 +3,7 @@
 React + TypeScript application over the frozen forecasting model.
 
 ```
-Status: complete — 9 pages, 44 tests passing, production build verified
+Status: complete — 9 pages, 62 tests passing, production build verified
 ```
 
 Full implementation report:
@@ -29,7 +29,7 @@ single origin and CORS is never exercised in development either.
 |---|---|
 | `python tasks.py ui` | dev server with hot reload |
 | `python tasks.py ui-build` | production build into `dist/` |
-| `python tasks.py ui-test` | 30 tests |
+| `python tasks.py ui-test` | 62 tests |
 | `npm run typecheck` | TypeScript, no emit |
 | `npm run preview` | serve the built bundle locally |
 
@@ -68,6 +68,22 @@ these data volumes after server-side windowing).
 
 Overview loads eagerly; every other route is lazy-loaded so the 112 KB chart
 bundle is not on the critical path.
+
+### Reaching the assistant
+
+Two entry points, deliberately both:
+
+| | |
+|---|---|
+| Sidebar `AI Assistant` | the full navigation entry, with its description — this is what tells a first-time visitor the feature exists |
+| Floating `AI` button | a shortcut from any page, for the visitor who already knows and is three pages deep looking at a chart |
+
+`FloatingAIAssistant` is rendered once from `AppShell`, so every routed page
+gets it without opting in. It reveals an "AI Assistant" label on hover *and* on
+keyboard focus, carries `aria-label="Open AI Assistant"`, marks itself
+`aria-current="page"` on `/assistant`, and navigates through the router rather
+than reloading. `<main>` carries bottom padding so the last row of any page can
+scroll clear of it.
 
 ### The assistant page
 
@@ -141,9 +157,9 @@ recorded outcome, so no accuracy is ever quoted against it.
 python tasks.py ui-test
 ```
 
-44 tests across four files: pure formatting/transform logic, the API client
+62 tests across five files: pure formatting/transform logic, the API client
 (URL building, error mapping, network failure), component rendering against a
-mocked API, and the assistant. The load-bearing assertions are the honesty ones
+mocked API, the assistant, and the floating shortcut. The load-bearing assertions are the honesty ones
 — that the app renders exactly the numbers the API returned, that a failed
 request produces an error state rather than a plausible-looking placeholder,
 that backend caveats reach the screen, and that an AI answer containing an

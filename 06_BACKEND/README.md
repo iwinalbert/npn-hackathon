@@ -15,13 +15,32 @@ Full implementation report: [`08_DOCUMENTATION/BACKEND_IMPLEMENTATION_REPORT.md`
 ```bash
 python tasks.py build-db     # build the 130 MB data layer (~10 s, one time)
 python tasks.py api          # http://localhost:8000  · docs at /docs
-python tasks.py api 8001     # ...or elsewhere if 8000 is taken;
-python tasks.py ui  8001     #    point the dev server at the same port
+python tasks.py ui           # http://localhost:5173, proxying to 8000
+
+python tasks.py stop-api     # if port 8000 is stuck — see below
 python tasks.py test         # 121 fast tests, ~3 s
 
 cd 06_BACKEND && python -m pytest -m slow    # +2 slow tests (~60 s):
                                              # portability proof + live inference
 ```
+
+### If port 8000 is occupied
+
+`python tasks.py api` refuses to start on an occupied port and says what is
+already there, including whether that build predates the AI assistant.
+
+```bash
+python tasks.py stop-api     # frees 8000, then start again
+```
+
+This exists because of a specific Windows failure. `uvicorn --reload` binds the
+socket in a reloader parent and serves from a spawned worker that inherits the
+handle; kill the parent and the worker survives, keeps the port, and keeps
+serving **the code it loaded at startup**. The result is an API that answers
+`/health` with 200 while returning 404 for every route added since — and
+`netstat` still attributes the socket to the dead parent, so the obvious
+`taskkill /PID <that pid> /F` reports "process not found". `stop-api` looks up
+the listener *and its children*, which is what actually frees the port.
 
 ### Docker
 

@@ -58,7 +58,7 @@ Runs as non-root, mounts research artefacts `:ro`, healthchecks on `/ready`.
 **Not yet built** — Docker is unavailable on the development machine. The full
 container design, the static verification performed, and the exact commands to
 run once Docker is available are in
-[`02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md`](../../02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md).
+[`02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md`](../../02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md).
 
 `make` equivalents exist in the project `Makefile` for Unix/CI. `tasks.py` works
 everywhere, including the Windows machine this is demonstrated on.

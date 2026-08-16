@@ -107,7 +107,7 @@ justify it.
 | See what was tried and rejected | `02_DOCUMENTATION/10_RESEARCH_REPORT/EXPERIMENT_CLASSIFICATION.md`, then `03_RESEARCH/experiments/registry/` |
 | Verify nothing was tampered with | `python tasks.py verify-integrity` |
 | Rebuild the product data layer | `python tasks.py build-db` |
-| Containerise / deploy | `02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md` |
+| Containerise / deploy | `02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md` |
 
 ## The frozen model
 

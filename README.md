@@ -36,6 +36,29 @@ python tasks.py help         # all commands
 Optional AI assistant: put `GEMINI_API_KEY=…` in `01_PROJECT/backend/.env`
 (gitignored). Without it every other feature works unchanged.
 
+## Run it in Docker
+
+```bash
+python tasks.py build-db                   # ONCE — materialises the data layer
+echo "GEMINI_API_KEY=your-key" > .env      # optional, beside docker-compose.yml
+docker compose up --build                  # http://localhost:8080
+```
+
+`python tasks.py docker-up` / `docker-ps` / `docker-logs` / `docker-down` wrap
+the same commands and work identically on Windows.
+
+The default stack needs **nothing from `03_RESEARCH/`** — the API serves every
+route, including the frozen forecast, from `01_PROJECT/backend/data/`. Live
+model verification is the one feature that reads the research tree, and it is
+opt-in:
+
+```bash
+python tasks.py docker-up --inference
+```
+
+Full details, security model and cloud handoff notes:
+[`02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md`](02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md)
+
 ## The model
 
 ```

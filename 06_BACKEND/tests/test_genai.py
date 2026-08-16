@@ -538,6 +538,38 @@ def test_a_classified_provider_error_never_echoes_the_provider_text(client, fake
     assert "generativelanguage" not in r.text
 
 
+def test_a_truncated_reply_is_declared_not_passed_off_as_complete(client, fake_provider):
+    """
+    Gemini 3.x spends max_output_tokens on internal reasoning before writing, so
+    a budget that looks generous can leave an answer cut off mid-sentence. When
+    that happens the caller must be told, not handed half an answer.
+    """
+    class TruncatingProvider(FakeProvider):
+        name = "truncating"
+
+        def generate(self, system: str, prompt: str):
+            return genai_svc.Generation(
+                "The forecast for FOODS_3_090 at CA_3 over the next 28 days (May 23,",
+                truncated=True)
+
+    genai_svc.set_provider(TruncatingProvider())
+    try:
+        body = client.post(f"{API}/genai/ask",
+                           json={"question": "Explain this forecast",
+                                 "store_id": "CA_3", "item_id": "FOODS_3_090"}).json()
+        assert body["truncated"] is True
+    finally:
+        genai_svc.set_provider(genai_svc.GeminiProvider())
+
+
+def test_a_plain_string_from_a_provider_still_works(client, fake_provider):
+    """The Protocol stays trivial: returning a bare str must remain valid."""
+    fake_provider(reply="Demand is stable.")
+    body = client.post(f"{API}/genai/ask", json={"question": "Explain the forecast"}).json()
+    assert body["answer"] == "Demand is stable."
+    assert body["truncated"] is False
+
+
 def test_chain_total_is_unchanged_by_assistant_activity(client, fake_provider):
     before = client.get(f"{API}/hierarchy/aggregate",
                         params={"level": "total", "node_id": "ALL"}).json()["total_28d"]

@@ -49,6 +49,9 @@ class AskResponse(BaseModel):
         description="Top-level keys of the context the model was given.")
     elapsed_ms: int
     disclaimer: str
+    truncated: bool = Field(
+        default=False,
+        description="True when the reply hit the output token limit and was cut short.")
     refused: bool = Field(
         default=False,
         description=("True when local policy answered the question and NO AI "
@@ -113,6 +116,7 @@ def ask(body: AskRequest) -> AskResponse:
         injection_suspected=reply.injection_suspected,
         context_keys=reply.context_keys,
         elapsed_ms=reply.elapsed_ms,
+        truncated=reply.truncated,
         disclaimer=REFUSAL_DISCLAIMER if reply.refused else DISCLAIMER,
         refused=reply.refused,
         refusal_category=reply.refusal_category,

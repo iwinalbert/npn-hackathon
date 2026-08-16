@@ -461,6 +461,8 @@ export interface AskResponse {
   context_keys: string[]
   elapsed_ms: number
   disclaimer: string
+  /** True when the reply hit the output token limit and was cut short. */
+  truncated?: boolean
   /** True when local policy answered and no AI provider was called at all. */
   refused?: boolean
   /** secret_extraction | instruction_override | forecast_mutation | model_mutation */

@@ -63,7 +63,7 @@ is, what the data is, how it is built, then how it was proved.
 | `05_BACKEND/` | Backend implementation report: data layer, API, model serving |
 | `06_FRONTEND/` | Frontend implementation report: pages, design system, integrity rules |
 | `07_GENAI/` | AI assistant: Gemini integration, key handling, guardrails |
-| `08_DEPLOYMENT/` | Git policy; what is versioned and what is deliberately not |
+| `08_DEPLOYMENT/` | Docker deployment report; Git policy — what is versioned and what is deliberately not |
 | `09_VALIDATION/` | Organisation audits, this reorganisation's report, and `_integrity/` — the SHA-256 manifests over all 522 protected artefacts |
 | `10_RESEARCH_REPORT/` | The paper, the performance report, the Use Case 11 compliance report, the experiment classification |
 | `11_SUBMISSION/` | Deliverable copies: the forecast CSV and the three PDFs |
@@ -107,6 +107,7 @@ justify it.
 | See what was tried and rejected | `02_DOCUMENTATION/10_RESEARCH_REPORT/EXPERIMENT_CLASSIFICATION.md`, then `03_RESEARCH/experiments/registry/` |
 | Verify nothing was tampered with | `python tasks.py verify-integrity` |
 | Rebuild the product data layer | `python tasks.py build-db` |
+| Containerise / deploy | `02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md` |
 
 ## The frozen model
 

@@ -1,7 +1,14 @@
 # Retail Demand Forecasting — full product stack
 #
-#   python tasks.py build-db      # once: build the 130 MB product data layer
+#   python tasks.py build-db      # ONCE, on the host — see below
 #   docker compose up --build     # then: http://localhost:8080
+#
+# PREREQUISITE: 01_PROJECT/backend/data/ must contain product.duckdb,
+# history.parquet and backtest.parquet before `up`. That directory is gitignored
+# (130 MB, rebuildable) and is bind-mounted READ-ONLY into the API.
+# If it is empty the API starts but /api/v1/ready reports not-ready, its
+# healthcheck never passes, and the frontend — which waits for service_healthy —
+# never starts. That looks like a hang; it is a missing data layer.
 #
 # Optional AI assistant: put GEMINI_API_KEY in a .env file beside this compose
 # file, or export it in the shell. Compose substitutes it at run time; it is
@@ -23,8 +30,10 @@ services:
     image: npn-forecast-api:latest
     container_name: npn-api
     restart: unless-stopped
-    # Not published to the host by default: the frontend reaches it over the
-    # internal network. Uncomment to hit the API or /docs directly.
+    security_opt: ["no-new-privileges:true"]
+    # Published so /docs and the raw API can be reached directly. The frontend
+    # does NOT use this: it proxies over the internal network to api:8000.
+    # Remove this block to keep the API off the host entirely.
     ports:
       - "8000:8000"
     environment:
@@ -72,6 +81,7 @@ services:
     image: npn-forecast-frontend:latest
     container_name: npn-frontend
     restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
     ports:
       - "8080:8080"
     environment:

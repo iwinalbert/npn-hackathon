@@ -1783,6 +1783,12 @@
             "type": "string",
             "title": "Disclaimer"
           },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated",
+            "description": "True when the reply hit the output token limit and was cut short.",
+            "default": false
+          },
           "refused": {
             "type": "boolean",
             "title": "Refused",

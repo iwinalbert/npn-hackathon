@@ -281,6 +281,19 @@ class AssistantReply:
     refusal_category: str | None = None
 
 
+@dataclass
+class Generation:
+    """
+    What a provider produced.
+
+    `generate()` may return a plain string — the fakes in the test-suite do, and
+    that stays valid — or this, when the provider knows something extra about
+    how the generation ended.
+    """
+    text: str
+    truncated: bool = False
+
+
 class LLMProvider(Protocol):
     """The seam. Implement this to swap vendors."""
 
@@ -346,9 +359,24 @@ class GeminiProvider:
                 # from arranging a calling loop we would never use.
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(
                     disable=True),
+                thinking_config=types.ThinkingConfig(
+                    thinking_budget=settings.genai_thinking_budget),
             ),
         )
+
+        # MAX_TOKENS means the reply was cut mid-sentence. Returning it as if it
+        # were complete presents half an answer as a whole one, so the caller is
+        # told and the UI says so.
+        truncated = False
+        try:
+            reason = response.candidates[0].finish_reason
+            truncated = reason is not None and "MAX_TOKENS" in str(reason)
+        except (AttributeError, IndexError, TypeError):
+            pass
+
         text = getattr(response, "text", None)
+        if text and text.strip():
+            return Generation(text.strip(), truncated=truncated)
         if not text or not text.strip():
             # A blocked or empty completion must surface as a clear failure, not
             # as an empty answer bubble.
@@ -651,7 +679,13 @@ def ask(
         log.exception("assistant provider call failed")
         raise _provider_failure(exc) from exc
 
-    answer = scrub_secrets(raw)
+    # A provider may return a bare string or a Generation; normalise here so the
+    # Protocol stays trivial to implement.
+    generation = raw if isinstance(raw, Generation) else Generation(str(raw))
+    if generation.truncated:
+        log.warning("assistant reply hit the output token limit")
+
+    answer = scrub_secrets(generation.text)
     grounded, ungrounded = _check_grounding(answer, context)
     if not grounded:
         log.warning("assistant reply contained %d ungrounded number(s)",
@@ -665,6 +699,7 @@ def ask(
         ungrounded_numbers=ungrounded,
         injection_suspected=injection,
         context_keys=sorted(context["data"].keys()),
+        truncated=generation.truncated,
         elapsed_ms=int((time.perf_counter() - started) * 1000),
     )
 

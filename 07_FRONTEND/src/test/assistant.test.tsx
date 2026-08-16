@@ -118,6 +118,63 @@ describe('Assistant — availability', () => {
       expect(screen.getByText(/works without it/i)).toBeInTheDocument())
   })
 
+  it('NEVER renders a blank page when the status probe fails', async () => {
+    // The regression this exists for: an API process older than the assistant
+    // answers /health 200 and /genai/status 404. `data` is undefined,
+    // `isLoading` is false and `available` is false, so every section that was
+    // gated on one of those rendered nothing — heading, then empty page.
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      if (String(url).includes('/genai/status')) {
+        return {
+          ok: false, status: 404, statusText: 'Not Found',
+          json: async () => ({ detail: 'Not Found' }),
+          headers: { get: () => null },
+        }
+      }
+      return {
+        ok: true, status: 200, statusText: 'OK',
+        json: async () => ({}), headers: { get: () => null },
+      }
+    }))
+    const { container } = wrap(<Assistant />)
+
+    // useGenAIStatus sets `retry: 1` on the query itself, which overrides the
+    // test client's `retry: false`, so the error state lands after the retry
+    // delay rather than immediately.
+    await waitFor(
+      () => expect(screen.getByText(/cannot reach the assistant service/i)).toBeInTheDocument(),
+      { timeout: 5000 },
+    )
+    // it says what to do about it
+    expect(screen.getByText(/python tasks\.py api/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument()
+    // and the static explanation panels still render rather than vanishing
+    expect(screen.getByText(/How this assistant works/i)).toBeInTheDocument()
+    expect(screen.getByText(/What it will not do/i)).toBeInTheDocument()
+    // the page has real content, not just the heading
+    expect(container.textContent!.length).toBeGreaterThan(400)
+  })
+
+  it('still shows starter prompts if only the suggestions call fails', async () => {
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      const ok = (body: unknown) => ({
+        ok: true, status: 200, statusText: 'OK',
+        json: async () => body, headers: { get: () => null },
+      })
+      if (String(url).includes('/genai/suggestions')) {
+        return {
+          ok: false, status: 500, statusText: 'Server Error',
+          json: async () => ({ detail: 'boom' }), headers: { get: () => null },
+        }
+      }
+      if (String(url).includes('/genai/status')) return ok(STATUS_OK)
+      return ok({})
+    }))
+    wrap(<Assistant />)
+    await waitFor(() => expect(screen.getByRole('textbox')).toBeInTheDocument())
+    expect(screen.getByText('Which items need attention right now?')).toBeInTheDocument()
+  })
+
   it('shows the input and starter suggestions when configured', async () => {
     mockApi(STATUS_OK)
     wrap(<Assistant />)
@@ -185,6 +242,40 @@ describe('Assistant — asking', () => {
     expect(screen.getByText(/input flagged/i)).toBeInTheDocument()
     // a deterministic refusal is not an "untraceable figure" situation
     expect(screen.queryByText(/could not be traced/i)).not.toBeInTheDocument()
+  })
+
+  it('renders the model’s light markdown instead of literal asterisks', async () => {
+    const user = userEvent.setup()
+    mockApi(STATUS_OK, {
+      ...GROUNDED_ANSWER,
+      answer: 'Consider the following:\n\n* **Planning Range:** 2752.29 to 4144.04 units.\n'
+            + '* **Historical Validation:** RMSE was 29.4873.',
+    })
+    wrap(<Assistant />)
+    await waitFor(() => expect(screen.getByRole('textbox')).toBeInTheDocument())
+    await user.type(screen.getByRole('textbox'), 'Explain')
+    await user.click(screen.getByRole('button', { name: /^ask$/i }))
+
+    await waitFor(() => expect(screen.getByText('Planning Range:')).toBeInTheDocument())
+    expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(2)
+    // the raw markers must not be on screen
+    expect(screen.queryByText(/\*\*Planning Range/)).not.toBeInTheDocument()
+  })
+
+  it('warns when the answer was cut short by the token limit', async () => {
+    const user = userEvent.setup()
+    mockApi(STATUS_OK, {
+      ...GROUNDED_ANSWER,
+      answer: 'The forecast for FOODS_3_090 over the next 28 days (May 23,',
+      truncated: true,
+    })
+    wrap(<Assistant />)
+    await waitFor(() => expect(screen.getByRole('textbox')).toBeInTheDocument())
+    await user.type(screen.getByRole('textbox'), 'Explain')
+    await user.click(screen.getByRole('button', { name: /^ask$/i }))
+
+    await waitFor(() =>
+      expect(screen.getByText(/reached the model's output limit/i)).toBeInTheDocument())
   })
 
   it('sends the selected series as context when focused', async () => {

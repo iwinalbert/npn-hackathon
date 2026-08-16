@@ -15,6 +15,95 @@ interface Turn {
 }
 
 /**
+ * Shown only when the status endpoint could not be read. The backend is the
+ * source of truth for these — this exists so the explanatory panel still says
+ * something true when the API is unreachable, not to duplicate policy.
+ */
+const FALLBACK_REFUSALS: Record<string, string> = {
+  modifying_forecasts: 'the model is frozen; no write path exists',
+  price_what_if: 'the model uses price as context, not as a causal lever',
+  prediction_intervals: 'the model emits point forecasts only',
+  live_accuracy_claims: 'no ground truth exists for the delivered forecast window',
+}
+
+/**
+ * Used only if /genai/suggestions fails while the assistant itself is up.
+ * A prompt list is the difference between an obvious UI and an empty box, so it
+ * should not disappear because one auxiliary request failed.
+ */
+const FALLBACK_SUGGESTIONS_SERIES = [
+  'Explain this forecast in plain language',
+  'Is demand increasing, decreasing or stable?',
+  'How much should I plan to stock over the next 28 days?',
+  'How accurate has the model been on this product?',
+]
+
+const FALLBACK_SUGGESTIONS_CHAIN = [
+  'Which items need attention right now?',
+  'How accurate is this model, and what does RMSE 2.09 mean?',
+  'Explain the difference between direct and recursive forecasting',
+  'How does the model handle products that rarely sell?',
+]
+
+/** `**bold**` → <strong>. Everything else stays literal text. */
+function inline(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith('**') && part.endsWith('**') && part.length > 4
+      ? <strong key={i} className="font-medium text-ink">{part.slice(2, -2)}</strong>
+      : <span key={i}>{part}</span>,
+  )
+}
+
+/**
+ * Renders an answer as paragraphs and bullet lists.
+ *
+ * The model writes light markdown — `* **Planning Range:** …` — despite being
+ * told not to use headings. Rendering that as raw text put literal asterisks on
+ * screen. This is a deliberately minimal renderer, not a markdown engine: bold
+ * and bullets are what actually appears, and anything else is left as text
+ * rather than interpreted.
+ */
+function AnswerText({ text }: { text: string }) {
+  const blocks: Array<{ type: 'p' | 'ul'; lines: string[] }> = []
+  for (const raw of text.split('\n')) {
+    const line = raw.trim()
+    if (!line) continue
+    const bullet = /^[*-]\s+/.test(line)
+    const last = blocks[blocks.length - 1]
+    if (bullet) {
+      const item = line.replace(/^[*-]\s+/, '')
+      if (last?.type === 'ul') last.lines.push(item)
+      else blocks.push({ type: 'ul', lines: [item] })
+    } else if (last?.type === 'p') {
+      last.lines.push(line)
+    } else {
+      blocks.push({ type: 'p', lines: [line] })
+    }
+  }
+
+  return (
+    <>
+      {blocks.map((b, i) =>
+        b.type === 'ul' ? (
+          <ul key={i} className={`space-y-1.5 ${i ? 'mt-3' : ''}`}>
+            {b.lines.map((l, j) => (
+              <li key={j} className="flex gap-2 text-sm leading-relaxed text-ink">
+                <span aria-hidden className="mt-2 h-1 w-1 shrink-0 rounded-full bg-ink-dim" />
+                <span>{inline(l)}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p key={i} className={`text-sm leading-relaxed text-ink ${i ? 'mt-3' : ''}`}>
+            {inline(b.lines.join(' '))}
+          </p>
+        ),
+      )}
+    </>
+  )
+}
+
+/**
  * AI Forecast Assistant.
  *
  * Deliberately framed as an analytical tool, not a chatbot: every answer shows
@@ -44,6 +133,9 @@ export function Assistant() {
 
   const available = status.data?.available === true
   const busy = turns.some((t) => t.pending)
+  const prompts = suggestions.data?.suggestions?.length
+    ? suggestions.data.suggestions
+    : (store && item ? FALLBACK_SUGGESTIONS_SERIES : FALLBACK_SUGGESTIONS_CHAIN)
 
   async function send(text: string) {
     const q = text.trim()
@@ -104,6 +196,58 @@ export function Assistant() {
       {/* --- unavailable ------------------------------------------------ */}
       {status.isLoading && <Spinner label="Checking assistant availability" />}
 
+      {/*
+        The status probe FAILING is different from the assistant being
+        unavailable, and it needs its own branch. Without one, `status.data` is
+        undefined, `isLoading` is false, `available` is false — every section
+        below is gated on one of those, so the page renders the heading and
+        nothing else. That is not a hypothetical: an API process started before
+        this feature existed answers /health with 200 and /genai/status with
+        404, which produced exactly that blank page.
+      */}
+      {status.isError && (
+        <Card title="Cannot reach the assistant service">
+          <p className="text-sm text-ink">
+            The frontend could not read{' '}
+            <code className="font-mono text-xs text-ink-muted">/api/v1/genai/status</code>
+            {' '}from the API.
+          </p>
+          <p className="mt-2 text-xs text-ink-muted">
+            {status.error instanceof ApiError
+              ? `${status.error.userMessage}${status.error.status ? ` (HTTP ${status.error.status})` : ''}`
+              : 'The request did not complete.'}
+          </p>
+          <ul className="mt-3 space-y-1.5 text-xs text-ink-muted">
+            <li>
+              · <span className="text-ink">The API is not running.</span> Start it
+              with <code className="font-mono text-ink">python tasks.py api</code>.
+            </li>
+            <li>
+              · <span className="text-ink">The API is running an older build.</span>{' '}
+              A 404 here means the process predates the assistant endpoints —
+              restart it so the <code className="font-mono text-ink">/genai</code>{' '}
+              routes are registered.
+            </li>
+          </ul>
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => { void status.refetch(); void suggestions.refetch() }}
+              className="rounded border border-forecast/50 bg-forecast/10 px-3 py-1.5
+                         text-xs font-medium text-forecast transition-colors
+                         hover:bg-forecast/20"
+            >
+              Try again
+            </button>
+          </div>
+          <Explain>
+            Only the assistant is affected. Every forecast, accuracy figure and
+            chart elsewhere in this application is served by other endpoints and
+            continues to work.
+          </Explain>
+        </Card>
+      )}
+
       {status.data && !available && (
         <Card title="The assistant is not configured in this deployment">
           <ul className="space-y-1">
@@ -137,7 +281,7 @@ export function Assistant() {
                 Try one of these
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {(suggestions.data?.suggestions ?? []).map((s) => (
+                {prompts.map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -183,11 +327,7 @@ export function Assistant() {
                     {t.answer && (
                       <div>
                         <div className="rounded border border-line bg-base px-4 py-3">
-                          {t.answer.answer.split(/\n{2,}/).map((para, i) => (
-                            <p key={i} className={`text-sm leading-relaxed text-ink ${i ? 'mt-3' : ''}`}>
-                              {para}
-                            </p>
-                          ))}
+                          <AnswerText text={t.answer.answer} />
                         </div>
 
                         {/* provenance strip */}
@@ -235,6 +375,15 @@ export function Assistant() {
                             </>
                           )}
                         </div>
+
+                        {t.answer.truncated && (
+                          <Caveat>
+                            This answer reached the model's output limit and was cut
+                            short. Ask a narrower question, or raise{' '}
+                            <code className="font-mono">NPN_GENAI_MAX_OUTPUT_TOKENS</code>{' '}
+                            in the API environment.
+                          </Caveat>
+                        )}
 
                         {!t.answer.grounded && !t.answer.refused && (
                           <Caveat>
@@ -300,7 +449,7 @@ export function Assistant() {
 
             {turns.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
-                {(suggestions.data?.suggestions ?? []).slice(0, 3).map((s) => (
+                {prompts.slice(0, 3).map((s) => (
                   <button
                     key={s}
                     type="button"
@@ -319,8 +468,13 @@ export function Assistant() {
         </Card>
       )}
 
-      {/* --- what it will and will not do -------------------------------- */}
-      {status.data && (
+      {/*
+        --- what it will and will not do ---------------------------------
+        Rendered whenever the probe has settled, success or failure. These two
+        panels are static explanations of the design; gating them on a
+        successful API call was what let the whole page go blank.
+      */}
+      {!status.isLoading && (
         <div className="grid gap-6 lg:grid-cols-2">
           <Card title="How this assistant works">
             <ol className="space-y-2.5">
@@ -348,7 +502,7 @@ export function Assistant() {
 
           <Card title="What it will not do">
             <ul className="space-y-2.5">
-              {Object.entries(status.data.refusals).map(([k, v]) => (
+              {Object.entries(status.data?.refusals ?? FALLBACK_REFUSALS).map(([k, v]) => (
                 <li key={k} className="border-l-2 border-l-line-strong pl-3">
                   <p className="text-xs font-medium text-ink">
                     {k.replace(/_/g, ' ')}

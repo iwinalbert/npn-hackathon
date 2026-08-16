@@ -121,7 +121,16 @@ class Settings(BaseSettings):
     genai_enabled: bool = True
     genai_timeout_seconds: float = 30.0
     genai_max_question_chars: int = 800
-    genai_max_output_tokens: int = 900
+    # Gemini 3.x spends this budget on internal reasoning BEFORE writing, and
+    # the reasoning counts against the same limit. Measured on gemini-3.5-flash:
+    # a trivial question spent 506 tokens thinking and 61 answering. At the old
+    # 900 the assistant's answers were being cut off mid-sentence.
+    genai_max_output_tokens: int = 2048
+    # 0 disables extended thinking; -1 lets the model decide.
+    # Zero is right for this task: the facts arrive precomputed and the model is
+    # explicitly forbidden from doing arithmetic, so reasoning tokens buy nothing
+    # and cost both latency and answer length.
+    genai_thinking_budget: int = 0
     genai_temperature: float = 0.2
 
     # --- observability ----------------------------------------------------

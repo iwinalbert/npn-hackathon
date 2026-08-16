@@ -12,6 +12,7 @@ This runner exposes the same commands everywhere with no extra tooling.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -32,10 +33,51 @@ def build_db() -> int:
     return _run([PY, str(BACKEND / "scripts" / "build_product_db.py")])
 
 
+def _whats_on(port: int) -> str | None:
+    """
+    Describe an API already listening on `port`, or None if it is free.
+
+    Worth the twenty lines: a *stale* API is far more confusing than no API. One
+    left running from before the assistant existed answers /health with 200 and
+    /genai/status with 404, so the app looks alive while the assistant page can
+    do nothing. Naming that on startup turns a puzzling 404 into a sentence.
+    """
+    import json
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(
+                f"http://127.0.0.1:{port}/openapi.json", timeout=2) as r:
+            spec = json.load(r)
+    except (urllib.error.URLError, OSError, ValueError, TimeoutError):
+        return None
+
+    paths = spec.get("paths", {})
+    genai = [p for p in paths if "/genai" in p]
+    detail = f"{len(paths)} routes"
+    if not genai:
+        detail += ", NO /genai routes - this build predates the AI assistant"
+    return detail
+
+
 def api() -> int:
-    """Run the API on http://localhost:8000 (interactive docs at /docs)."""
+    """Run the API on http://localhost:8000, or `api <port>`. Docs at /docs."""
+    port = sys.argv[2] if len(sys.argv) > 2 else "8000"
+
+    existing = _whats_on(int(port))
+    if existing:
+        bar = "!" * 70
+        print(f"\n{bar}")
+        print(f"Port {port} is ALREADY serving an API: {existing}")
+        print("Stop that process first, or run this pair instead:")
+        print(f"    python tasks.py api {int(port) + 1}")
+        print(f"    python tasks.py ui  {int(port) + 1}")
+        print(f"{bar}\n")
+        return 1
+
     return _run([PY, "-m", "uvicorn", "app.main:app", "--reload",
-                 "--port", "8000"], cwd=BACKEND)
+                 "--port", str(port)], cwd=BACKEND)
 
 
 def test() -> int:
@@ -80,7 +122,14 @@ def _npm(*args: str) -> int:
 
 
 def ui() -> int:
-    """Run the frontend dev server on http://localhost:5173."""
+    """Run the frontend dev server on :5173, or `ui <api_port>` to proxy elsewhere."""
+    if len(sys.argv) > 2:
+        # Set it here rather than telling the user to prefix the command: the
+        # `VAR=value cmd` form is bash-only and silently fails in PowerShell,
+        # which is the shell this project is actually demonstrated in.
+        target = f"http://127.0.0.1:{int(sys.argv[2])}"
+        os.environ["VITE_DEV_API_TARGET"] = target
+        print(f"proxying /api to {target}")
     return _npm("run", "dev")
 
 

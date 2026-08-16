@@ -18,7 +18,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: 06_BACKEND/Dockerfile
+      dockerfile: 01_PROJECT/backend/Dockerfile
       target: full          # use `api` for a lean build without live inference
     image: npn-forecast-api:latest
     container_name: npn-api
@@ -44,10 +44,10 @@ services:
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       # product data layer (product.duckdb + the two parquet sidecars) — 130 MB
-      - ./06_BACKEND/data:/data/product:ro
+      - ./01_PROJECT/backend/data:/data/product:ro
       # frozen model artefacts, read-only — needed only for live inference
-      - ./models/champion:/research/models/champion:ro
-      - ./predictions/final_forecast:/research/predictions/final_forecast:ro
+      - ./03_RESEARCH/models/champion:/research/models/champion:ro
+      - ./03_RESEARCH/predictions/final_forecast:/research/predictions/final_forecast:ro
       # writable scratch: the research pipeline creates directories on import
       - npn-scratch:/research/experiments
       - npn-scratch-preds:/research/predictions/validation
@@ -67,7 +67,7 @@ services:
 
   frontend:
     build:
-      context: ./07_FRONTEND
+      context: ./01_PROJECT/frontend
       dockerfile: Dockerfile
     image: npn-forecast-frontend:latest
     container_name: npn-frontend

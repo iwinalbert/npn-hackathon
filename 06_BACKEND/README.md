@@ -3,7 +3,7 @@
 FastAPI service that serves the **frozen** M5 demand-forecasting model's output.
 
 ```
-Status: Phase 2 complete — 28 endpoints, 80 tests passing, container-ready
+Status: complete — 34 endpoints, 149 tests passing, container-ready
 ```
 
 Full implementation report: [`08_DOCUMENTATION/BACKEND_IMPLEMENTATION_REPORT.md`](../08_DOCUMENTATION/BACKEND_IMPLEMENTATION_REPORT.md)
@@ -15,6 +15,8 @@ Full implementation report: [`08_DOCUMENTATION/BACKEND_IMPLEMENTATION_REPORT.md`
 ```bash
 python tasks.py build-db     # build the 130 MB data layer (~10 s, one time)
 python tasks.py api          # http://localhost:8000  · docs at /docs
+python tasks.py api 8001     # ...or elsewhere if 8000 is taken;
+python tasks.py ui  8001     #    point the dev server at the same port
 python tasks.py test         # 121 fast tests, ~3 s
 
 cd 06_BACKEND && python -m pytest -m slow    # +2 slow tests (~60 s):

@@ -160,6 +160,68 @@ def genai_check() -> int:
     return _run([PY, "-m", "pytest", "-m", "live", "-v"], cwd=BACKEND)
 
 
+def _compose(*args: str, inference: bool = False) -> int:
+    """
+    Run `docker compose`, or explain clearly why it cannot.
+
+    The failure mode this guards against is a bare "command not found", which
+    tells a new teammate nothing about what to install or what the alternative
+    is.
+    """
+    import shutil
+    if shutil.which("docker") is None:
+        bar = "!" * 70
+        print(f"\n{bar}")
+        print("Docker is not installed or not on PATH.")
+        print("  Install Docker Desktop (Windows/macOS) or docker + the compose")
+        print("  plugin (Linux), then run this again.")
+        print("  Development without Docker is unaffected:")
+        print("      python tasks.py api        python tasks.py ui")
+        print(f"{bar}\n")
+        return 1
+
+    files = ["-f", "docker-compose.yml"]
+    if inference:
+        files += ["-f", "docker-compose.inference.yml"]
+    return _run(["docker", "compose", *files, *args])
+
+
+def docker_config() -> int:
+    """Validate and print the resolved compose configuration."""
+    return _compose("config", inference="--inference" in sys.argv)
+
+
+def docker_build() -> int:
+    """Build the container images."""
+    return _compose("build", inference="--inference" in sys.argv)
+
+
+def docker_up() -> int:
+    """Start the stack in the background. Add --inference for live verification."""
+    rc = _compose("up", "-d", "--build", inference="--inference" in sys.argv)
+    if rc == 0:
+        print("\n  app  -> http://localhost:8080")
+        print("  api  -> http://localhost:8000/docs")
+        print("  logs -> python tasks.py docker-logs")
+    return rc
+
+
+def docker_down() -> int:
+    """Stop the stack and remove its containers."""
+    return _compose("down", inference="--inference" in sys.argv)
+
+
+def docker_logs() -> int:
+    """Follow container logs (Ctrl-C to stop)."""
+    return _compose("logs", "-f", "--tail", "100",
+                    inference="--inference" in sys.argv)
+
+
+def docker_ps() -> int:
+    """Show container status and health."""
+    return _compose("ps", inference="--inference" in sys.argv)
+
+
 def verify_integrity() -> int:
     """Prove that no protected research artefact has changed."""
     script = (ROOT / "03_RESEARCH" / "scripts" / "08_organization"
@@ -262,6 +324,12 @@ COMMANDS = {
     "ui-install": ui_install,
     "ui-build": ui_build,
     "ui-test": ui_test,
+    "docker-config": docker_config,
+    "docker-build": docker_build,
+    "docker-up": docker_up,
+    "docker-down": docker_down,
+    "docker-logs": docker_logs,
+    "docker-ps": docker_ps,
     "verify-all": verify_all,
     "verify-integrity": verify_integrity,
     "openapi": openapi,

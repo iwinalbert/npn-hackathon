@@ -1,32 +1,47 @@
-# Retail Demand Forecasting — full product stack
+# Retail Demand Forecasting — production-like local stack
 #
-#   python tasks.py build-db      # ONCE, on the host — see below
+#   python tasks.py build-db      # ONCE, on the host — see PREREQUISITE below
 #   docker compose up --build     # then: http://localhost:8080
 #
-# PREREQUISITE: 01_PROJECT/backend/data/ must contain product.duckdb,
-# history.parquet and backtest.parquet before `up`. That directory is gitignored
-# (130 MB, rebuildable) and is bind-mounted READ-ONLY into the API.
+# PREREQUISITE — the product data layer
+# -------------------------------------
+# 01_PROJECT/backend/data/ must contain product.duckdb, history.parquet and
+# backtest.parquet before `up`. That directory is gitignored (125 MB,
+# rebuildable) and is bind-mounted READ-ONLY into the API.
 # If it is empty the API starts but /api/v1/ready reports not-ready, its
 # healthcheck never passes, and the frontend — which waits for service_healthy —
 # never starts. That looks like a hang; it is a missing data layer.
 #
+# THIS STACK DOES NOT NEED 03_RESEARCH
+# ------------------------------------
+# The API serves every route, including the frozen 28-day forecast, from the
+# three files above. Verified against an EMPTY project root: forecast,
+# hierarchy, accuracy, insights, /docs, /openapi.json and /genai all respond,
+# and /inference reports unavailable with a reason. Deploy this and the research
+# tree can be absent from the machine entirely.
+#
+# Live model verification — re-running the frozen boosters to prove they still
+# reproduce the shipped forecast — is the ONE feature that needs the research
+# tree. It is opt-in, so the default deployment carries no dependency on it:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.inference.yml up --build
+#
 # Optional AI assistant: put GEMINI_API_KEY in a .env file beside this compose
-# file, or export it in the shell. Compose substitutes it at run time; it is
-# never written into an image layer.
+# file, or export it. Compose substitutes it at run time; it is never written
+# into an image layer. Leave it unset and everything else works.
 #
 # The browser talks only to the frontend container. nginx proxies /api to the
-# API service on the internal network, so there is one origin, no CORS in play,
-# and no API host baked into the JavaScript bundle.
-#
-# The research tree is mounted READ-ONLY (:ro) and both containers run as
-# non-root, so the frozen model artefacts cannot be modified even by accident.
+# API service on the internal network: one origin, no CORS, and no API host
+# baked into the JavaScript bundle. Both containers run as non-root.
 
 services:
   api:
     build:
       context: .
       dockerfile: 01_PROJECT/backend/Dockerfile
-      target: full          # use `api` for a lean build without live inference
+      # Lean target: no LightGBM, no research tree, no pipeline import.
+      # docker-compose.inference.yml switches this to `full`.
+      target: api
     image: npn-forecast-api:latest
     container_name: npn-api
     restart: unless-stopped
@@ -39,40 +54,33 @@ services:
     environment:
       NPN_ENVIRONMENT: production
       NPN_DATA_DIR: /data/product
-      NPN_PROJECT_ROOT: /research
       # Same-origin through the nginx proxy means CORS is not exercised in this
       # topology. These entries only matter if a browser is pointed straight at
       # the API, e.g. during frontend development with `npm run dev`.
       NPN_CORS_ORIGINS: "http://localhost:5173,http://localhost:4173,http://localhost:8080"
       NPN_LOG_LEVEL: INFO
-      NPN_ENABLE_INFERENCE: "true"
       # AI assistant. Injected at RUNTIME from the host environment or a .env
       # file next to this compose file — never baked into the image, never sent
       # to the browser. Leave unset to run without the assistant: every other
       # feature works and /genai/status explains why it is unavailable.
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
-      # product data layer (product.duckdb + the two parquet sidecars) — 130 MB
+      # The ONLY runtime data the API needs: product.duckdb + two parquet
+      # sidecars. Read-only — the service never writes to it.
       - ./01_PROJECT/backend/data:/data/product:ro
-      # frozen model artefacts, read-only — needed only for live inference
-      - ./03_RESEARCH/models/champion:/research/models/champion:ro
-      - ./03_RESEARCH/predictions/final_forecast:/research/predictions/final_forecast:ro
-      # writable scratch: the research pipeline creates directories on import
-      - npn-scratch:/research/experiments
-      - npn-scratch-preds:/research/predictions/validation
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request,sys,json;r=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready',timeout=4));sys.exit(0 if r.get('ready') else 1)"]
       interval: 30s
       timeout: 5s
-      start_period: 20s
+      start_period: 15s
       retries: 3
     deploy:
       resources:
         limits:
-          # Idle ~200 MB; a live inference job peaks near 1 GB because it loads
-          # the 59.2M-row panel to rebuild features.
-          memory: 2G
+          # The lean target holds a DuckDB connection and parquet readers.
+          # The inference override raises this — see that file.
+          memory: 1G
 
   frontend:
     build:
@@ -102,7 +110,3 @@ services:
       resources:
         limits:
           memory: 128M
-
-volumes:
-  npn-scratch:
-  npn-scratch-preds:

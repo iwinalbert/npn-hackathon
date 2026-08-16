@@ -1,4 +1,4 @@
-# DOCKER DEPLOYMENT REPORT
+# DOCKER IMPLEMENTATION REPORT
 
 **Retail Demand Forecasting** — Walmart M5 · Hierarchical 28-Day Forecasting
 **Scope:** containerise the existing system for a teammate to deploy later
@@ -15,16 +15,27 @@ Docker is not installed on this machine**
 ## 1. Architecture
 
 ```
+DEFAULT STACK — no 03_RESEARCH dependency at all
+
 Browser  ──►  frontend container (nginx :8080)
                  │  serves the built SPA
-                 │  /api/  ──proxy──►  api container (uvicorn :8000)
-                                          │
-                                          ├─ /data/product      ro  product data layer (125 MB)
-                                          ├─ /research/pipeline     baked into image (0.18 MB)
-                                          ├─ /research/models/champion             ro mount
-                                          ├─ /research/predictions/final_forecast  ro mount
+                 │  /api/  ──proxy──►  api container (uvicorn :8000, target: api)
+                                          ├─ /data/product  ro   product data layer (125 MB)
                                           └─ HTTPS ──► Gemini API (only if a key is set)
+
+WITH docker-compose.inference.yml — adds live model verification only
+
+                                       api container (target: full)
+                                          ├─ /research/pipeline                    in image (0.18 MB)
+                                          ├─ /research/models/champion             ro mount
+                                          └─ /research/predictions/final_forecast  ro mount
 ```
+
+**The default deployment does not need the research tree.** Verified against an
+empty project root: the frozen 28-day forecast (`total_28d = 3331.3681`),
+hierarchy, accuracy, insights, `/docs`, `/openapi.json` and every `/genai` route
+all respond; `/inference/status` reports unavailable with a reason. The machine
+running this stack can have no `03_RESEARCH/` directory whatsoever.
 
 One origin from the browser's point of view: nginx proxies `/api/` internally to
 `api:8000`, so no CORS is exercised, no API host is compiled into the bundle, and
@@ -37,13 +48,20 @@ the Gemini key never leaves the API container.
 | Base | `python:3.13-slim` | `python:3.13-slim` + `libgomp1` | `node:22-alpine` → `nginx:1.27-alpine` |
 | Deps | fastapi, uvicorn, pydantic, duckdb, google-genai | + lightgbm, numpy, pandas, pyarrow | nginx only |
 | Live inference | disabled — `/inference/*` returns 503 with a reason | enabled | n/a |
+| Needs `03_RESEARCH` | **no** | yes (two ro mounts + pipeline) | no |
+| Compose default | **yes** | opt-in overlay | yes |
 | Runs as | `app` (uid 10001) | `app` (uid 10001) | nginx (see §10) |
 
-**Why `full` is the default.** The product advertises live model verification —
-re-running the frozen boosters and proving they reproduce the shipped forecast
-bit-for-bit. That needs LightGBM and the research feature pipeline. Deploy
-`--target api` instead if that endpoint is not wanted; every other route is
-identical and the image is much smaller.
+**Why `api` is the default.** A deployment should not depend on a 2 GB research
+tree it does not need. `api` serves every route the product actually ships —
+including the frozen forecast — from three generated files, so the deployable
+unit is `01_PROJECT/` plus a data directory.
+
+`full` exists because live model verification is a genuine credibility asset:
+`POST /api/v1/inference/verify` re-runs the frozen boosters and shows
+`max_abs_diff = 0.000e+00` against the shipped forecast. That is worth having,
+but it is worth having *opt-in*, because it costs ~104 MB of extra wheels, ~1 GB
+more memory, and a dependency on artefacts that live outside the product.
 
 ## 3. Build contexts — the part that needed fixing
 
@@ -116,6 +134,8 @@ read-only bind mounts land on directories that now already exist, and
 
 ## 5. Compose services
 
+Two files. `docker-compose.yml` is the deployable stack; `docker-compose.inference.yml` is an opt-in overlay that adds live model verification and, with it, the only dependency on `03_RESEARCH`.
+
 | Service | Image | Port | Depends on |
 |---|---|---|---|
 | `api` | `npn-forecast-api:latest` (target `full`) | 8000 | — |
@@ -126,16 +146,22 @@ first page load cannot race the database open.
 
 ### Volumes
 
+**Default stack — one mount, read-only:**
+
 | Mount | Mode | Why |
 |---|---|---|
-| `./01_PROJECT/backend/data` → `/data/product` | **ro** | the only data the API needs to serve every non-inference route |
-| `./03_RESEARCH/models/champion` → `/research/models/champion` | **ro** | frozen boosters, live inference only |
-| `./03_RESEARCH/predictions/final_forecast` → `/research/predictions/final_forecast` | **ro** | the shipped forecast, compared against |
-| `npn-scratch` → `/research/experiments` | rw | absorbs the import-time mkdirs |
-| `npn-scratch-preds` → `/research/predictions/validation` | rw | same |
+| `./01_PROJECT/backend/data` → `/data/product` | **ro** | product.duckdb + two parquet sidecars: everything the API needs to serve every shipped route |
 
-Every research mount is read-only. The frozen artefacts cannot be modified by the
-running system even by accident.
+**With the inference overlay, three more:**
+
+| Mount | Mode | Why |
+|---|---|---|
+| `./03_RESEARCH/models/champion` → `/research/models/champion` | **ro** | the two frozen boosters |
+| `./03_RESEARCH/predictions/final_forecast` → `/research/predictions/final_forecast` | **ro** | the shipped forecast, compared against |
+| `npn-scratch`, `npn-scratch-preds` | rw | absorb the import-time mkdirs (§4) |
+
+No research path is ever writable. The frozen artefacts cannot be modified by
+the running system even by accident.
 
 ### Environment
 
@@ -149,6 +175,28 @@ running system even by accident.
 | `NPN_CORS_ORIGINS` | dev origins | unused in this topology — same origin |
 | `API_HOST` *(frontend)* | `api:8000` | substituted into nginx at start |
 | **`GEMINI_API_KEY`** | `${GEMINI_API_KEY:-}` | **runtime interpolation only** |
+
+## 5b. Why the Dockerfiles are not in a `docker/` directory
+
+A `docker/backend/`, `docker/frontend/` layout was considered and rejected.
+Build context is the reason:
+
+* **The backend Dockerfile must resolve `03_RESEARCH/pipeline`** for the `full`
+  target, so its context is the repository root either way. Moving the file
+  changes nothing about that and adds a level of indirection between the
+  Dockerfile and the tree it copies from.
+* **The frontend Dockerfile's context IS its own directory.** It does
+  `COPY package.json`, `COPY . .` and `COPY nginx.conf`. Moving it to
+  `docker/frontend/` would separate it from `nginx.conf` and from the only
+  context it can be built with — `docker build -f docker/frontend/Dockerfile
+  01_PROJECT/frontend` is harder to read, not easier.
+* A `docker/` directory would also be a fourth top-level area, which the
+  three-area structure exists specifically to avoid.
+
+Each Dockerfile therefore sits with the thing it builds, and the two compose
+files sit at the root where the build contexts resolve from. What a deployment
+teammate needs to find is `docker-compose.yml` and this report — both at
+predictable locations.
 
 ## 6. Secret handling
 
@@ -269,17 +317,40 @@ loads the 59.2M-row panel. The compose limit is 2 GB for that reason.
 4. **Single worker by design.** DuckDB opens read-only per process and each
    worker would add a full model+panel copy during inference. Scale with
    replicas, not `--workers`.
-5. **`linux/amd64` assumed.** The wheel check targeted `manylinux_2_28_x86_64`.
+5. **The inference overlay is the only research dependency, and is untested in
+   a container.** The default stack was verified research-free by running the
+   API against an empty project root. The overlay's mounts and the §4 permission
+   fix are statically checked but have never been exercised by a real build.
+6. **`linux/amd64` assumed.** The wheel check targeted `manylinux_2_28_x86_64`.
    On arm64 (Apple Silicon, Graviton) the wheels differ and must be re-checked.
-6. **No TLS, no auth, no rate limiting.** Appropriate for a local production-like
+7. **No TLS, no auth, no rate limiting.** Appropriate for a local production-like
    stack; all three belong at the edge in a real deployment.
 
 ## 11. Local run
 
 ```bash
-python tasks.py build-db          # ONCE — materialises the 125 MB data layer
+python tasks.py build-db                   # ONCE — materialises the 125 MB data layer
 echo "GEMINI_API_KEY=your-key" > .env      # optional, beside docker-compose.yml
-docker compose up --build         # http://localhost:8080
+docker compose up --build                  # http://localhost:8080
+```
+
+Or through the task runner, which works identically on Windows and prints a
+clear message if Docker is not installed:
+
+```bash
+python tasks.py docker-build     # build images
+python tasks.py docker-up        # start (detached) and print the URLs
+python tasks.py docker-ps        # container status + health
+python tasks.py docker-logs      # follow logs
+python tasks.py docker-down      # stop and remove
+```
+
+Add `--inference` to any of those to use the overlay:
+
+```bash
+python tasks.py docker-up --inference
+# equivalent to:
+docker compose -f docker-compose.yml -f docker-compose.inference.yml up -d --build
 ```
 
 | | |
@@ -288,8 +359,12 @@ docker compose up --build         # http://localhost:8080
 | API docs | <http://localhost:8000/docs> |
 | Readiness | <http://localhost:8000/api/v1/ready> |
 
-Without a key everything works except the assistant, which explains why it is
-unavailable.
+**The development workflow is unchanged.** `python tasks.py api` and
+`python tasks.py ui` still run the app directly on the host with hot reload;
+Docker is an additional path, not a replacement.
+
+Without a `GEMINI_API_KEY` everything works except the assistant, which explains
+why it is unavailable.
 
 ## 12. First commands once Docker is available
 
@@ -317,8 +392,11 @@ curl -s localhost:8080/api/v1/health              # 200 — proxy works
 curl -s localhost:8000/api/v1/series/CA_3/FOODS_3_090/forecast \
   | python -m json.tool | grep total_28d          # 3331.3681
 
-# 6. THE regression test for §4 — this is what would have failed before the fix
+# 6. THE regression test for §4 — only applies to the inference overlay, which
+#    is the only configuration that imports the pipeline
+docker compose -f docker-compose.yml -f docker-compose.inference.yml up -d --build
 docker compose exec api python -c "import pipeline.config; print('pipeline import OK')"
+docker compose exec api curl -s -X POST localhost:8000/api/v1/inference/verify
 
 # 7. non-root
 docker compose exec api id                        # uid=10001(app)
@@ -351,8 +429,12 @@ mounts, and a frontend that hard-codes no API host.
    `build_product_db.py`, or mount object storage. It is rebuildable from the
    frozen artefacts, so it does not need to be backed up — but it must exist
    before the API reports ready.
-2. **Whether live inference is needed.** If not, deploy `--target api`: much
-   smaller, no research mounts, no LightGBM.
+2. **Whether live inference is needed.** The default already says no: plain
+   `docker compose up` gives you the lean image with no research mounts and no
+   LightGBM. Only add `-f docker-compose.inference.yml` if you want the
+   "watch the frozen model reproduce its forecast" endpoint, and note that it
+   requires `03_RESEARCH/models/champion` and
+   `03_RESEARCH/predictions/final_forecast` to be present on the host.
 3. **`GEMINI_API_KEY` via the platform's secret manager**, not an env file.
 4. **TLS, authentication and rate limiting at the edge.** None are in this stack.
    Note that each assistant request costs money — rate limiting matters.
@@ -369,12 +451,22 @@ mounts, and a frontend that hard-codes no API host.
 | `.dockerignore` | rewritten as an allow-list — the previous version was entirely stale and would have shipped a 2.3 GB context |
 | `01_PROJECT/backend/Dockerfile` | pre-create + `chown` the ten directories `pipeline/config.py` makes at import; corrected the build-context comment |
 | `docker-compose.yml` | `security_opt: no-new-privileges` on both services; corrected a stale comment claiming the API port was unpublished; documented the data-layer prerequisite and its hang-like failure mode |
-| `02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md` | this document |
+| `02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md` | this document |
+
+### Finalisation pass
+
+| File | Change |
+|---|---|
+| `docker-compose.yml` | default target `full` → **`api`**; research mounts and scratch volumes moved out; memory limit 2G → 1G; documents that the stack needs no research tree |
+| `docker-compose.inference.yml` | **new** — opt-in overlay carrying the entire `03_RESEARCH` dependency |
+| `tasks.py` | `docker-config`, `docker-build`, `docker-up`, `docker-down`, `docker-logs`, `docker-ps`, each accepting `--inference`; explains itself if Docker is absent |
+| `README.md` | Docker quick-start |
+| this report | renamed from `DOCKER_DEPLOYMENT_REPORT.md` so there is one deployment document, not two |
 
 No application code, no model, no dataset, no research artefact was modified.
 
 > **Location note.** The task named
-> `02_DOCUMENTATION/09_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md`. The documentation
+> `02_DOCUMENTATION/09_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md`. The documentation
 > tree already has `08_DEPLOYMENT/` (deployment) and `09_VALIDATION/`
 > (verification), so this sits in `08_DEPLOYMENT/` beside `GIT_POLICY.md` rather
 > than creating a second deployment folder.

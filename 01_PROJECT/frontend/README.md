@@ -134,7 +134,7 @@ proxies `/api/` to the API service over the internal network.
 
 **The Docker image has not been built** — Docker is unavailable on the
 development machine. See
-[`02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md`](../../02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_DEPLOYMENT_REPORT.md)
+[`02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md`](../../02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md)
 for the exact commands and what to check.
 
 ---

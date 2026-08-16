@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 
 import { useModelCard, useReadiness } from '../../api/hooks'
 import { Badge } from '../ui'
+import { FloatingAIAssistant } from './FloatingAIAssistant'
 
 /**
  * Navigation follows the analytical flow the product is trying to teach:
@@ -147,10 +148,18 @@ export function AppShell() {
         </nav>
 
         {/* -------------------------------------------------------------- */}
-        <main className="min-w-0 flex-1 px-4 py-6 lg:px-8">
+        {/*
+          The extra bottom padding is what keeps the floating button from being
+          a nuisance: the last row of any page can always be scrolled clear of
+          it, so it never permanently covers a control or a chart axis.
+        */}
+        <main className="min-w-0 flex-1 px-4 pb-24 pt-6 lg:px-8">
           <Outlet />
         </main>
       </div>
+
+      {/* Rendered once here, so every routed page gets it without opting in. */}
+      <FloatingAIAssistant />
     </div>
   )
 }

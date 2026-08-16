@@ -20,8 +20,8 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-BACKEND = ROOT / "06_BACKEND"
-FRONTEND = ROOT / "07_FRONTEND"
+BACKEND = ROOT / "01_PROJECT" / "backend"
+FRONTEND = ROOT / "01_PROJECT" / "frontend"
 PY = sys.executable
 
 
@@ -162,13 +162,14 @@ def genai_check() -> int:
 
 def verify_integrity() -> int:
     """Prove that no protected research artefact has changed."""
-    script = ROOT / "scripts" / "08_organization" / "61_integrity_manifest.py"
+    script = (ROOT / "03_RESEARCH" / "scripts" / "08_organization"
+              / "61_integrity_manifest.py")
     rc = _run([PY, str(script), "after"])
     return rc or _run([PY, str(script), "compare"])
 
 
 def openapi() -> int:
-    """Write the OpenAPI schema to 06_BACKEND/openapi.json."""
+    """Write the OpenAPI schema to 01_PROJECT/backend/openapi.json."""
     sys.path.insert(0, str(BACKEND))
     import json
 
@@ -203,7 +204,7 @@ def ui() -> int:
 
 
 def ui_build() -> int:
-    """Build the production frontend bundle into 07_FRONTEND/dist."""
+    """Build the production frontend bundle into 01_PROJECT/frontend/dist."""
     return _npm("run", "build")
 
 

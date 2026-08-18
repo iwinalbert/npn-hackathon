@@ -42,7 +42,7 @@ WORKDIR /app
 # ---------------------------------------------------------------------------
 FROM base AS deps-api
 COPY backend/requirements.txt ./requirements.txt
-RUN pip install --require-hashes=false -r requirements.txt
+RUN pip install -r requirements.txt
 
 FROM base AS deps-full
 # libgomp1 is LightGBM's OpenMP runtime; the wheel will not import without it.

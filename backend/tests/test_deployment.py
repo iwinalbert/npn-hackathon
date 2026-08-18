@@ -74,6 +74,8 @@ def test_product_database_contains_no_baked_absolute_paths():
     would make the database file non-portable, which is why this build defines
     none.
     """
+    if not Path(settings.product_db).exists():
+        pytest.skip("product.duckdb not built — run scripts/build_product_db.py")
     import duckdb
     con = duckdb.connect(str(settings.product_db), read_only=True)
     try:

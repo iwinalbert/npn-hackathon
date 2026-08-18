@@ -1,11 +1,3 @@
-"""
-Error types and their HTTP mapping.
-
-Every failure returns the same JSON shape so the frontend can render one error
-component instead of guessing at response bodies:
-
-    {"error": "not_found", "message": "...", "context": {...}, "request_id": "..."}
-"""
 
 from __future__ import annotations
 
@@ -13,7 +5,6 @@ from typing import Any
 
 
 class ApiError(Exception):
-    """Base class for errors that map to a deliberate HTTP response."""
 
     status_code = 500
     error_type = "internal_error"

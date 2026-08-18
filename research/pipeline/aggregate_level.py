@@ -1,37 +1,3 @@
-"""
-AGGREGATE-LEVEL modelling: forecasting a hierarchy level directly, so that its
-forecast can be reconciled back down onto the store-item series.
-
-NEW MODULE. Nothing here modifies or imports-and-mutates any existing pipeline
-component; the protected champion path is untouched.
-
-WHY A SEPARATE BUILDER INSTEAD OF REUSING FeatureBuilder
---------------------------------------------------------
-FeatureBuilder (and its V2/V4/V5 subclasses) hard-code config.N_SERIES = 30490 in
-several places and read a per-series SNAP column keyed to one state. An item-level
-series is a sum over ten stores in three states, so neither assumption holds. The
-honest fix is a small purpose-built builder rather than bending the verified one
-and risking a silent change to the champion's own feature values.
-
-THE ONE RULE IS UNCHANGED
--------------------------
-Standing at origin T we may use:
-  * aggregated sales up to and including T  (ORIGIN-RELATIVE, held constant
-    across all 28 horizon days)
-  * the calendar and sell_prices for the target days, both of which the dataset
-    genuinely publishes in advance  (TARGET-DAY)
-and nothing else. Every array below is sliced with [:, :T+1] or indexed by a
-target day, never both.
-
-WHAT AN AGGREGATE MODEL KNOWS THAT THE BOTTOM MODEL DOES NOT
--------------------------------------------------------------
-The bottom model sees one store's history of an item: a thin, mostly-zero count
-series. Its implied item-level forecast is the sum of ten such independent
-estimates. This model sees the pooled item history directly, so its lag and
-rolling features carry roughly ten times the counts and a correspondingly smaller
-estimation variance. That is a genuinely different information set, not a
-re-encoding of one the bottom model already holds.
-"""
 
 from __future__ import annotations
 
@@ -45,17 +11,10 @@ from .data_loader import M5Data
 
 NOT_YET = -1
 SHRINK_K = 20.0
-WDAY_WINDOW_DAYS = 364        # 52 weeks
+WDAY_WINDOW_DAYS = 364
 
 
 class AggregateLevel:
-    """
-    The bottom panel summed onto a named hierarchy level.
-
-    level = "item"        3,049 groups  (one item across all 10 stores)
-    level = "item_state"  9,147 groups
-    level = "store_dept"     70 groups
-    """
 
     LEVEL_KEYS = {
         "item": ["item_id"],
@@ -80,13 +39,11 @@ class AggregateLevel:
         self.group_of_series = codes.astype(np.int32)
         self.n_groups = len(uniques)
 
-        # --- aggregated sales ------------------------------------------
         n_days = data.sales_wide.shape[1]
         self.sales_wide = np.zeros((self.n_groups, n_days), dtype=np.float32)
         np.add.at(self.sales_wide, self.group_of_series,
                   data.sales_wide.astype(np.float32))
 
-        # --- group metadata (first member's hierarchy codes) ------------
         first_row = (pd.Series(np.arange(len(meta)))
                      .groupby(self.group_of_series).first().to_numpy())
         self.meta = pd.DataFrame({
@@ -99,10 +56,6 @@ class AggregateLevel:
         self.members_per_group = np.bincount(
             self.group_of_series, minlength=self.n_groups).astype(np.float32)
 
-        # --- aggregated price ------------------------------------------
-        # Mean sell_price over the members that HAVE a price that week, plus the
-        # count of members listing it. Both are published in advance for the
-        # forecast weeks, exactly like the bottom-level price.
         if data.price_wide is not None:
             pw = data.price_wide
             priced = ~np.isnan(pw)
@@ -117,14 +70,9 @@ class AggregateLevel:
             self.price_wide = None
             self.n_priced = None
 
-        # --- SNAP at aggregate level -----------------------------------
-        # An item-level group spans three states, so no single state flag
-        # applies. The number of states with SNAP active that day is the
-        # aggregate-level analogue, and is equally known in advance.
         snap = data.calendar[["snap_CA", "snap_TX", "snap_WI"]].to_numpy(np.int8)
         self.snap_count = snap.sum(axis=1).astype(np.int8)
 
-        # --- event codes ------------------------------------------------
         self.event_codes = {}
         for col in ["event_name_1", "event_type_1", "event_name_2", "event_type_2"]:
             vals = sorted(data.calendar[col].dropna().unique())
@@ -132,7 +80,6 @@ class AggregateLevel:
             self.event_codes[col] = (data.calendar[col].map(m).fillna(0)
                                      .to_numpy(np.int16))
 
-        # --- first-ever sale (masked at the origin when used) -----------
         has_any = (self.sales_wide > 0).any(axis=1)
         self.first_sale_idx_full = np.where(
             has_any, np.argmax(self.sales_wide > 0, axis=1), 10 ** 6).astype(np.int32)
@@ -156,12 +103,10 @@ def _shrink(ratio: np.ndarray, volume: np.ndarray, k: float = SHRINK_K) -> np.nd
 
 
 class AggFeatureBuilder:
-    """Leakage-safe direct-28-day feature frames for one AggregateLevel."""
 
     def __init__(self, agg: AggregateLevel):
         self.a = agg
 
-    # ------------------------------------------------------------------
     def _demand(self, origin: int) -> dict[str, np.ndarray]:
         s = self.a.sales_wide
         out = {}
@@ -181,15 +126,7 @@ class AggFeatureBuilder:
                 np.nan).astype(np.float32)
         return out
 
-    # ------------------------------------------------------------------
     def _wday_ratio(self, origin: int) -> np.ndarray:
-        """
-        Per-group weekday profile over the trailing 52 weeks, shrunk toward 1.
-
-        At bottom level this family was validated across four windows and three
-        seeds (Experiments #72-#74). At aggregate level it is estimated from ~10x
-        the counts, so it is strictly better determined here than there.
-        """
         s = self.a.sales_wide
         a = max(0, origin + 1 - WDAY_WINDOW_DAYS)
         blk = s[:, a:origin + 1].astype(np.float64)
@@ -205,7 +142,6 @@ class AggFeatureBuilder:
                                           blk[:, m].mean(axis=1) / overall, 1.0)
         return _shrink(prof, vol)
 
-    # ------------------------------------------------------------------
     def _price(self, origin: int, target_days: np.ndarray):
         a = self.a
         if a.price_wide is None:
@@ -222,7 +158,6 @@ class AggFeatureBuilder:
         weeks = a.day_to_week[target_days]
         return recent, a.price_wide[:, weeks].T, a.n_priced[:, weeks].T
 
-    # ------------------------------------------------------------------
     def build_origin_frame(self, origin_idx: int, horizon: int = config.HORIZON,
                            include_target: bool = True) -> pd.DataFrame:
         a = self.a
@@ -238,7 +173,6 @@ class AggFeatureBuilder:
             "horizon": np.repeat(np.arange(1, horizon + 1, dtype=np.int8), n),
         }
 
-        # --- calendar (target-day) --------------------------------------
         for name, arr in [
             ("wday", cal["wday"].to_numpy(np.int16)),
             ("month", cal["month"].to_numpy(np.int16)),
@@ -252,28 +186,23 @@ class AggFeatureBuilder:
         ]:
             cols[name] = np.repeat(arr[target_days], n)
 
-        # --- demand (origin-relative) -----------------------------------
         for name, arr in self._demand(origin_idx).items():
             cols[name] = np.tile(arr, horizon)
 
-        # --- weekday shape ----------------------------------------------
         prof = self._wday_ratio(origin_idx)
         wd_t = cal["wday"].to_numpy()[target_days]
         cols["wday_ratio_52w"] = np.concatenate(
             [prof[:, w].astype(np.float32) for w in wd_t])
 
-        # --- recency ------------------------------------------------------
         first = np.where(a.first_sale_idx_full <= origin_idx,
                          a.first_sale_idx_full, NOT_YET)
         dsf = np.where(first >= 0, origin_idx - first, NOT_YET).astype(np.float32)
         cols["days_since_first_sale"] = np.tile(dsf, horizon)
 
-        # --- hierarchy ----------------------------------------------------
         for c in ("item_code", "dept_code", "cat_code"):
             cols[c] = np.tile(a.meta[c].to_numpy(np.int16), horizon)
         cols["n_members"] = np.tile(a.members_per_group, horizon)
 
-        # --- price ---------------------------------------------------------
         recent, price_t, npriced_t = self._price(origin_idx, target_days)
         cols["recent_avg_price"] = np.tile(recent, horizon)
         cols["sell_price"] = price_t.astype(np.float32).ravel()
@@ -294,22 +223,15 @@ class AggFeatureBuilder:
 
 
 AGG_FEATURES = [
-    # calendar (target-day)
     "wday", "month", "year", "is_weekend", "snap_count",
     "event_name_1", "event_type_1", "event_name_2", "event_type_2",
-    # demand (origin-relative)
     "lag_1", "lag_7", "lag_14", "lag_28",
     "rolling_mean_7", "rolling_mean_28", "rolling_mean_91",
     "rolling_std_7", "rolling_std_28", "momentum_28_91",
-    # shape
     "wday_ratio_52w",
-    # recency
     "days_since_first_sale",
-    # hierarchy
     "item_code", "dept_code", "cat_code", "n_members",
-    # price
     "sell_price", "recent_avg_price", "price_rel_to_recent_avg", "n_stores_priced",
-    # horizon
     "horizon",
 ]
 

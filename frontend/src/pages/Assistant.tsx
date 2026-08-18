@@ -14,11 +14,6 @@ interface Turn {
   pending: boolean
 }
 
-/**
- * Shown only when the status endpoint could not be read. The backend is the
- * source of truth for these — this exists so the explanatory panel still says
- * something true when the API is unreachable, not to duplicate policy.
- */
 const FALLBACK_REFUSALS: Record<string, string> = {
   modifying_forecasts: 'the model is frozen; no write path exists',
   price_what_if: 'the model uses price as context, not as a causal lever',
@@ -26,11 +21,6 @@ const FALLBACK_REFUSALS: Record<string, string> = {
   live_accuracy_claims: 'no ground truth exists for the delivered forecast window',
 }
 
-/**
- * Used only if /genai/suggestions fails while the assistant itself is up.
- * A prompt list is the difference between an obvious UI and an empty box, so it
- * should not disappear because one auxiliary request failed.
- */
 const FALLBACK_SUGGESTIONS_SERIES = [
   'Explain this forecast in plain language',
   'Is demand increasing, decreasing or stable?',
@@ -45,7 +35,6 @@ const FALLBACK_SUGGESTIONS_CHAIN = [
   'How does the model handle products that rarely sell?',
 ]
 
-/** `**bold**` → <strong>. Everything else stays literal text. */
 function inline(text: string) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
     part.startsWith('**') && part.endsWith('**') && part.length > 4
@@ -54,15 +43,6 @@ function inline(text: string) {
   )
 }
 
-/**
- * Renders an answer as paragraphs and bullet lists.
- *
- * The model writes light markdown — `* **Planning Range:** …` — despite being
- * told not to use headings. Rendering that as raw text put literal asterisks on
- * screen. This is a deliberately minimal renderer, not a markdown engine: bold
- * and bullets are what actually appears, and anything else is left as text
- * rather than interpreted.
- */
 function AnswerText({ text }: { text: string }) {
   const blocks: Array<{ type: 'p' | 'ul'; lines: string[] }> = []
   for (const raw of text.split('\n')) {
@@ -103,15 +83,6 @@ function AnswerText({ text }: { text: string }) {
   )
 }
 
-/**
- * AI Forecast Assistant.
- *
- * Deliberately framed as an analytical tool, not a chatbot: every answer shows
- * which data it was built from, how long it took, and whether every figure in it
- * traced back to that data. A failed grounding check is shown to the user rather
- * than hidden — an assistant that admits an unverifiable number is worth far
- * more than one that sounds confident.
- */
 export function Assistant() {
   const [params, setParams] = useSearchParams()
   const store = params.get('store')

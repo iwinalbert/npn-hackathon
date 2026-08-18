@@ -1,14 +1,3 @@
-"""
-Cross-platform task runner.
-
-    python tasks.py <command>
-
-`make` is not installed on the Windows machine this project is developed and
-demonstrated on, so the Makefile alone would strand the most important user.
-This runner exposes the same commands everywhere with no extra tooling.
-
-    python tasks.py help
-"""
 
 from __future__ import annotations
 
@@ -31,19 +20,10 @@ def _run(cmd: list[str], cwd: Path = ROOT) -> int:
 
 
 def build_db() -> int:
-    """Build the product database from the frozen research artefacts."""
     return _run([PY, str(BACKEND / "scripts" / "build_product_db.py")])
 
 
 def _whats_on(port: int) -> str | None:
-    """
-    Describe an API already listening on `port`, or None if it is free.
-
-    Worth the twenty lines: a *stale* API is far more confusing than no API. One
-    left running from before the assistant existed answers /health with 200 and
-    /genai/status with 404, so the app looks alive while the assistant page can
-    do nothing. Naming that on startup turns a puzzling 404 into a sentence.
-    """
     import json
     import urllib.error
     import urllib.request
@@ -64,18 +44,6 @@ def _whats_on(port: int) -> str | None:
 
 
 def _listener_pids(port: int) -> list[int]:
-    """
-    PIDs to stop in order to free `port`.
-
-    Includes the listener's *children*, because that is the failure this exists
-    for. `uvicorn --reload` binds the socket in a reloader parent and serves
-    from a spawned worker that inherits the handle. Kill the parent — close the
-    terminal, tear down a shell session — and on Windows the worker survives,
-    keeps the port, and keeps serving whatever code it loaded at startup. It
-    answers /health perfectly while missing every route added since, and netstat
-    still attributes the socket to the dead parent, so the obvious `taskkill`
-    reports "process not found".
-    """
     pids: list[int] = []
     if platform.system() == "Windows":
         out = subprocess.run(["netstat", "-ano"], capture_output=True,
@@ -100,7 +68,6 @@ def _listener_pids(port: int) -> list[int]:
 
 
 def stop_api() -> int:
-    """Free the API port (default 8000), including an orphaned --reload worker."""
     port = int(sys.argv[2]) if len(sys.argv) > 2 else 8000
 
     if not _whats_on(port) and not _listener_pids(port):
@@ -119,8 +86,6 @@ def stop_api() -> int:
                 ok = True
             except OSError:
                 ok = False
-        # A dead parent whose socket a child inherited is the normal case here,
-        # so "not found" is expected noise rather than a failure.
         print(f"  pid {pid}: {'stopped' if ok else 'already gone'}")
 
     time.sleep(1.5)
@@ -132,7 +97,6 @@ def stop_api() -> int:
 
 
 def api() -> int:
-    """Run the API on http://localhost:8000, or `api <port>`. Docs at /docs."""
     port = sys.argv[2] if len(sys.argv) > 2 else "8000"
 
     existing = _whats_on(int(port))
@@ -151,22 +115,14 @@ def api() -> int:
 
 
 def test() -> int:
-    """Run the backend test suite."""
     return _run([PY, "-m", "pytest"], cwd=BACKEND)
 
 
 def genai_check() -> int:
-    """Call the REAL Gemini API and check the guardrails hold (needs a key)."""
     return _run([PY, "-m", "pytest", "-m", "live", "-v"], cwd=BACKEND)
 
 
 def _overlays() -> list[str]:
-    """
-    The compose file list, assembled from flags on the command line.
-
-    Order is the contract: later `-f` files override earlier ones, so `--prod`
-    must come last or its hardening would be overwritten by the base file.
-    """
     files = ["-f", "docker-compose.yml"]
     if "--inference" in sys.argv:
         files += ["-f", "docker-compose.inference.yml"]
@@ -176,13 +132,6 @@ def _overlays() -> list[str]:
 
 
 def _compose(*args: str) -> int:
-    """
-    Run `docker compose`, or explain clearly why it cannot.
-
-    The failure mode this guards against is a bare "command not found", which
-    tells a new teammate nothing about what to install or what the alternative
-    is.
-    """
     import shutil
     if shutil.which("docker") is None:
         bar = "!" * 70
@@ -199,20 +148,14 @@ def _compose(*args: str) -> int:
 
 
 def docker_config() -> int:
-    """Validate and print the resolved compose configuration."""
     return _compose("config")
 
 
 def docker_build() -> int:
-    """Build the container images."""
     return _compose("build")
 
 
 def docker_up() -> int:
-    """Start the stack detached. Flags: --inference, --prod."""
-    # Preflight first. Starting a stack with no data layer produces a hang that
-    # looks like a Docker problem and is not one; catching it here costs a
-    # second and saves the twenty minutes of debugging it usually triggers.
     if preflight() != 0:
         print("\npreflight failed - not starting the stack "
               "(see the failures above)")
@@ -232,22 +175,18 @@ def docker_up() -> int:
 
 
 def docker_down() -> int:
-    """Stop the stack and remove its containers."""
     return _compose("down")
 
 
 def docker_logs() -> int:
-    """Follow container logs (Ctrl-C to stop)."""
     return _compose("logs", "-f", "--tail", "100")
 
 
 def docker_ps() -> int:
-    """Show container status and health."""
     return _compose("ps")
 
 
 def preflight() -> int:
-    """Pre-deploy checks: data layer, compose, build context, secrets."""
     cmd = [PY, str(ROOT / "infra" / "scripts" / "preflight.py")]
     if "--skip-data" in sys.argv:
         cmd.append("--skip-data")
@@ -257,15 +196,11 @@ def preflight() -> int:
 
 
 def smoke() -> int:
-    """Smoke-test a RUNNING stack. Flags: --prod, --skip-web, --api <url>."""
     cmd = [PY, str(ROOT / "infra" / "scripts" / "smoke_test.py")]
 
     if "--api" in sys.argv:
         cmd += ["--api-url", sys.argv[sys.argv.index("--api") + 1]]
     elif "--prod" in sys.argv:
-        # --prod unpublishes port 8000, so the API is reachable only through
-        # the frontend's proxy. Test it there rather than reporting a
-        # connection refused that is actually correct behaviour.
         cmd += ["--api-url", "http://localhost:8080"]
 
     for flag in ("--skip-web", "--skip-api", "--json"):
@@ -277,7 +212,6 @@ def smoke() -> int:
 
 
 def verify_integrity() -> int:
-    """Prove that no protected research artefact has changed."""
     script = (ROOT / "research" / "scripts" / "08_organization"
               / "61_integrity_manifest.py")
     rc = _run([PY, str(script), "after"])
@@ -285,7 +219,6 @@ def verify_integrity() -> int:
 
 
 def openapi() -> int:
-    """Write the OpenAPI schema to backend/openapi.json."""
     sys.path.insert(0, str(BACKEND))
     import json
 
@@ -298,8 +231,6 @@ def openapi() -> int:
 
 
 def _npm(*args: str) -> int:
-    """Run npm in the frontend directory. Uses shell=True on Windows because
-    npm ships as npm.cmd there and is not directly executable otherwise."""
     cmd = ["npm", *args]
     if platform.system() == "Windows":
         print(f"$ {' '.join(cmd)}   (in {FRONTEND})", flush=True)
@@ -308,11 +239,7 @@ def _npm(*args: str) -> int:
 
 
 def ui() -> int:
-    """Run the frontend dev server on :5173, or `ui <api_port>` to proxy elsewhere."""
     if len(sys.argv) > 2:
-        # Set it here rather than telling the user to prefix the command: the
-        # `VAR=value cmd` form is bash-only and silently fails in PowerShell,
-        # which is the shell this project is actually demonstrated in.
         target = f"http://127.0.0.1:{int(sys.argv[2])}"
         os.environ["VITE_DEV_API_TARGET"] = target
         print(f"proxying /api to {target}")
@@ -320,22 +247,18 @@ def ui() -> int:
 
 
 def ui_build() -> int:
-    """Build the production frontend bundle into frontend/dist."""
     return _npm("run", "build")
 
 
 def ui_test() -> int:
-    """Run the frontend test suite."""
     return _npm("run", "test")
 
 
 def ui_install() -> int:
-    """Install frontend dependencies."""
     return _npm("ci")
 
 
 def verify_all() -> int:
-    """Run every check: backend tests, frontend tests, build, integrity."""
     steps = [
         ("backend tests", test),
         ("frontend tests", ui_test),
@@ -357,7 +280,6 @@ def verify_all() -> int:
 
 
 def clean_db() -> int:
-    """Delete the product database. It is always rebuildable."""
     removed = 0
     for p in (BACKEND / "data").glob("product.duckdb*"):
         p.unlink()
@@ -394,7 +316,7 @@ COMMANDS = {
 
 
 def help_() -> int:
-    print(__doc__.strip())
+    print((__doc__ or "tasks.py -- project task runner").strip())
     print("\nCommands:")
     width = max(len(k) for k in COMMANDS)
     for name, fn in COMMANDS.items():

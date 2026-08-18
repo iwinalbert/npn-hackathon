@@ -1,48 +1,3 @@
-"""
-EXPERIMENT #82 — THE SAME RECONCILIATION WITH A DEPLOYABLE, PER-ORIGIN alpha.
-
-The champion is not touched. Every artefact this writes is new.
-
-WHY A SECOND PROTOCOL
----------------------
-Experiment #81 held alpha at the value that minimised RMSE on ONE window
-(origin d_1885). Experiment #80c then showed that window is atypical: the
-champion over-forecasts it by +0.0817 units per row, whereas on the primary
-window it is calibrated. A constant tuned on an outlier is a weak constant, and
-that is a property of the PROTOCOL, not of the method.
-
-There is a strictly better protocol available, and it costs nothing in
-leakage-safety. At any forecast origin T the 28 days ending at T are fully
-observed, so alpha can be selected on the window (T-28, T] and applied to
-(T, T+28]. That is a complete, deployable rule: at the real forecast origin
-d_1941 the selection window is d_1914..d_1941, which is exactly the data a
-practitioner standing on 2016-05-22 would have. No evaluation day is ever used
-to choose anything.
-
-This is pre-registered as a SEPARATE hypothesis with its own criteria, and both
-experiments are reported side by side, whichever way each falls. Reporting only
-the protocol that happened to win would be the failure mode this whole branch
-exists to avoid.
-
-WHAT IS FIXED IN ADVANCE (from #80/#80b/#80c, all inner-window)
----------------------------------------------------------------
-  level              item (3,049 groups)
-  aggregate model    LightGBM L2, 30 features, 30 training origins
-  correction form    forecast-proportions top-down, shrunk by alpha
-  variants           FULL and DEMEANED, as in #81
-  alpha              NOT fixed — selected on each origin's preceding window
-
-PRE-REGISTERED ACCEPTANCE CRITERIA
-----------------------------------
-  K1  wins on RMSE in at least 3 of the 4 windows
-  K2  mean window dRMSE <= -0.005
-  K3  mean window high-volume RMSE does not worsen
-  K4  the selected alphas are stable — max minus min across windows <= 0.40.
-      A rule whose parameter swings across the grid is not a rule.
-  K5  MECHANISM: the item-level model beats the bottom-up sum in >=3 of 4
-
-    python scripts/07_usecase11/59_exp82_adaptive_alpha.py
-"""
 
 from __future__ import annotations
 
@@ -80,7 +35,6 @@ def banner(t):
 
 
 def window_pieces(data, origin, seed=config.RANDOM_SEED):
-    """Champion blend, item-level truth/bottom-up/model forecast, as matrices."""
     champ = champion_predictions(data, origin, seed=seed)
     days = np.sort(np.unique(champ["target_day_idx"]))
     pos = {d: i for i, d in enumerate(days)}

@@ -5,13 +5,6 @@ import { PipelineDiagram } from '../components/diagrams'
 import { Async, Badge, Card, Explain, Metric } from '../components/ui'
 import { compact, nf, pct } from '../lib/format'
 
-/**
- * The 30-second page.
- *
- * An evaluator opening this should immediately learn: what is forecast, over
- * what horizon, on what data, by which model, and how well it performs — with
- * every number sourced from the API and explained in one plain sentence.
- */
 export function Overview() {
   const model = useModelCard()
   const prov = useProvenance()

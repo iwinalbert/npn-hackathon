@@ -1,11 +1,3 @@
-"""
-Builds reports/FINAL_ML_RESULTS_REPORT.md and .pdf — the whole project in one place.
-
-Reads only executed results. Nothing is typed in by hand except the team's
-reported figures, which are labelled as theirs throughout.
-
-    python scripts/24_final_results_report.py
-"""
 
 from __future__ import annotations
 
@@ -40,7 +32,6 @@ def cload(n):
     return pd.read_csv(p) if p.exists() else None
 
 
-# Human labels + which phase produced each result.
 META = {
     "opt_05_recursive": ("Recursive forecasting", "5", "REJECTED — gain inside noise, MAE +0.040"),
     "opt_00_baseline_reproduce": ("Global LightGBM + Tweedie (32 features)", "1", "**SELECTED**"),
@@ -106,7 +97,6 @@ def main():
     Ad("---")
     Ad("")
 
-    # ---------------- headline ----------------
     Ad("## The result in one paragraph")
     Ad("")
     Ad(f"We built a leakage-verified forecasting pipeline for 30,490 store-item "
@@ -120,7 +110,6 @@ def main():
        "thing it produced was the measurement that explains why.")
     Ad("")
 
-    # ---------------- scorecard ----------------
     Ad("## FINAL SCORECARD")
     Ad("")
     Ad("Every leakage-safe model, ranked by RMSE on the identical validation "
@@ -145,7 +134,6 @@ def main():
        f"*{TEAM_MAE}* | *—* | *—* | *methodology unknown* |")
     Ad("")
 
-    # ---------------- recommendations ----------------
     Ad("## Recommendation")
     Ad("")
     Ad("| Question | Answer | Why |")
@@ -169,7 +157,6 @@ def main():
        "(~112s), explainable, and the most robust across windows. |")
     Ad("")
 
-    # ---------------- why ----------------
     Ad("## Why the final model was selected")
     Ad("")
     if sel:
@@ -184,7 +171,6 @@ def main():
            "it cost 0.0398 MAE — roughly thirteen times larger than the gain.")
     Ad("")
 
-    # ---------------- the campaign ----------------
     Ad("## What the optimization campaign actually found")
     Ad("")
     Ad("### Successful experiments")
@@ -229,7 +215,6 @@ def main():
        "origin | earlier |")
     Ad("")
 
-    # ---------------- the big finding ----------------
     Ad("## The most important measurement in the project")
     Ad("")
     if rbs is not None and rb is not None:
@@ -266,7 +251,6 @@ def main():
            f"variation — and the team's validation window is unknown.")
     Ad("")
 
-    # ---------------- team comparison ----------------
     Ad("## Comparison with the team benchmark")
     Ad("")
     Ad("| | Team | Ours |")
@@ -291,7 +275,6 @@ def main():
        "reason to ask five specific questions, not a verdict.")
     Ad("")
 
-    # ---------------- methodology ----------------
     Ad("## Validation and leakage methodology")
     Ad("")
     Ad("| Block | Days | Dates |")
@@ -312,7 +295,6 @@ def main():
        "rather than inherited on trust.")
     Ad("")
 
-    # ---------------- features ----------------
     if imp is not None:
         Ad("## Strongest features")
         Ad("")
@@ -328,7 +310,6 @@ def main():
            "fourteen new candidates could not move the score.")
     Ad("")
 
-    # ---------------- forecast ----------------
     Ad("## Final 28-day forecast")
     Ad("")
     if sel:
@@ -350,7 +331,6 @@ def main():
        "only honest estimate of its quality.")
     Ad("")
 
-    # ---------------- novelty ----------------
     Ad("## What happened to the original novelty")
     Ad("")
     Ad("The project's proposed novelty was *Listing-Aware + Recency-Aware Demand "
@@ -372,7 +352,6 @@ def main():
        "chain of hypotheses that were tested and dropped on evidence.")
     Ad("")
 
-    # ---------------- limitations ----------------
     Ad("## Limitations")
     Ad("")
     Ad("- Results come from one primary window; Phase 9 shows other windows differ "
@@ -390,7 +369,6 @@ def main():
        "place rather than silently dropped mid-campaign.")
     Ad("")
 
-    # ---------------- presentation ----------------
     Ad("## How to present this in eight minutes")
     Ad("")
     Ad("1. **The problem** — 30,490 series, 28 days ahead, 68% of history is zeros.")

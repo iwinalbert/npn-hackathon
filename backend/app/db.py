@@ -1,28 +1,3 @@
-"""
-DuckDB access layer.
-
-THREE GUARANTEES THIS MODULE ENFORCES
--------------------------------------
-1. **Read-only.** The product database is opened with ``read_only=True`` and the
-   sidecar parquet files are only ever read. Nothing in the API can write to any
-   artefact, product-owned or research-owned.
-
-2. **No string-interpolated user input.** Every value is a bound parameter. The
-   only identifiers ever interpolated are module constants (``SAFE_LEVELS``) and
-   artefact paths from settings — never request data.
-
-3. **No baked absolute paths.** Sidecar locations are resolved from settings on
-   every call, so the same database file works on a laptop and in a container
-   with the data mounted anywhere. (DuckDB bakes absolute paths into view SQL,
-   which is why this API defines no views over external files.)
-
-CONCURRENCY
------------
-A DuckDB connection is not safe to share across threads, but ``con.cursor()``
-returns an independent handle onto the same database. FastAPI runs sync route
-handlers in a threadpool, so each request takes its own cursor from one shared
-read-only connection.
-"""
 
 from __future__ import annotations
 
@@ -35,8 +10,6 @@ import duckdb
 from .config import settings
 from .errors import ServiceUnavailable
 
-# --- identifier whitelists --------------------------------------------------
-# Anything a request can influence must appear here, or it cannot reach SQL.
 
 SAFE_LEVELS: dict[str, list[str]] = {
     "total": [],
@@ -67,14 +40,12 @@ _conn: duckdb.DuckDBPyConnection | None = None
 
 
 class DatabaseUnavailable(ServiceUnavailable):
-    """The product data layer has not been built, or is not readable."""
 
     def __init__(self, message: str, **ctx):
         super().__init__(message, remedy="python tasks.py build-db", **ctx)
 
 
 def history_source() -> str:
-    """SQL fragment for the history sidecar, resolved fresh from settings."""
     p = Path(settings.history_parquet)
     if not p.exists():
         raise DatabaseUnavailable(f"history sidecar not found at {p}")
@@ -82,7 +53,6 @@ def history_source() -> str:
 
 
 def backtest_source() -> str:
-    """SQL fragment for the backtest sidecar, resolved fresh from settings."""
     p = Path(settings.backtest_parquet)
     if not p.exists():
         raise DatabaseUnavailable(f"backtest sidecar not found at {p}")
@@ -90,7 +60,6 @@ def backtest_source() -> str:
 
 
 def get_connection() -> duckdb.DuckDBPyConnection:
-    """The shared read-only connection, opened lazily on first use."""
     global _conn
     if _conn is None:
         with _lock:
@@ -116,7 +85,6 @@ def close_connection() -> None:
 
 
 def query(sql: str, params: list[Any] | None = None) -> list[dict[str, Any]]:
-    """Run a parameterised query and return a list of dicts."""
     cur = get_connection().cursor()
     try:
         rel = cur.execute(sql, params or [])
@@ -132,7 +100,6 @@ def query_one(sql: str, params: list[Any] | None = None) -> dict[str, Any] | Non
 
 
 def validate_level(level: str) -> list[str]:
-    """Map a level name to its grouping columns, or raise."""
     if level not in SAFE_LEVELS:
         raise ValueError(
             f"unknown level '{level}'. Valid levels: {sorted(SAFE_LEVELS)}")
@@ -140,12 +107,6 @@ def validate_level(level: str) -> list[str]:
 
 
 def health() -> dict[str, Any]:
-    """
-    Readiness detail: which artefacts exist, which are queryable, row counts.
-
-    Never raises — readiness must be able to report a broken state rather than
-    become one.
-    """
     out: dict[str, Any] = {
         "data_dir": str(settings.data_dir),
         "artefacts": {},

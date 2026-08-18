@@ -1,4 +1,3 @@
-"""Hierarchy navigation, coherent aggregation and search."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Query
@@ -59,7 +58,6 @@ def aggregate(
     }
     if history_days:
         hist = svc.aggregate_history(level, node_id, history_days)
-        # the service already returns ascending day_idx
         out["history"] = [{"date": str(h["date"])[:10],
                            "day_idx": int(h["day_idx"]),
                            "sales": int(h["sales"])} for h in hist]

@@ -1,53 +1,3 @@
-"""
-USE CASE 11 / STEP 3 — THE EXACT ACCURACY AN AGGREGATE MODEL MUST REACH.
-
-READ-ONLY. Trains nothing. Writes uc11_aggregate_model_target.json.
-
-Step 2 expressed the requirement as an abstract "fraction of the discrepancy
-recovered". This step converts it into the only number that can be checked
-against a real model: an RMSE at the aggregate level.
-
-THE ALGEBRA
------------
-Reconcile by pushing an aggregate correction down in proportion to each member's
-own forecast (forecast-proportions top-down), scaled by a shrinkage alpha:
-
-    P'_s = P_s + alpha * (P_s / F) * Dhat        Dhat = Ahat - F
-
-Write e_s = Y_s - P_s, and per group-day
-
-    c = sum_s e_s * (P_s / F)        k = sum_s (P_s / F)^2
-
-Then the change in bottom-level squared error is exactly
-
-    dSSE(alpha) = -2*alpha * sum(c * Dhat) + alpha^2 * sum(k * Dhat^2)
-
-With a perfect aggregate (Dhat = D = A - F) this is the oracle. With a real
-aggregate forecast Ahat = A - eta, and treating eta as uncorrelated with the
-bottom-up discrepancy,
-
-    sum(c * Dhat) -> sum(c * D)          (unchanged in expectation)
-    sum(k * Dhat^2) -> sum(k * D^2) + sum(k) * var(eta)
-
-so at alpha = 1 the break-even condition is
-
-    var(eta) < ( 2*sum(c*D) - sum(k*D^2) ) / sum(k)
-
-which is a hard RMSE target for the aggregate model. With alpha fitted, the
-expected gain is -(sum(c*D))^2 / (sum(k*D^2) + sum(k)*var(eta)), which is
-negative for ANY var(eta) — shrinkage cannot lose in expectation, it only
-shrinks the prize.
-
-CAVEAT, STATED UP FRONT
------------------------
-"eta uncorrelated with D" is optimistic. A real item-level model and the
-bottom-up sum both miss the same demand shocks, so their errors are positively
-correlated, which lowers sum(c*Dhat) below sum(c*D). This step therefore
-produces a NECESSARY condition, not a sufficient one — a model that fails the
-target here cannot help, a model that passes it still has to be measured.
-
-    python scripts/07_usecase11/52_aggregate_model_target.py
-"""
 
 from __future__ import annotations
 
@@ -110,7 +60,6 @@ def main():
         np.add.at(F, g, P)
         D = A - F
 
-        # shares P_s / F, guarded where the group forecast is ~0
         Fg = F[g]
         share = np.where(Fg > 1e-9, P / np.where(Fg > 1e-9, Fg, 1.0), 0.0)
 
@@ -124,18 +73,14 @@ def main():
         S_k = float(k.sum())
         n_gd = n_g * len(days)
 
-        # oracle at alpha = 1 and at the optimal alpha
         d_sse_1 = -2 * S_cD + S_kD2
         alpha_star = S_cD / S_kD2 if S_kD2 > 0 else 0.0
         d_sse_star = -(S_cD ** 2) / S_kD2 if S_kD2 > 0 else 0.0
 
-        # break-even noise variance at alpha = 1
         var_max = (2 * S_cD - S_kD2) / S_k if S_k > 0 else 0.0
         rmse_target = float(np.sqrt(max(var_max, 0.0)))
         bu_rmse = metrics.rmse(A.ravel(), F.ravel())
 
-        # what the gain would be for a model at various aggregate RMSEs,
-        # with alpha fitted (the shrinkage form, which cannot lose)
         curve = []
         for mult in (1.0, 0.95, 0.9, 0.85, 0.8, 0.7, 0.6, 0.5):
             var_eta = (bu_rmse * mult) ** 2

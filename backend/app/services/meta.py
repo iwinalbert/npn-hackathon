@@ -1,18 +1,3 @@
-"""
-Model card and the capability matrix.
-
-THE CAPABILITY MATRIX IS A PRODUCT FEATURE, NOT A DISCLAIMER
-------------------------------------------------------------
-The research phase ran 86 experiments and rejected most of the techniques Use
-Case 11's wording might tempt a team to claim: hierarchical reconciliation,
-Croston/SBA/TSB, promotion modelling, segmentation. Hiding that and implying the
-product does everything would be both dishonest and, on inspection, obviously
-thin.
-
-Shipping the rejections *with their measured numbers* is stronger: it shows the
-use case was engaged with scientifically. Every entry below traces to a recorded
-experiment, and nothing is asserted that the evidence does not support.
-"""
 
 from __future__ import annotations
 
@@ -39,14 +24,6 @@ def model_card() -> dict:
 
 @ttl_cache()
 def capabilities() -> dict:
-    """
-    What this system genuinely does, what research rejected, and what it cannot do.
-
-    Categories:
-      implemented   — built, and backed by validated work
-      rejected      — investigated during research and turned down on evidence
-      not_supported — outside what the frozen model or the data can support
-    """
     implemented = [
         {"name": "28-day-ahead forecasts per store-item",
          "category": "implemented",
@@ -173,7 +150,6 @@ def capabilities() -> dict:
 
 @ttl_cache()
 def provenance() -> dict:
-    """Where every served number comes from."""
     card = model_card()
     counts = {}
     for t in ("series", "forecast", "calendar", "error_bands",

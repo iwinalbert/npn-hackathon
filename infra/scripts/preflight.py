@@ -1,24 +1,3 @@
-"""
-Pre-deploy checks. Everything here runs WITHOUT Docker.
-
-    python infra/scripts/preflight.py            # all checks
-    python infra/scripts/preflight.py --json     # machine-readable
-
-This is the gate that runs before a build, in CI and on a laptop. It answers one
-question: "if I run `docker compose up` right now, will it work, and will the
-image be the one I meant to ship?"
-
-It deliberately needs no Docker daemon, because the two failures it exists to
-catch are both invisible to a successful build:
-
-  * a MISSING DATA LAYER, which does not fail the build at all -- the API starts,
-    /ready reports not-ready, its healthcheck never passes, and the frontend
-    waits for service_healthy forever. That looks like a hang.
-  * a LEAKING BUILD CONTEXT, which does not fail the build either. It just
-    quietly ships gigabytes, or a secret, into an image layer.
-
-Exit code 0 = safe to build. 1 = at least one FAIL. WARNs never fail the run.
-"""
 
 from __future__ import annotations
 
@@ -36,9 +15,6 @@ ROOT = Path(__file__).resolve().parents[2]
 PASS, WARN, FAIL = "PASS", "WARN", "FAIL"
 
 
-# ---------------------------------------------------------------------------
-# result plumbing
-# ---------------------------------------------------------------------------
 @dataclass
 class Check:
     name: str
@@ -73,11 +49,6 @@ def section(title: str) -> Section:
     return s
 
 
-# ---------------------------------------------------------------------------
-# 1. product data layer
-# ---------------------------------------------------------------------------
-# Named separately from the size floors so a truncated download is caught too:
-# a 0-byte product.duckdb passes "exists" and fails everything afterwards.
 REQUIRED_DATA = {
     "product.duckdb": 5_000_000,
     "history.parquet": 5_000_000,
@@ -88,10 +59,6 @@ REQUIRED_DATA = {
 def check_data_layer(skip: bool = False) -> None:
     s = section("Product data layer")
     if skip:
-        # CI runners legitimately have no data layer: it is 130 MB, gitignored,
-        # and generated from frozen artefacts that are themselves not in git.
-        # Every other section still applies there, which is the point of the
-        # flag -- config checks are exactly what CI should be enforcing.
         s.warn("skipped", "--skip-data: not checked on this run")
         return
 
@@ -119,17 +86,12 @@ def check_data_layer(skip: bool = False) -> None:
         s.ok("total mounted at /data/product", f"{total / 1e6:,.1f} MB")
 
 
-# ---------------------------------------------------------------------------
-# 2. compose configuration
-# ---------------------------------------------------------------------------
 COMPOSE_FILES = [
     "docker-compose.yml",
     "docker-compose.inference.yml",
     "infra/compose/docker-compose.prod.yml",
 ]
 
-# A literal key here would mean the secret is in the repository. The only
-# acceptable form is compose interpolation from the host environment.
 SECRET_KEYS = ("GEMINI_API_KEY", "NPN_GEMINI_API_KEY")
 
 
@@ -167,14 +129,11 @@ def check_compose() -> None:
     services = base.get("services", {})
 
     for name, svc in services.items():
-        # Restart policy: without it a crashed container stays down silently.
         if svc.get("restart"):
             s.ok(f"{name}: restart policy", svc["restart"])
         else:
             s.fail(f"{name}: restart policy", "not set")
 
-        # Healthcheck: the frontend's depends_on condition is worthless without
-        # one on the API, and no orchestrator can route safely without it.
         if svc.get("healthcheck"):
             s.ok(f"{name}: healthcheck", "present")
         else:
@@ -197,14 +156,6 @@ def check_compose() -> None:
         if svc.get("network_mode") == "host":
             s.fail(f"{name}: network_mode", "host networking defeats isolation")
 
-    # Frozen artefacts and the product data layer must never be writable by the
-    # running system.
-    #
-    # Only the SOURCE side of a bind is inspected. Matching anywhere in the
-    # string is wrong: the container-side path `/research/...` also appears on
-    # the named scratch volumes, which are writable on purpose (they absorb the
-    # mkdir()s pipeline/config.py performs at import time). A named volume has
-    # no host path at all, so it is skipped rather than judged.
     protected_sources = ("./research/", "./backend/data")
     for rel, doc in docs.items():
         for name, svc in (doc.get("services") or {}).items():
@@ -213,7 +164,7 @@ def check_compose() -> None:
                     continue
                 src = vol.split(":", 1)[0]
                 if not src.startswith((".", "/")):
-                    continue                      # named volume, not a bind
+                    continue
                 if not src.startswith(protected_sources):
                     continue
                 if vol.endswith(":ro"):
@@ -221,16 +172,9 @@ def check_compose() -> None:
                 else:
                     s.fail(f"{rel} {name}: mount is writable", vol)
 
-    # The Gemini key must be interpolated, never literal.
     raw = "\n".join((ROOT / f).read_text(encoding="utf-8")
                     for f in COMPOSE_FILES if (ROOT / f).is_file())
-    # Strip ${...} spans first. Without this the check reports its own answer as
-    # a violation: `GEMINI_API_KEY: ${GEMINI_API_KEY:-}` contains a second,
-    # inner occurrence of the name followed by `:-}`, which looks literal.
     raw = re.sub(r"\$\{[^}]*\}", "", raw)
-    # [ \t]* rather than \s*: with the interpolation stripped the line is now
-    # `GEMINI_API_KEY:` with nothing after it, and \s* would cross the newline
-    # and match the next line's content as if it were the value.
     literal = [k for k in SECRET_KEYS
                if re.search(rf"{k}[ \t]*[:=][ \t]*(?!\$)\S+", raw)]
     if literal:
@@ -240,11 +184,6 @@ def check_compose() -> None:
         s.ok("secret interpolation", "GEMINI_API_KEY comes from the environment")
 
 
-# ---------------------------------------------------------------------------
-# 3. build context (.dockerignore simulation)
-# ---------------------------------------------------------------------------
-# The five paths the backend Dockerfile actually COPYs. If any is excluded the
-# build fails; if anything large or secret is INcluded, the image is wrong.
 REQUIRED_IN_CONTEXT = [
     "backend/requirements.txt",
     "backend/requirements-inference.txt",
@@ -258,18 +197,10 @@ FORBIDDEN_IN_CONTEXT = [
     "backend/data/product.duckdb",
 ]
 
-# Above this, something has leaked. The measured context is ~0.4 MB.
 CONTEXT_BUDGET_MB = 5.0
 
 
 def _pattern_to_regex(pat: str) -> re.Pattern[str]:
-    """
-    Translate one .dockerignore pattern into a regex.
-
-    Docker matches with Go's filepath.Match plus `**`. The rule that matters
-    most here is that a pattern matching a DIRECTORY excludes everything under
-    it, so `research/**` and `research` must both take the subtree.
-    """
     out, i = [], 0
     while i < len(pat):
         c = pat[i]
@@ -286,7 +217,6 @@ def _pattern_to_regex(pat: str) -> re.Pattern[str]:
         else:
             out.append(re.escape(c))
         i += 1
-    # Trailing: a match on the path itself also matches its children.
     return re.compile("^" + "".join(out) + "(/.*)?$")
 
 
@@ -307,7 +237,6 @@ def _parse_dockerignore(path: Path) -> list[tuple[bool, re.Pattern[str], str]]:
 
 
 def _included(rel: str, rules) -> bool:
-    """Last matching rule wins -- Docker's own semantics."""
     included = True
     for negate, rx, _ in rules:
         if rx.match(rel):
@@ -325,12 +254,8 @@ def check_build_context() -> None:
     rules = _parse_dockerignore(di)
     s.ok(".dockerignore", f"{len(rules)} rules")
 
-    # Any top-level directory with no rule at all leaks wholesale. This is the
-    # exact failure the allow-list is meant to prevent, and it reappears every
-    # time someone adds a new top-level folder.
     unruled = []
     for entry in sorted(ROOT.iterdir()):
-        # .git is the one directory Docker's builder handles itself.
         if not entry.is_dir() or entry.name == ".git":
             continue
         if _included(entry.name + "/probe", rules):
@@ -342,7 +267,6 @@ def check_build_context() -> None:
     else:
         s.ok("top-level coverage", "every top-level directory has a rule")
 
-    # Walk what would actually be sent, pruning subtrees nothing can re-include.
     negations = [lit for neg, _, lit in rules if neg]
     sent_files, sent_bytes = 0, 0
     for dirpath, dirnames, filenames in os.walk(ROOT):
@@ -354,7 +278,6 @@ def check_build_context() -> None:
             sub = f"{rel_dir}/{d}" if rel_dir else d
             if sub in {".git"}:
                 continue
-            # Descend only if something in the subtree could still be included.
             if _included(f"{sub}/probe", rules) or any(
                     n.startswith(sub) for n in negations):
                 keep.append(d)
@@ -391,9 +314,6 @@ def check_build_context() -> None:
             s.ok(f"forbidden: {rel}", "excluded")
 
 
-# ---------------------------------------------------------------------------
-# 4. secrets
-# ---------------------------------------------------------------------------
 def _git(*args: str) -> str:
     try:
         return subprocess.run(["git", *args], cwd=ROOT, capture_output=True,
@@ -418,8 +338,6 @@ def check_secrets() -> None:
     else:
         s.ok(".env files", "none tracked")
 
-    # Google API keys are AIza + 35 chars. Narrow on purpose: a broad
-    # "looks like a token" regex fires on every hash in the research tree.
     key_rx = re.compile(r"AIza[0-9A-Za-z_\-]{35}")
     hits = []
     for f in tracked:
@@ -443,9 +361,6 @@ def check_secrets() -> None:
                "absent -- the stack runs, the AI assistant reports unavailable")
 
 
-# ---------------------------------------------------------------------------
-# 5. images
-# ---------------------------------------------------------------------------
 DOCKERFILES = {
     "backend": "backend/Dockerfile",
     "frontend": "frontend/Dockerfile",
@@ -461,9 +376,6 @@ def check_dockerfiles() -> None:
             continue
         text = p.read_text(encoding="utf-8")
 
-        # An unpinned base image makes a build unreproducible between runs.
-        # `FROM base AS deps-api` refers to an earlier STAGE, not a registry
-        # image, so only external references are candidates for pinning.
         stages = {m.lower() for m in re.findall(r"\bAS\s+(\S+)", text, re.I)}
         bases = [b for b in re.findall(r"^FROM\s+(\S+)", text, re.M)
                  if b.lower() not in stages]
@@ -479,8 +391,6 @@ def check_dockerfiles() -> None:
             s.fail(f"{name}: HEALTHCHECK", "absent")
 
         if name == "backend":
-            # USER must precede CMD in every runtime stage, or the process runs
-            # as root regardless of the USER line existing somewhere above.
             for target in ("api", "full"):
                 m = re.search(rf"AS {target}\b(.*?)(?=^FROM |\Z)", text,
                               re.S | re.M)
@@ -498,9 +408,6 @@ def check_dockerfiles() -> None:
                     s.ok(f"backend: target {target} non-root", "USER app")
 
 
-# ---------------------------------------------------------------------------
-# 6. toolchain
-# ---------------------------------------------------------------------------
 def check_toolchain() -> None:
     s = section("Toolchain")
     import shutil
@@ -521,7 +428,6 @@ def check_toolchain() -> None:
             s.warn(tool, "not on PATH -- container/frontend steps unavailable")
 
 
-# ---------------------------------------------------------------------------
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--json", action="store_true", help="machine-readable output")

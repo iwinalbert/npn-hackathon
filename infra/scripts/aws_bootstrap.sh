@@ -60,10 +60,6 @@ else
 fi
 
 GHA_ROLE_NAME="${PROJECT}-github-deploy"
-# GitHub's sub claim is repo:{owner}@{owner_id}/{repo}@{repo_id}:ref:...
-# for accounts/repos GitHub has assigned immutable numeric IDs to (its
-# rename-hijack protection), not the plain owner/repo string most examples
-# assume -- both forms are matched here so this keeps working either way.
 TRUST_POLICY=$(cat <<EOF
 {
   "Version": "2012-10-17",

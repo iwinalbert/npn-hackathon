@@ -1,30 +1,3 @@
-"""
-The SHIPPED champion, reproduced on demand for any origin, with caching.
-
-NEW MODULE — READ-ONLY WITH RESPECT TO THE CHAMPION. It calls the existing
-components (features_v5, recursive, optimize) exactly as Experiments #74-#79 did
-and combines them at the shipped operating point. It defines no new modelling and
-changes no existing file. Its only purpose is that later experiments need the
-champion's per-row predictions on windows for which no prediction file was ever
-saved, and re-deriving them by copying a training loop into each new script is
-how reproductions drift.
-
-THE SHIPPED CONFIGURATION  (Experiments #74, #76, #77, #79)
------------------------------------------------------------
-    member A   DIRECT   LightGBM tweedie(1.1), 38 features (CHAMPION_FEATURES),
-                        400 rounds, 15 origins x 28 days
-    member B'  RECURSIVE LightGBM tweedie(1.1), 32 features
-                        (REC_COLS + the six shape/cycle features), one-step,
-                        rolled forward 28 times
-    blend      P = clip(0.60 * A + 0.40 * B', 0, None)
-
-w = 0.60 was selected on an inner window (origin d_1885) in Experiment #77 and is
-a fixed constant here — it is never re-fitted.
-
-Primary window (origin d_1913, targets d_1914-d_1941), seed 42:
-    RMSE 2.0929394   MAE 1.0395172
-which is the number every candidate in this branch is measured against.
-"""
 
 from __future__ import annotations
 
@@ -41,13 +14,10 @@ from .features_v2 import FeatureBuilderV2
 from .features_v4 import V4_FEATURES
 from .features_v5 import FeatureBuilderV5, CHAMPION_FEATURES, V5_FEATURES
 
-#: member B' feature list, exactly as Experiment #77 defined it
 REC_COLS_V5 = list(recursive.REC_COLS) + list(V4_FEATURES) + list(V5_FEATURES)
 
-#: the shipped blend weight, selected on an inner window in Experiment #77
 W_SHIPPED = 0.60
 
-#: recorded primary-window scores of the shipped configuration
 SHIPPED_RMSE = 2.0929394037324487
 SHIPPED_MAE = 1.0395171989061582
 
@@ -55,7 +25,6 @@ CACHE_DIR = config.PREDICTIONS_ROOT / "uc11_cache"
 
 
 class BlendSetup(optimize.Setup):
-    """optimize.Setup on the champion's 38-feature builder, reusing one M5Data."""
 
     def __init__(self, data, origin_idx, n_origins=optimize.N_ORIGINS):
         self.data = data
@@ -76,7 +45,6 @@ class BlendSetup(optimize.Setup):
 
 
 def fit_direct(setup, seed=config.RANDOM_SEED):
-    """Member A."""
     X, Y = optimize.build_matrix(setup, CHAMPION_FEATURES)
     booster, info = optimize.train(
         X, Y, CHAMPION_FEATURES,
@@ -89,7 +57,6 @@ def fit_direct(setup, seed=config.RANDOM_SEED):
 
 
 def fit_recursive(data, origin_idx, seed=config.RANDOM_SEED):
-    """Member B' — the upgraded recursive member, plus its leakage check."""
     booster, info = recursive.train_one_step(
         data, origin_idx, seed=seed,
         builder_cls=FeatureBuilderV5, cols=REC_COLS_V5)
@@ -105,14 +72,6 @@ def fit_recursive(data, origin_idx, seed=config.RANDOM_SEED):
 
 def champion_predictions(data, origin_idx, *, seed=config.RANDOM_SEED,
                          cache=True, verbose=True):
-    """
-    Reproduce the shipped champion on one origin.
-
-    Returns a dict with the two member forecasts, the blend, the truth and the
-    leakage checks. Results are cached under predictions/uc11_cache/ keyed by
-    origin and seed, because every experiment in this branch needs the same
-    baseline and each rebuild costs several minutes.
-    """
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
     path = CACHE_DIR / f"champion_blend_origin{origin_idx}_seed{seed}.csv"
     if cache and path.exists():

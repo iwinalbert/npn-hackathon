@@ -1,55 +1,3 @@
-"""
-EXPERIMENT #81 — FOUR-WINDOW VALIDATION OF ITEM-LEVEL RECONCILIATION.
-
-The champion is not touched. Every artefact this writes is new.
-
-WHAT IS BEING TESTED
---------------------
-    P'_s,d = clip( P_s,d + alpha * (P_s,d / F_i,d) * (Ahat_i,d - F_i,d), 0, None )
-
-where P is the shipped champion blend, F is its own bottom-up item-level sum and
-Ahat is an independently trained item-level (3,049 series) direct 28-day
-LightGBM. Algebraically this is a forecast-proportions top-down of the item
-level blended into the bottom-up forecast with weight alpha — i.e. textbook
-middle-out reconciliation, not a new model family.
-
-TWO VARIANTS, BOTH FIXED BEFORE THIS SCRIPT RUNS
-------------------------------------------------
-  FULL      the correction exactly as the item model produces it.  alpha = 0.55
-  DEMEANED  the same correction with its volume-weighted global component
-            divided out, so it can only redistribute BETWEEN items and can
-            never act as an overall rescale.                        alpha = 0.35
-
-Both alphas, the level (item), the objective (L2) and the feature set were
-selected on the inner window (origin d_1885) in Experiments #80/#80b/#80c. They
-are constants here and are not re-fitted on any evaluation window.
-
-WHY BOTH
---------
-Experiment #80c found the inner window is atypical: the champion over-forecasts
-it by +0.0817 units per row, whereas on the primary window it is calibrated
-(bias -0.0081). Two thirds of the inner window's -0.0160 was the item model
-happening to undo that level anomaly; the item-specific remainder was -0.0053.
-The FULL variant is still a legitimate, deployable forecast — the item model's
-level is its own honest output, not an oracle — but whether that level advantage
-generalises is exactly what four windows decide. DEMEANED isolates the
-cross-store channel and is the conservative reading.
-
-PRE-REGISTERED ACCEPTANCE CRITERIA  (fixed before the first run)
-----------------------------------------------------------------
-  H1  wins on RMSE in at least 3 of the 4 windows
-  H2  mean window dRMSE <= -0.005
-  H3  mean window high-volume RMSE does not worsen  (project rule: aggregate
-      gains must not come from easy low-volume rows)
-  H4  MECHANISM: the item-level model beats the bottom-up item-level sum in at
-      least 3 of 4 windows. Without this, any gain is not from the stated cause.
-  H5  the recursive member's structural leakage check passes on every window
-
-A variant is promotable only if all five hold. Both variants are reported in
-full either way, including any RMSE/MAE trade-off.
-
-    python scripts/07_usecase11/57_exp81_four_window_validation.py
-"""
 
 from __future__ import annotations
 
@@ -163,7 +111,6 @@ def evaluate_window(data, name, origin, seed=config.RANDOM_SEED):
             f"high-vol {d['highvol_RMSE']:.4f} ({d['dhighvol']:+.4f})")
 
         if name == "primary_spring_2016":
-            # volume-decile breakdown, on the window the project reports
             vol = hist[si]
             dec = pd.qcut(vol, 10, labels=False, duplicates="drop")
             rows = []
@@ -178,7 +125,6 @@ def evaluate_window(data, name, origin, seed=config.RANDOM_SEED):
                 rows[-1]["dRMSE"] = (rows[-1]["reconciled_RMSE"]
                                      - rows[-1]["champion_RMSE"])
             out[f"{tag}_deciles"] = rows
-            # occurrence diagnostics, same 0.5 rule the project uses
             act = yy > 0
             prd = pr_flat >= 0.5
             tp = float((act & prd).sum())

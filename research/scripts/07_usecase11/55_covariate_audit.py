@@ -1,49 +1,3 @@
-"""
-USE CASE 11 / REQUIREMENT 6 — EXTERNAL COVARIATE AUDIT.
-
-READ-ONLY. Trains nothing. Writes uc11_covariate_audit.json + two CSVs.
-
-Use Case 11 names three covariate families: PRICE, PROMOTION, HOLIDAY. This
-script answers, for each one, the six questions the brief asks:
-
-    1. is it available at the forecast origin?
-    2. is it available for all 28 future days?
-    3. is it known in advance, or would it have to be forecast itself?
-    4. is the current implementation leakage-safe?
-    5. does it actually improve performance?
-    6. does it improve all demand regimes, or only a subset?
-
-Questions 1-4 are answered structurally, by checking the raw files at the REAL
-forecast origin d_1941 — not the backtest origin — because that is where a
-missing future covariate would actually bite.
-
-Questions 5-6 are answered from the experiment record plus a residual-structure
-diagnostic run here: if the champion's residuals are already flat across
-discount depth, event days and SNAP days, then the covariate is being used
-adequately and a richer encoding of it has nothing left to explain. That test is
-the gate for the one covariate family the project has NOT yet represented
-explicitly.
-
-THE PROMOTION PROBLEM, STATED HONESTLY
---------------------------------------
-M5 contains NO promotion field. Nothing in calendar.csv, sales_train_*.csv or
-sell_prices.csv flags a promotion, a display, a feature ad or a coupon. The only
-observable that moves with a promotion is the price itself. The project already
-carries price_rel_to_recent_avg (price against its own trailing 8-week average)
-and tested three price-dynamics features in Experiment `opt_02_v2_C_price`
-(price_pct_change_1w, price_pct_change_4w, price_vs_origin_pct), which scored
-2.1281 against the then-champion's 2.1210 and were rejected.
-
-What has NOT been tested is the retail-standard promotion proxy: depth of
-discount against the product's own REGULAR price, defined as a long-run
-reference rather than a recent average. That is a different quantity from a
-week-on-week percentage change — a product held at a promotional price for six
-weeks shows zero week-on-week change while being 30% off its regular price. This
-script measures whether such a signal has any residual left to explain before
-anyone trains on it.
-
-    python scripts/07_usecase11/55_covariate_audit.py
-"""
 
 from __future__ import annotations
 
@@ -62,7 +16,7 @@ from pipeline.data_loader import M5Data
 
 PRED_FILE = config.PREDICTIONS_DIR / "exp_76_diversity_blend_validation.csv"
 OUT_JSON = config.ARTIFACTS_DIR / "uc11_covariate_audit.json"
-REF_WEEKS = 52          # window defining a product's "regular" price
+REF_WEEKS = 52
 
 
 def log(*a):
@@ -77,10 +31,9 @@ def main():
     banner("USE CASE 11 — EXTERNAL COVARIATE AUDIT (read-only)")
     data = M5Data()
     cal = data.calendar
-    origin = config.FINAL_FORECAST_ORIGIN_IDX          # d_1941, the REAL origin
-    future = origin + 1 + np.arange(config.HORIZON)    # d_1942 .. d_1969
+    origin = config.FINAL_FORECAST_ORIGIN_IDX
+    future = origin + 1 + np.arange(config.HORIZON)
 
-    # ------------------------------------------------------------------
     banner("A. AVAILABILITY AT THE REAL FORECAST ORIGIN (d_1941)")
     log(f"  forecast window: d_{future[0]+1}..d_{future[-1]+1}  "
         f"({cal['date'].iloc[future[0]].date()} .. {cal['date'].iloc[future[-1]].date()})")
@@ -91,7 +44,6 @@ def main():
                       ("event_name_2", "event_name_2"), ("event_type_2", "event_type_2"),
                       ("snap_CA", "snap_CA"), ("snap_TX", "snap_TX"), ("snap_WI", "snap_WI")]:
         block = cal[col].iloc[future]
-        # event columns are legitimately NaN on non-event days: absence is the value
         is_event = col.startswith("event_")
         n_present = int(len(block)) if is_event else int(block.notna().sum())
         avail[name] = {"days_covered": n_present, "of": int(config.HORIZON),
@@ -104,7 +56,6 @@ def main():
             extra = f"   events in window: {named if named else 'none'}"
         log(f"  {name:<14} {n_present}/{config.HORIZON} days{extra}")
 
-    # prices for the future weeks
     fweeks = np.unique(data.day_to_week[future])
     price_future = data.price_wide[:, fweeks]
     n_series_priced = int((~np.isnan(price_future)).all(axis=1).sum())
@@ -122,7 +73,6 @@ def main():
         f"ALL {len(fweeks)} future weeks  ({n_series_any} in at least one)")
     log(f"  promotion      0/{config.HORIZON} — NO PROMOTION FIELD EXISTS IN M5")
 
-    # ------------------------------------------------------------------
     banner("B. RESIDUAL STRUCTURE ON THE PRIMARY WINDOW")
     log("  If the champion's residuals are already flat across a covariate, that")
     log("  covariate has nothing left to explain and a richer encoding of it")
@@ -140,9 +90,6 @@ def main():
     w_origin = int(data.day_to_week[v_origin])
     tgt_week = data.day_to_week[t_idx]
 
-    # --- regular price = max over the 52 weeks ENDING AT THE ORIGIN -----
-    # Uses only weeks <= origin, so it is origin-relative and could not import
-    # a post-origin price even if prices were not published in advance.
     ref_block = data.price_wide[:, max(0, w_origin - REF_WEEKS + 1):w_origin + 1]
     with np.errstate(all="ignore"):
         regular = np.nanmax(ref_block.astype(np.float64), axis=1)
@@ -151,7 +98,6 @@ def main():
     with np.errstate(divide="ignore", invalid="ignore"):
         discount = np.where(reg_row > 0, 1.0 - price_now / reg_row, np.nan)
 
-    # --- how many weeks the current price has been unchanged, at the origin ---
     pw = data.price_wide
     same = np.ones(config.N_SERIES, dtype=np.int32)
     cur = pw[:, w_origin]
@@ -184,7 +130,6 @@ def main():
 
     all_rows = []
 
-    # --- discount depth --------------------------------------------------
     bins = np.array([-np.inf, -1e-9, 0.02, 0.05, 0.10, 0.20, 0.30, np.inf])
     lab = ["price >= regular", "0-2% off", "2-5% off", "5-10% off",
            "10-20% off", "20-30% off", "30%+ off"]
@@ -201,7 +146,6 @@ def main():
             f"{r['mean_pred']:>9.3f}{r['mean_residual']:>+9.3f}"
             f"{r['RMSE']:>9.3f}{r['share_of_sq_error_pct']:>9.2f}")
 
-    # --- weeks at current price -----------------------------------------
     wb = np.array([0, 1, 2, 4, 8, 16, 53])
     wcode = np.digitize(weeks_at_price, wb[1:-1], right=True).astype(float)
     wlab = {i: l for i, l in enumerate(
@@ -215,7 +159,6 @@ def main():
             f"{r['mean_pred']:>9.3f}{r['mean_residual']:>+9.3f}"
             f"{r['RMSE']:>9.3f}{r['share_of_sq_error_pct']:>9.2f}")
 
-    # --- events / holidays -------------------------------------------------
     ev1 = cal["event_name_1"].to_numpy()[t_idx]
     ev_flag = pd.notna(ev1).astype(float)
     log(f"\n  --- holiday / event days ---")
@@ -229,7 +172,6 @@ def main():
     named = pd.Series(ev1).dropna().unique().tolist()
     log(f"  events present in this window: {named}")
 
-    # --- SNAP -------------------------------------------------------------
     snap = data.snap_matrix[t_idx, data.snap_col_of_series[s_idx]].astype(float)
     log(f"\n  --- SNAP days (matched to each series' own state) ---")
     log(f"  {'bin':<20}{'n':>10}{'actual':>9}{'pred':>9}{'resid':>9}"
@@ -240,7 +182,6 @@ def main():
             f"{r['mean_pred']:>9.3f}{r['mean_residual']:>+9.3f}"
             f"{r['RMSE']:>9.3f}{r['share_of_sq_error_pct']:>9.2f}")
 
-    # ------------------------------------------------------------------
     banner("C. HOW MUCH IS A PERFECT DISCOUNT CORRECTION WORTH?")
     log("  Oracle: give the model the exact mean residual of every discount bin")
     log("  (an additive per-bin correction fitted on the evaluation window")

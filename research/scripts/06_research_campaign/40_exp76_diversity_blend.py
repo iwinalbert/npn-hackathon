@@ -1,79 +1,3 @@
-"""
-EXPERIMENT #76 — ARCHITECTURAL-DIVERSITY BLEND (direct + recursive).
-
-THE HYPOTHESIS
---------------
-The champion's remaining error is almost entirely variance, not bias: the error
-autopsy put the bias share of MSE at 0.11%. Variance is what averaging removes.
-
-Experiment #70 tried averaging and failed (2.1210 -> 2.1261, REJECTED). But it
-ensembled six DIRECT LightGBM models that differed only in Tweedie power, leaf
-count and seed. Their residuals correlated 0.9897, and five of the six were
-individually 0.010-0.038 RMSE worse than the champion. That experiment therefore
-tested "do near-copies of the champion help", not "does averaging help". Its
-failure is fully explained by member similarity and member quality, both of which
-are fixable.
-
-Diagnostic #76-D re-measured every model whose predictions are on disk against
-the NEW 38-feature champion. One stands out:
-
-    model                    RMSE     residual corr with champion
-    champion (direct, 38f) 2.1163                   1.000
-    recursive one-step     2.1182                   0.9529   <--
-    every other model      2.121-2.243              0.958-0.990
-
-The recursive model is a structurally different forecaster - one model that only
-ever predicts one day ahead, rolled forward 28 times on its own output - and it
-is the only model on disk that is both as accurate as the champion and materially
-decorrelated from it.
-
-For two forecasters with equal MSE sigma^2 and residual correlation rho, the
-equal-weight blend has MSE = sigma^2 (1 + rho) / 2. With sigma^2 = 4.4788 and
-rho = 0.9529 that predicts RMSE 2.0904. Measured on the saved predictions:
-2.0912. The arithmetic and the data agree, which is why this is worth a real
-experiment rather than another feature.
-
-THE COMBINATION RULE IS FIXED IN ADVANCE, NOT FITTED
-----------------------------------------------------
-    blend = 0.5 * champion + 0.5 * recursive
-
-w = 0.5 is chosen a priori, not tuned: for two members of near-identical MSE
-(2.1163 vs 2.1182) the variance-minimising weight is exactly 0.5 analytically.
-No parameter of this model is selected using validation data at any point. The
-full w-grid is reported per window as evidence, but it never feeds back into the
-configuration.
-
-PRE-REGISTERED ACCEPTANCE CRITERIA  (fixed before this script was first run)
----------------------------------------------------------------------------
-NEW CHAMPION requires ALL FOUR:
-  C1  blend beats the champion on RMSE in at least 3 of 4 windows
-  C2  mean window dRMSE <= -0.010
-        Stricter than #73's -0.003 on purpose. The free diagnostic predicts
-        -0.025 on the primary window; requiring at least 40% of that to survive
-        on unseen windows guards against the primary window being optimistic.
-  C3  blend beats the champion on at least 2 of 3 seeds on the primary window,
-      with BOTH members reseeded
-  C4  MECHANISM: mean member residual correlation across the 4 windows <= 0.97
-        This is the falsifiable part. The claim is that the gain comes from
-        architectural diversity. If the two architectures turn out to be ~0.99
-        correlated once retrained on other windows, the stated mechanism is
-        wrong and the result should not be trusted even if C1-C3 pass.
-
-NEGATIVE CONTROL (reported, not a gate)
-  champion(seed 42) blended with champion(seed 7) - same architecture, different
-  seed. If plain averaging were the whole story this control would gain as much
-  as the diversity blend. The gap between them is the part attributable to
-  architecture rather than to averaging.
-
-DISCLOSED COST (reported, deliberately NOT a gate)
-  The recursive member has MAE 1.0717 against the champion's 1.0287, so the
-  RMSE-optimal blend costs about +0.015 MAE. RMSE is this project's headline
-  metric and the criteria above are set on RMSE alone, but the trade-off is real
-  and the full w-frontier is reported so it is visible rather than buried. A
-  near-MAE-neutral point on that frontier is reported alongside.
-
-    python scripts/06_research_campaign/40_exp76_diversity_blend.py
-"""
 
 from __future__ import annotations
 
@@ -96,14 +20,12 @@ from pipeline.experiment import Experiment
 from pipeline.features_v5 import (FeatureBuilderV5, CHAMPION_FEATURES,
                                   CHAMPION_RMSE, CHAMPION_MAE)
 
-W_BLEND = 0.5                      # fixed a priori, never fitted
+W_BLEND = 0.5
 SEEDS = [42, 7, 202]
 W_GRID = np.round(np.arange(0.30, 1.001, 0.05), 2)
 
 
-# --------------------------------------------------------------------------
 class SharedSetup(optimize.Setup):
-    """optimize.Setup, but reusing one already-loaded M5Data across windows."""
 
     def __init__(self, data, origin_idx, n_origins=optimize.N_ORIGINS):
         self.data = data
@@ -128,7 +50,6 @@ def banner(t):
 
 
 def fit_direct(s, seed):
-    """Train the champion (direct, 38 features) and predict the window."""
     X, Y = optimize.build_matrix(s, CHAMPION_FEATURES)
     b, info = optimize.train(X, Y, CHAMPION_FEATURES,
                              params={"seed": seed, "bagging_seed": seed,
@@ -141,7 +62,6 @@ def fit_direct(s, seed):
 
 
 def fit_recursive(s, seed):
-    """Train the one-step model and roll it forward across the window."""
     b, info = recursive.train_one_step(s.data, s.origin_idx, seed=seed)
     p, work = recursive.recursive_forecast(s.data, b, s.origin_idx)
     checks = recursive.verify_no_future_leakage(s.data, work, s.origin_idx)
@@ -169,7 +89,6 @@ def w_frontier(pc, pr, y):
     return rows
 
 
-# --------------------------------------------------------------------------
 def main():
     t0 = time.time()
     R: dict = {"pre_registered": {
@@ -202,9 +121,7 @@ def main():
         "autumn_2015": idx("2015-10-01"),
     }
 
-    # ==================================================================
     banner("TEST A — CROSS-WINDOW (both members retrained from scratch per window)")
-    # ==================================================================
     rows, frontiers, leak = [], {}, {}
     primary_preds = None
     for wname, o in WINDOWS.items():
@@ -226,7 +143,6 @@ def main():
         b = blend(pc, pr)
         rb, mb = metrics.rmse(s.y, b), metrics.mae(s.y, b)
 
-        # variance-cancellation prediction from the two member MSEs and rho
         ec, er = pc - s.y, pr - s.y
         pred_mse = float(np.mean(((ec + er) / 2) ** 2))
         hv = metrics.rmse(s.y[s.high], b[s.high])
@@ -267,9 +183,7 @@ def main():
     print(f"  probability of {wins}/4 by chance if the blend were useless: "
           f"{[1,4,6,4,1][wins]/16:.3f}")
 
-    # ==================================================================
     banner("TEST B — SEED SENSITIVITY (primary window, both members reseeded)")
-    # ==================================================================
     s = primary_preds["s"]
     seed_rows = []
     seed_direct = {42: primary_preds["pc"]}
@@ -310,9 +224,7 @@ def main():
     print(f"\n  blend wins {seed_wins}/{len(SEEDS)} seeds   "
           f"mean dRMSE {S.dRMSE.mean():+.4f}")
 
-    # ==================================================================
     banner("NEGATIVE CONTROL — same architecture, different seed")
-    # ==================================================================
     print("  If plain averaging were the whole story, blending the champion with")
     print("  a reseeded champion would gain as much as blending it with a")
     print("  different architecture. This measures the difference.\n")
@@ -340,9 +252,7 @@ def main():
         "gain_attributable_to_architecture": div_gain - same_arch_gain,
     }
 
-    # ==================================================================
     banner("DISCLOSED COST — the RMSE / MAE frontier on the primary window")
-    # ==================================================================
     fr = pd.DataFrame(frontiers["primary_spring_2016"])
     base_r = metrics.rmse(s.y, pc42)
     base_m = metrics.mae(s.y, pc42)
@@ -357,9 +267,7 @@ def main():
               f"({mn.RMSE-base_r:+.4f})  MAE {mn.MAE:.4f} ({mn.MAE-base_m:+.4f})")
         R["mae_neutral_point"] = mn.to_dict()
 
-    # ==================================================================
     banner("DECISION")
-    # ==================================================================
     crit = {
         "C1_wins_at_least_3_of_4_windows": wins >= 3,
         "C2_mean_window_dRMSE_at_most_-0.010": mean_d <= -0.010,

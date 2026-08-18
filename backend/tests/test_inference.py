@@ -1,10 +1,3 @@
-"""
-The live-inference boundary.
-
-The verification run itself takes ~48 s, so it is marked `slow` and excluded
-from the default suite. Everything around it — availability reporting, the
-concurrency guard, job lifecycle, and the refusals — is always tested.
-"""
 import time
 
 import pytest
@@ -46,13 +39,6 @@ def test_job_runner_reports_its_own_limits(client):
 
 @pytest.mark.slow
 def test_verification_reproduces_the_frozen_forecast(client):
-    """
-    THE MODEL-SERVING PROOF.
-
-    Loads the frozen boosters, rebuilds features from the raw panel, re-runs
-    both members, blends at w=0.60 and compares against the shipped artefact.
-    Expected result: an exact match.
-    """
     status = client.get(f"{API}/inference/status").json()
     if not status["available"]:
         pytest.skip(f"inference unavailable: {status['reasons']}")
@@ -61,7 +47,6 @@ def test_verification_reproduces_the_frozen_forecast(client):
     assert r.status_code == 200
     job_id = r.json()["job_id"]
 
-    # a second submission while one is running must be refused, not queued
     assert client.post(f"{API}/inference/verify").status_code == 409
 
     deadline = time.time() + 300

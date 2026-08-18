@@ -1,16 +1,3 @@
-"""
-Stage 1 — ML pipeline foundation verification.
-
-Runs the whole foundation end to end and writes a machine-readable result file
-that the PDF report is then generated from. Nothing here trains a model.
-
-    python scripts/01_foundation_check.py
-
-Outputs:
-    artifacts/foundation_checks.json     every check, pass/fail, with detail
-    artifacts/sample_features.csv        a small human-inspectable feature sample
-    artifacts/feature_summary.csv        per-feature dtype / missingness / range
-"""
 
 from __future__ import annotations
 
@@ -49,9 +36,7 @@ def run(checks: list[vc.CheckResult]) -> None:
 def main() -> None:
     t_start = time.time()
 
-    # ------------------------------------------------------------------
     section("1. LOAD SOURCE DATA (read-only)")
-    # ------------------------------------------------------------------
     t0 = time.time()
     data = M5Data()
     load_secs = time.time() - t0
@@ -60,15 +45,11 @@ def main() -> None:
     RESULTS["data"] = data.describe()
     RESULTS["data"]["load_seconds"] = round(load_secs, 1)
 
-    # ------------------------------------------------------------------
     section("2. SOURCE DATA INTEGRITY")
-    # ------------------------------------------------------------------
     run(vc.check_data_integrity(data))
     run(vc.check_calendar_alignment(data))
 
-    # ------------------------------------------------------------------
     section("3. BACKTEST WINDOW DEFINITION")
-    # ------------------------------------------------------------------
     bt = Backtester(data)
     fb = bt.fb
     window = bt.make_window(config.VALIDATION_ORIGIN_IDX)
@@ -88,9 +69,7 @@ def main() -> None:
         f"{wdesc['validation_days']} ({wdesc['validation_dates']}) are real observed sales",
     )])
 
-    # ------------------------------------------------------------------
     section("4. BUILD VALIDATION FRAME (all 30,490 series x 28 days)")
-    # ------------------------------------------------------------------
     t0 = time.time()
     valid = bt.build_validation_frame(config.VALIDATION_ORIGIN_IDX)
     build_secs = time.time() - t0
@@ -108,9 +87,7 @@ def main() -> None:
     run(vc.check_feature_sanity(valid, data))
     run(vc.check_target_matches_source(valid, data, n_spot=500))
 
-    # ------------------------------------------------------------------
     section("5. LEAKAGE TEST — corrupt every post-origin sales value")
-    # ------------------------------------------------------------------
     print("  Overwriting all sales after the origin with 9999 and rebuilding...")
     t0 = time.time()
     run(vc.check_no_future_sales_leakage(data, config.VALIDATION_ORIGIN_IDX))
@@ -119,12 +96,7 @@ def main() -> None:
     section("6. FUTURE-COVARIATE TEST — prices/calendar SHOULD be usable")
     run(vc.check_future_covariates_are_used(data, config.VALIDATION_ORIGIN_IDX))
 
-    # ------------------------------------------------------------------
     section("7. TRAINING FRAME + TRAIN/VALIDATION SEPARATION")
-    # ------------------------------------------------------------------
-    # A modest series sample keeps this verification fast; the full training build
-    # happens in the modelling stage. The separation logic being tested is
-    # identical either way.
     rng = np.random.default_rng(config.RANDOM_SEED)
     sample_series = np.sort(rng.choice(config.N_SERIES, size=2000, replace=False))
 
@@ -161,9 +133,7 @@ def main() -> None:
         f"{dup} duplicate (series, origin, target_day) rows",
     )])
 
-    # ------------------------------------------------------------------
     section("7b. LISTING-AWARE FEATURE BEHAVIOUR ACROSS ORIGINS")
-    # ------------------------------------------------------------------
     probe_origins = [200, 700, 1400, config.VALIDATION_ORIGIN_IDX]
     listing_checks, listing_rows = vc.check_listing_feature_behaviour(data, probe_origins)
     print(pd.DataFrame(listing_rows).to_string(index=False))
@@ -171,9 +141,7 @@ def main() -> None:
     run(listing_checks)
     RESULTS["listing_feature_probe"] = listing_rows
 
-    # ------------------------------------------------------------------
     section("8. FUTURE-HORIZON FRAME (d_1942..d_1969) — no target expected")
-    # ------------------------------------------------------------------
     fut = bt.build_future_frame()
     print(f"  shape {fut.shape}")
     covered = {
@@ -201,13 +169,7 @@ def main() -> None:
                        f"{covered['price_present_pct']}% of future rows have a known sell_price"),
     ])
 
-    # ------------------------------------------------------------------
     section("9. METRIC PIPELINE SMOKE TEST  (NOT a model result)")
-    # ------------------------------------------------------------------
-    # These are trivial arithmetic rules with no fitting of any kind. Their only
-    # purpose is to prove the metric code runs on a real 853,720-row window and
-    # returns sane numbers. They are NOT baselines, NOT models, and MUST NOT be
-    # compared with the team's LightGBM+Tweedie benchmark.
     y_true = valid["sales"].to_numpy()
 
     smoke = {
@@ -233,9 +195,7 @@ def main() -> None:
         f"metrics computed over {smoke['predict_all_zeros']['n']:,} predictions",
     )])
 
-    # ------------------------------------------------------------------
     section("10. FEATURE INVENTORY")
-    # ------------------------------------------------------------------
     feat_cols = [c for c in all_feature_columns() if c in valid.columns]
     rows = []
     for grp, cols in FEATURE_GROUPS.items():
@@ -266,12 +226,9 @@ def main() -> None:
         "summary": rows,
     }
 
-    # ------------------------------------------------------------------
     section("11. WRITE ARTIFACTS")
-    # ------------------------------------------------------------------
     feat_summary.to_csv(config.ARTIFACTS_DIR / "feature_summary.csv", index=False)
 
-    # Human-inspectable sample: 3 series x all 28 horizon days, with real labels
     show_series = [0, 1500, 20000]
     samp = valid[valid["series_idx"].isin(show_series)].copy()
     samp.insert(1, "series_id", data.series_meta["id"].to_numpy()[samp["series_idx"]])
@@ -296,9 +253,7 @@ def main() -> None:
         json.dump(RESULTS, f, indent=2, default=str)
     print(f"  wrote {out_path.name}")
 
-    # ------------------------------------------------------------------
     section("RESULT")
-    # ------------------------------------------------------------------
     print(f"  {summary['passed']}/{summary['total_checks']} checks passed "
           f"in {RESULTS['runtime_seconds']}s")
     if summary["failed"]:

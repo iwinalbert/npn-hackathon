@@ -1,31 +1,3 @@
-"""
-The CHAMPION feature builder: 38 features (Experiments #72-#75).
-
-Until now this class lived inside the one-off script that created it
-(scripts/06_research_campaign/36_exp74_reproduce_and_extend.py). Every later
-experiment that wants to build on the champion needs it, so it is promoted here
-unchanged. The logic is copied verbatim from that script - this module adds no
-behaviour, it only gives the champion a permanent home.
-
-WHAT THE 38 FEATURES ARE
-------------------------
-    BASE32          the original champion feature set (features.py, groups A-G)
-    + V4_FEATURES   wday_ratio_52w, wday_ratio_13w, snap_lift, weekend_lift
-                    per-series WEEKLY shape - Experiment #72, validated in #73
-                    across 4 windows and 3 seeds
-    + V5_FEATURES   month_ratio, dom_ratio
-                    per-series month-of-year and day-of-month shape -
-                    Experiment #74 part B
-
-Measured on the primary window (d_1914-d_1941): RMSE 2.1157, MAE 1.0287.
-
-LEAKAGE
--------
-Inherited unchanged from FeatureBuilderV4: every ratio is computed from sales
-strictly at or before the forecast origin. The only target-day inputs are
-calendar facts (which month it is, which day of the month), published years in
-advance.
-"""
 
 from __future__ import annotations
 
@@ -36,12 +8,10 @@ from . import config
 from .features_v2 import BASE32
 from .features_v4 import FeatureBuilderV4, V4_FEATURES, _shrink
 
-# Two years of history where available, matching Experiment #74.
 CYCLE_WINDOW_DAYS = 728
 
 
 class FeatureBuilderV5(FeatureBuilderV4):
-    """V4 + per-series month-of-year and day-of-month profiles."""
 
     def _cycle_profiles(self, origin: int) -> dict:
         s = self.d.sales_wide
@@ -92,10 +62,8 @@ class FeatureBuilderV5(FeatureBuilderV4):
 
 V5_FEATURES = ["month_ratio", "dom_ratio"]
 
-#: The champion feature set, in the exact order Experiment #74 recorded it.
 CHAMPION_FEATURES = list(BASE32) + list(V4_FEATURES) + V5_FEATURES
 
-#: Measured champion scores on the primary window, for delta reporting.
 CHAMPION_RMSE = 2.1156930820206945
 CHAMPION_MAE = 1.0286892499701086
 

@@ -1,21 +1,8 @@
-"""
-Response schemas.
-
-These are the API's contract. They are deliberately explicit about provenance —
-several carry a `basis` or `disclaimer` field — because this product serves
-forecasts from a frozen research model and the difference between "the model
-predicted this" and "we measured this in backtest" must survive the trip to the
-UI. A field name that blurs the two would eventually become a misleading chart.
-"""
 
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-
-# --------------------------------------------------------------------------
-# meta
-# --------------------------------------------------------------------------
 
 class ModelCard(BaseModel):
     model_name: str
@@ -55,10 +42,6 @@ class CapabilityMatrix(BaseModel):
     not_supported: list[Capability]
 
 
-# --------------------------------------------------------------------------
-# hierarchy
-# --------------------------------------------------------------------------
-
 class LevelInfo(BaseModel):
     level: str
     label: str
@@ -87,10 +70,6 @@ class SeriesSummary(BaseModel):
     mean_daily_sales: float
     zero_pct: float
 
-
-# --------------------------------------------------------------------------
-# series detail
-# --------------------------------------------------------------------------
 
 class SeriesDetail(SeriesSummary):
     total_units: int
@@ -140,10 +119,6 @@ class SeriesHistoryResponse(BaseModel):
     to_date: str
 
 
-# --------------------------------------------------------------------------
-# aggregate forecast
-# --------------------------------------------------------------------------
-
 class AggregatePoint(BaseModel):
     date: str
     day_idx: int
@@ -166,10 +141,6 @@ class AggregateForecast(BaseModel):
         default=None,
         description="Measured accuracy at this aggregation level, if available")
 
-
-# --------------------------------------------------------------------------
-# health
-# --------------------------------------------------------------------------
 
 class HealthResponse(BaseModel):
     status: str

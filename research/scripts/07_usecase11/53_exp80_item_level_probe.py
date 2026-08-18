@@ -1,60 +1,3 @@
-"""
-EXPERIMENT #80 (PROBE) — CAN AN ITEM-LEVEL MODEL BEAT THE BOTTOM-UP SUM, AND
-DOES RECONCILING IT DOWNWARD IMPROVE THE STORE-ITEM FORECAST?
-
-RUN ENTIRELY ON THE INNER WINDOW (origin d_1885, targets d_1886..d_1913).
-
-WHY THE INNER WINDOW
---------------------
-This is a go/no-go probe. Deciding whether to proceed on the basis of the
-primary window would be selection on the evaluation data, and every weight or
-threshold it produced would be contaminated. The inner window lies strictly
-before the primary window's targets and before the final forecast origin, and it
-is the same window Experiment #77 used to choose the blend weight. If this probe
-passes, the full four-window validation follows in a separate script with every
-constant fixed here carried across unchanged.
-
-WHAT STEPS 1-3 ESTABLISHED
---------------------------
-  * Bottom-up sums are already coherent; no incoherence exists to repair.
-  * At every coarse level the recoverable error is negligible: knowing the TRUE
-    store x dept daily total, perfectly, is worth only -0.0221 RMSE, and the
-    chain total is worth -0.0007.
-  * At item level (10 stores summed) the common component is 16.8% of all
-    squared error and the true-aggregate oracle is worth -0.2272.
-  * The algebra that converts that into a required aggregate accuracy assumes
-    the aggregate model's error is uncorrelated with the bottom-up sum's error.
-    That assumption is badly wrong in practice — both miss the same demand
-    shocks — so it produces optimistic numbers and CANNOT be used as a
-    prediction. Only a real aggregate forecast settles it.
-
-WHAT IS MEASURED HERE
----------------------
-  1. Item-level accuracy of the bottom-up sum vs a dedicated item-level model
-     vs two naive aggregate benchmarks. (Mechanism check: if the item model
-     cannot beat the bottom-up sum, the direction is dead.)
-  2. The correlation between the two aggregate error series — the quantity that
-     governs how much of the oracle survives.
-  3. The exact bottom-level RMSE of the reconciled forecast
-
-         P'_s = clip( P_s + alpha * (P_s / F) * (Ahat - F), 0, None )
-
-     over a grid of alpha, plus MAE, high-volume RMSE and volume-decile
-     behaviour at the best alpha.
-
-PRE-REGISTERED PROCEED CRITERIA (fixed before the first run)
-------------------------------------------------------------
-  G1  the item-level model beats the bottom-up sum on item-level RMSE
-  G2  the best-alpha reconciled bottom-level RMSE improves by at least -0.005
-  G3  that alpha lies strictly inside the grid (not pinned at an endpoint,
-      which would mean the optimum has not been bracketed)
-  G4  the leakage corruption test on the aggregate feature builder passes
-
-Failing any of them stops the direction here rather than spending four windows
-on it.
-
-    python scripts/07_usecase11/53_exp80_item_level_probe.py
-"""
 
 from __future__ import annotations
 
@@ -79,7 +22,7 @@ from pipeline.aggregate_level import (AggregateLevel, AggFeatureBuilder,
 from pipeline.champion_blend import champion_predictions
 from pipeline.data_loader import M5Data
 
-INNER_ORIGIN = config.VALIDATION_ORIGIN_IDX - config.HORIZON      # 1884 -> d_1885
+INNER_ORIGIN = config.VALIDATION_ORIGIN_IDX - config.HORIZON
 N_AGG_ORIGINS = 30
 ALPHAS = np.round(np.arange(0.0, 1.01, 0.05), 2)
 
@@ -94,13 +37,9 @@ def banner(t):
     log(f"\n{'=' * 78}\n{t}\n{'=' * 78}")
 
 
-# ----------------------------------------------------------------------
 def train_agg_model(agg, origin_idx, *, objective="tweedie", power=1.1,
                     seed=config.RANDOM_SEED, n_origins=N_AGG_ORIGINS,
                     n_estimators=optimize.N_ESTIMATORS):
-    """Direct 28-day model on the aggregate panel. Same harness philosophy as
-    the bottom-level champion: fixed origins, 28-day blocks, no target may fall
-    on or after the first evaluation day."""
     fb = AggFeatureBuilder(agg)
     newest = origin_idx - config.HORIZON
     origins = sorted(newest - i * config.HORIZON for i in range(n_origins))
@@ -152,17 +91,7 @@ def train_agg_model(agg, origin_idx, *, objective="tweedie", power=1.1,
     return p, valid, info
 
 
-# ----------------------------------------------------------------------
 def leakage_corruption_test(data, origin_idx):
-    """
-    Rebuild the aggregate features from a panel whose post-origin sales have
-    been replaced with 9999 and require every feature to come back identical.
-
-    The AggregateLevel object is reconstructed from the corrupted panel rather
-    than patched, so nothing precomputed from the clean matrix can mask a leak.
-    A companion check confirms the TARGET did change, so the test cannot pass
-    vacuously.
-    """
     clean = AggregateLevel(data, "item")
     f_clean = AggFeatureBuilder(clean).build_origin_frame(
         origin_idx, horizon=config.HORIZON, include_target=True)
@@ -189,7 +118,6 @@ def leakage_corruption_test(data, origin_idx):
             "passed": (len(mismatches) == 0) and bool(target_changed)}
 
 
-# ----------------------------------------------------------------------
 def main():
     t0 = time.time()
     banner("EXPERIMENT #80 (PROBE) — ITEM-LEVEL MODEL + MIDDLE-OUT RECONCILIATION")
@@ -201,7 +129,6 @@ def main():
     log("\n  loading data...")
     data = M5Data()
 
-    # ---------------------------------------------------------------
     banner("STEP A — leakage corruption test on the aggregate builder")
     ck = leakage_corruption_test(data, INNER_ORIGIN)
     log(f"  features checked      : {ck['features_checked']}")
@@ -211,7 +138,6 @@ def main():
     if not ck["passed"]:
         raise SystemExit("STOP: aggregate feature builder is not leakage-safe")
 
-    # ---------------------------------------------------------------
     banner("STEP B — the champion's bottom-level forecast on this window")
     champ = champion_predictions(data, INNER_ORIGIN)
     y = champ["y"]
@@ -222,7 +148,6 @@ def main():
     log(f"  member B' recursive RMSE {metrics.rmse(y, champ['recursive']):.4f}")
     log(f"  BLEND w=0.60        RMSE {base_rmse:.4f}   MAE {base_mae:.4f}")
 
-    # reshape bottom-level to (series x day)
     days = np.sort(np.unique(champ["target_day_idx"]))
     pos = {d: i for i, d in enumerate(days)}
     n_d = len(days)
@@ -233,7 +158,6 @@ def main():
     Ym[si, di] = y
     Pm[si, di] = P
 
-    # ---------------------------------------------------------------
     banner("STEP C — item-level: bottom-up sum vs a dedicated model")
     agg = AggregateLevel(data, "item")
     log(f"  {agg.describe()}")
@@ -247,7 +171,6 @@ def main():
     log(f"\n  bottom-up sum          RMSE {metrics.rmse(A.ravel(), F.ravel()):8.4f}"
         f"   WAPE {metrics.wape(A.ravel(), F.ravel()):.4f}")
 
-    # naive aggregate benchmarks, for context
     naive28 = np.repeat(agg.sales_wide[:, INNER_ORIGIN - 27:INNER_ORIGIN + 1]
                         .mean(axis=1)[:, None], n_d, axis=1)
     log(f"  naive rolling-mean-28  RMSE {metrics.rmse(A.ravel(), naive28.ravel()):8.4f}"
@@ -278,7 +201,6 @@ def main():
     G1 = best["RMSE"] < metrics.rmse(A.ravel(), F.ravel())
     log(f"  G1 (item model beats bottom-up): {'PASS' if G1 else 'FAIL'}")
 
-    # ---------------------------------------------------------------
     banner("STEP D — reconcile downward and score at the BOTTOM level")
     log("  P'_s = clip( P_s + alpha * (P_s / F) * (Ahat - F), 0, None )")
     log(f"\n  {'alpha':>7}{'RMSE':>10}{'dRMSE':>10}{'MAE':>10}{'dMAE':>10}")

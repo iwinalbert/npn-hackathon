@@ -1,11 +1,3 @@
-/**
- * Component-level tests against a mocked API.
- *
- * The most important assertions here are the HONESTY ones: that the app renders
- * the numbers the API returned and nothing else, that a failed request produces
- * an error state rather than a plausible-looking placeholder, and that the
- * backend's caveats reach the screen.
- */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
@@ -125,10 +117,9 @@ describe('Overview page', () => {
   it('shows occurrence metrics as computed, without inflating them', async () => {
     mockApi()
     wrap(<Overview />)
-    // 0.6980 accuracy must render as 69.8%, not as the recall value
     await waitFor(() => expect(screen.getByText('69.8%')).toBeInTheDocument())
-    expect(screen.getByText('80.7%')).toBeInTheDocument()  // recall
-    expect(screen.getByText('63.2%')).toBeInTheDocument()  // precision
+    expect(screen.getByText('80.7%')).toBeInTheDocument()
+    expect(screen.getByText('63.2%')).toBeInTheDocument()
   })
 
   it('carries the backend caveat about occurrence metrics to the screen', async () => {
@@ -150,7 +141,6 @@ describe('Overview page', () => {
     mockApi(true)
     wrap(<Overview />)
     await waitFor(() => expect(screen.getAllByRole('alert').length).toBeGreaterThan(0))
-    // nothing that looks like a metric should be on screen
     expect(screen.queryByText('2.0929')).not.toBeInTheDocument()
     expect(screen.queryByText('97.2%')).not.toBeInTheDocument()
     expect(screen.getAllByText(/not ready/i).length).toBeGreaterThan(0)
@@ -163,9 +153,6 @@ describe('AppShell navigation', () => {
   it('exposes every top-level destination as a link', async () => {
     mockApi()
     wrap(<AppShell />)
-    // Each nav link's accessible name is "<label><description>", and several
-    // descriptions share words with other labels, so match on the leading
-    // label rather than a loose substring.
     const names = screen.getAllByRole('link').map((el) => el.textContent ?? '')
     for (const label of ['Overview', 'Forecast', 'Hierarchy', 'Insights',
                          'AI Assistant']) {

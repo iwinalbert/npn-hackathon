@@ -1,39 +1,14 @@
 import { compact, nf, pct } from '../../lib/format'
 
-/**
- * How 30,490 bottom-level forecasts become one chain number.
- *
- * DESIGN DECISIONS
- * ----------------
- * * The picture is the argument. The model predicts ONE level — store × item —
- *   and every figure above it is a sum of those predictions, so the diagram
- *   flows downward from the bottom level into the aggregates rather than
- *   drilling down from the top.
- * * M5's hierarchy is a cross-product, not a tree: the same 30,490 series roll
- *   up by geography AND by product. Drawing both paths side by side, converging
- *   on one chain total, is the honest shape — and it makes coherence visible,
- *   because the two paths have to land on the same number.
- * * Level identity is carried by shape and by a labelled rail, not by colour:
- *   wide band (bottom level), rectangle (store / department), pill (state /
- *   category), framed total (chain).
- * * Every number here comes from /hierarchy/aggregate for that exact node. A
- *   node whose request has not answered shows a pending dash — never an
- *   estimate, never a share of something else.
- *
- * Built from HTML rather than SVG so it reflows on a narrow screen, inherits the
- * theme, and reads in order to a screen reader.
- */
 
 export interface FlowNode {
   id: string
   label: string
-  /** 28-day forecast total for this node, or null while it is still loading. */
   total: number | null
   nSeries: number
 }
 
 export interface FlowLevel {
-  /** The app's own level key, e.g. 'store' — what the API is asked for. */
   key: string
   title: string
   shape: 'box' | 'pill'
@@ -55,7 +30,6 @@ interface Props {
   onSelect?: (level: string, nodeId: string) => void
 }
 
-/** A vertical connector with an arrowhead, optionally labelled. */
 function FlowArrow({ label }: { label?: string }) {
   return (
     <div className="flex flex-col items-center py-1.5" aria-hidden>

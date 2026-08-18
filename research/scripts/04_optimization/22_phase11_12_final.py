@@ -1,21 +1,3 @@
-"""
-PHASE 11 — final model selection on measured evidence
-PHASE 12 — final 28-day forecast (d_1942 .. d_1969)
-
-Selection rule, fixed in advance and applied mechanically:
-  1. leakage-safe (hard gate — anything unsafe is excluded, not ranked)
-  2. lowest RMSE on the primary window
-  3. MAE as tie-break, and as a veto if a candidate trades a trivial RMSE gain
-     for a large MAE loss
-  4. robustness across windows
-  5. training time / explainability as final tie-breaks
-
-Existing prediction files are NOT overwritten. If the selected configuration is
-the one that already produced predictions/final_forecast_28day.csv, that file is
-verified rather than regenerated.
-
-    python scripts/22_phase11_12_final.py
-"""
 
 from __future__ import annotations
 
@@ -34,8 +16,6 @@ from pipeline import config, experiment, metrics, optimize
 from pipeline.features_v2 import V2_SETS
 
 PRIMARY = "d_1914 .. d_1941"
-# An RMSE gain smaller than this is inside the window-to-window noise we
-# measured, so it cannot justify a large MAE loss.
 NOISE_BAND = 0.013
 MAE_VETO = 0.02
 
@@ -110,7 +90,6 @@ def main():
     print(f"\n  SELECTED: {selected['experiment']}")
     print(f"  reason  : {reason}")
 
-    # ------------------------------------------------------------------
     banner("PHASE 12 — FINAL 28-DAY FORECAST")
 
     incumbent_cfg = selected["experiment"] in (

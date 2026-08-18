@@ -6,23 +6,6 @@ import {
 
 import { type DemandPoint, compact, longDate, shortDate } from '../../lib/format'
 
-/**
- * The product's headline picture: what actually sold, drawn against what the
- * model said would sell.
- *
- * DESIGN DECISIONS
- * ----------------
- * * Two lines, and they must be separable at a glance from the back of a room:
- *   different colour, different dash, different marker shape, and each one
- *   labelled where it ends — not only in the legend.
- * * The two can only be compared where both genuinely exist. That is the
- *   held-out backtest window, which sits immediately before the forecast
- *   origin, so the chart reads left to right as: observed → compared → predicted.
- * * A labelled marker separates "measured" from "predicted". After it the
- *   actual line simply stops: those days have not happened.
- * * The shaded band is drawn UNDER the lines and is observed backtest error,
- *   never a model-produced interval.
- */
 const COLOR = {
   actual: '#C6D2E4',    // observed reality — the app's neutral "actual" tone
   predicted: '#4EA8F0', // the model
@@ -34,24 +17,16 @@ const COLOR = {
 
 export interface Props {
   data: DemandPoint[]
-  /** First predicted-only date: where measurement stops and forecast begins. */
   forecastStartDate?: string
-  /** CSS length, or a number of pixels. */
   height?: number | string
   showBand?: boolean
   yLabel?: string
-  /**
-   * Label every single date. The plot keeps at least `pxPerDate` per day and
-   * scrolls sideways when the container cannot hold them all.
-   */
   everyDate?: boolean
   pxPerDate?: number
 }
 
-/** Axis numbers stay short: 1.5K rather than 1500, 0.6 rather than 0.60. */
 const tickLabel = (v: number) => (Math.abs(v) >= 1000 ? compact(v) : String(Number(v.toFixed(2))))
 
-/** 1, 2, 2.5, 5 or 10 × a power of ten — the steps a person would have chosen. */
 function niceStep(raw: number): number {
   if (!Number.isFinite(raw) || raw <= 0) return 1
   const mag = 10 ** Math.floor(Math.log10(raw))
@@ -60,11 +35,6 @@ function niceStep(raw: number): number {
   return step * mag
 }
 
-/**
- * The y ticks, computed here rather than left to the chart library: the frozen
- * axis and the scrolling plot must agree exactly, or the labels stop lining up
- * with the gridlines they belong to.
- */
 function niceTicks(max: number, count = 5): number[] {
   const step = niceStep(max / (count - 1))
   return Array.from({ length: count }, (_, i) => Number((i * step).toPrecision(12)))
@@ -129,10 +99,6 @@ function DemandTooltip({ active, payload, label }: any) {
   )
 }
 
-/**
- * Written as HTML rather than a Recharts <Legend>: it stays put while the plot
- * scrolls sideways, and it can carry the marker shapes as well as the colours.
- */
 function ChartLegend({ hasBand, hasCompared }: { hasBand: boolean; hasCompared: boolean }) {
   return (
     <ul className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 px-1 text-xs text-ink-muted">
@@ -181,14 +147,12 @@ function ChartLegend({ hasBand, hasCompared }: { hasBand: boolean; hasCompared: 
   )
 }
 
-/** Round marker on the actual line. */
 function ActualDot(props: any) {
   const { cx, cy, payload, index } = props
   if (cx == null || cy == null || payload?.actual == null) return <g key={`a-empty-${index}`} />
   return <circle key={`a-${index}`} cx={cx} cy={cy} r={3} fill={COLOR.actual} />
 }
 
-/** Diamond marker on the predicted line — a different shape, not just a colour. */
 function PredictedDot(props: any) {
   const { cx, cy, payload, index } = props
   if (cx == null || cy == null || payload?.predicted == null) return <g key={`p-empty-${index}`} />
@@ -201,14 +165,9 @@ function PredictedDot(props: any) {
   )
 }
 
-/**
- * The label the reference sketch draws with an arrow: the series named where it
- * ends, so the picture reads without a trip to the legend.
- */
 function endLabel(atIndex: number, text: string, color: string, dy: number) {
   return function EndLabel(props: any) {
     const { x, y, index } = props
-    // Recharts calls this for every point; only the last one gets a label.
     if (index !== atIndex || x == null || y == null) return <g key={`skip-${index}`} />
     return (
       <g key={`end-${text}`} transform={`translate(${x}, ${y})`} aria-hidden>
@@ -363,7 +322,6 @@ export function ActualVsPredictedChart({
                   angle={everyDate ? -60 : 0}
                   textAnchor={everyDate ? 'end' : 'middle'}
                   height={xHeight}
-                  // Keeps the first rotated date clear of the pinned axis strip.
                   padding={everyDate ? { left: 22, right: 10 } : undefined}
                   tickLine={false}
                   axisLine={{ stroke: COLOR.grid }}

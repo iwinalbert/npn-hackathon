@@ -1,11 +1,3 @@
-"""
-Builds reports/05_diagnostics_and_research/REPOSITORY_ORGANIZATION_REPORT.{md,pdf}
-
-Documents the repository reorganization and its integrity audit. Reads the move
-log and the before/after hash records produced during the reorganization.
-
-    python scripts/05_diagnostics/32_organization_report.py
-"""
 
 from __future__ import annotations
 
@@ -24,7 +16,6 @@ import pandas as pd
 from pipeline import config, metrics
 from pipeline.report_pdf import render_markdown_to_pdf
 
-# Provenance records, preserved inside the repository rather than in a temp dir
 LOG = config.ARTIFACTS_DIR / "repository_move_log.json"
 HASHES = config.ARTIFACTS_DIR / "repository_hashes_before.json"
 

@@ -1,13 +1,3 @@
-"""
-Feature-group ablation ladder (spec section 9).
-
-Adds one feature group at a time on top of the last, holding EVERYTHING else
-fixed — same objective (Tweedie), same hyperparameters, same training origins,
-same validation window, same metric code. Any change in RMSE/MAE between two
-consecutive rungs is therefore attributable to the group that was just added.
-
-    python scripts/04_run_ablation.py
-"""
 
 from __future__ import annotations
 

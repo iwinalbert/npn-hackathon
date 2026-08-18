@@ -1,15 +1,3 @@
-"""
-Team-matched reproduction attempt + methodology diagnosis.
-
-Runs on the SAME validation window as every other experiment in this project
-(origin d_1913, targets d_1914..d_1941, all 30,490 series, 853,720 predictions)
-so the numbers sit directly alongside our own.
-
-Nothing existing is overwritten: new experiment ids, new model files, new
-prediction files.
-
-    python scripts/10_team_reproduction.py
-"""
 
 from __future__ import annotations
 
@@ -31,12 +19,10 @@ from pipeline import config, metrics, team_style
 from pipeline.data_loader import M5Data
 from pipeline.experiment import Experiment
 
-VO = config.VALIDATION_ORIGIN_IDX                 # 1912 -> d_1913
-VALID_DAYS = VO + 1 + np.arange(config.HORIZON)   # d_1914 .. d_1941
+VO = config.VALIDATION_ORIGIN_IDX
+VALID_DAYS = VO + 1 + np.arange(config.HORIZON)
 
-# Training target days. Every one is <= the origin, so no training row can
-# target a validation day.
-TRAIN_START = 1214                                 # ~2 years of daily rows
+TRAIN_START = 1214
 TRAIN_DAYS = np.arange(TRAIN_START, VO + 1)
 
 TWEEDIE = {
@@ -69,9 +55,7 @@ def main():
     print(f"  features   : {len(cols)} (team-style, per-target-day, min lookback "
           f"{team_style.MIN_LOOKBACK}d)")
 
-    # ==================================================================
     banner("LEAKAGE TEST ON THE NEW FEATURE CONSTRUCTION")
-    # ==================================================================
     print("  A different feature builder needs its own proof, not inherited trust.")
     print("  Overwriting all sales after the origin with 9999 and rebuilding...")
 
@@ -89,24 +73,18 @@ def main():
         raise SystemExit(f"STOP: leakage detected in {bad}")
     del Xd, corrupt
 
-    # ==================================================================
     banner("BUILD TRAINING SET")
-    # ==================================================================
     t0 = time.time()
     Xtr, ytr, _ = tb.build(TRAIN_DAYS, with_target=True, verbose=True)
     build_s = time.time() - t0
     print(f"  built {Xtr.shape[0]:,} x {Xtr.shape[1]} in {build_s:.0f}s "
           f"({Xtr.nbytes/1e6:.0f} MB)")
 
-    # Rows whose lookback runs off the start of the panel carry NaN lags.
-    # LightGBM handles NaN natively; we do not drop or impute them.
     nan_rows = int(np.isnan(Xtr).any(axis=1).sum())
     print(f"  rows containing at least one NaN feature: {nan_rows:,} "
           f"({nan_rows/len(Xtr)*100:.2f}%) — left as NaN, never imputed")
 
-    # ==================================================================
     banner("TRAIN — LightGBM Tweedie, team-style features")
-    # ==================================================================
     exp = Experiment(
         "model_08_team_style_reproduction",
         model_type="LightGBM",
@@ -153,9 +131,7 @@ def main():
     booster.save_model(str(mpath))
     exp.set(model_path=str(mpath.relative_to(config.PROJECT_ROOT)))
 
-    # ==================================================================
     banner("EVALUATE on d_1914..d_1941")
-    # ==================================================================
     _, yv, vmeta = tb.build(VALID_DAYS, with_target=True)
     preds = np.clip(booster.predict(Xc), 0, None)
 
@@ -177,9 +153,7 @@ def main():
     exp.set(prediction_path=str(ppath.relative_to(config.PROJECT_ROOT)))
     exp.save()
 
-    # ==================================================================
     banner("WHERE DOES THE DIFFERENCE COME FROM?")
-    # ==================================================================
     ours = pd.read_csv(config.PREDICTIONS_DIR /
                        "model_04_tweedie_recency_listing_validation.csv")
     ours = ours.sort_values(["target_day_idx", "series_idx"]).reset_index(drop=True)

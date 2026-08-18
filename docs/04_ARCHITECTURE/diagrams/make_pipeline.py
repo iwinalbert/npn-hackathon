@@ -1,11 +1,3 @@
-"""
-Render the data + delivery pipeline diagram to PNG.
-
-    python make_pipeline.py
-
-Companion to system-architecture.png. That one answers "what runs where";
-this one answers "where do the numbers come from, and what checks them".
-"""
 from __future__ import annotations
 
 import pathlib
@@ -95,7 +87,6 @@ def heading(y, text):
     ax.plot([4, 156], [y - 2.6, y - 2.6], color=RULE, linewidth=1.0, zorder=1)
 
 
-# ===========================================================================
 ax.text(4, 127.5, "Retail Demand Forecasting — Data & Delivery Pipeline",
         fontsize=21, family=SANS, weight="bold", color=INK, va="center")
 ax.text(4, 122.9,
@@ -104,9 +95,6 @@ ax.text(4, 122.9,
         fontsize=9.6, family=SANS, color=MUTED, va="center")
 ax.plot([4, 156], [119.5, 119.5], color=RULE, linewidth=1.1, zorder=1)
 
-# ===========================================================================
-# 1 · Provenance
-# ===========================================================================
 heading(114, "1  ·  WHERE THE NUMBERS COME FROM")
 
 chain = [
@@ -132,7 +120,6 @@ ax.text(4, 92.0,
         "Everything right of it is the deployable unit.",
         fontsize=7.8, family=SANS, color=MUTED, va="center")
 
-# model + metrics
 box(4, 72, 90, "THE FROZEN MODEL",
     ["ŷ = 0.60 × Direct    LightGBM Tweedie(1.1, 38 features)",
      "  + 0.40 × Recursive LightGBM Tweedie(1.1, 32 features)",
@@ -152,9 +139,6 @@ ax.text(4, 67.5,
         "so no accuracy is ever quoted against it.",
         fontsize=7.8, family=SANS, color=MUTED, va="center")
 
-# ===========================================================================
-# 2 · Build
-# ===========================================================================
 heading(60, "2  ·  BUILD  —  one Dockerfile, two targets")
 
 box(4, 34, 48, "target: api          (default)",
@@ -181,9 +165,6 @@ ax.text(4, 30.0,
         "caught.",
         fontsize=7.8, family=SANS, color=MUTED, va="center")
 
-# ===========================================================================
-# 3 · Pipeline
-# ===========================================================================
 heading(25, "3  ·  CI  —  and what a green run does NOT prove")
 
 jobs = [
@@ -216,8 +197,6 @@ ax.text(26, 0.6,
         "tests · the API reaching ready:true  —  a CI runner has no data layer",
         fontsize=7.4, family=SANS, color=INK2, va="center")
 
-# Written to the parent folder: the PNG is the deliverable, the
-# script beside it is just how it is regenerated.
 out = pathlib.Path(__file__).resolve().parent.parent / "data-pipeline.png"
 fig.savefig(out, dpi=200, facecolor=BG, bbox_inches="tight", pad_inches=0.34)
 print(f"wrote {out}")

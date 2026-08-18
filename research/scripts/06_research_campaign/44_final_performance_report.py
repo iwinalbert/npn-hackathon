@@ -1,17 +1,3 @@
-"""
-FINAL MODEL PERFORMANCE REPORT — audit and build.
-
-REPORTING TASK ONLY. Trains nothing, changes no model, writes no forecast.
-Every regression number is re-derived from the saved validation-prediction files
-and cross-checked against the experiment registry; any disagreement is printed
-and the script refuses to emit the report.
-
-Demand-occurrence (classification-style) metrics are computed only for models
-whose per-row predictions exist on disk. Where they do not exist, the report
-says "N/A - not evaluated" rather than inventing a number.
-
-    python scripts/06_research_campaign/44_final_performance_report.py
-"""
 
 from __future__ import annotations
 
@@ -32,12 +18,8 @@ REG = config.EXPERIMENTS_DIR
 PRED = config.PREDICTIONS_DIR
 ART = config.ARTIFACTS_DIR
 
-# Threshold for the demand-occurrence event. A point forecast of 0.5 or more
-# rounds to at least one unit, which is the only non-arbitrary cut for a count
-# target. Applied identically to every model.
 THRESHOLD = 0.5
 
-# (label, registry record, prediction file or None, objective, n_features, note)
 MODELS = [
     ("Naive - last value", "model_00_baseline_last_value", None,
      "none (arithmetic)", None, "baseline"),
@@ -60,14 +42,8 @@ MODELS = [
      "model_05_hurdle_validation.csv", "binary + Tweedie", 32, "development"),
     ("Recursive one-step (member B)", "opt_05_recursive",
      "opt_05_recursive_validation.csv", "Tweedie (p=1.1)", 26, "ensemble member"),
-    # Shape-only, 36 features. Its predictions ARE on disk.
     ("Shape only, 36 features", "exp_72_per_series_shape_features",
      "exp_72_shape_validation.csv", "Tweedie (p=1.1)", 36, "development"),
-    # The 38-feature champion. Its registry metrics are sound and were
-    # reproduced bit-identically, but its per-row predictions were never
-    # persisted: exp_74_new_champion_validation.csv is a misnamed byte-identical
-    # copy of the 36-feature file above (script 36 discards the 38-feature
-    # model's predictions at line 166 and saves Part A's at line 243).
     ("Shape+Cycle, 38 features", "exp_74_shape_reproduction_and_extension",
      None, "Tweedie (p=1.1)", 38, "SHAPE CHAMPION"),
     ("Diversity blend w=0.50 (38f + 26f)", "exp_76_architectural_diversity_blend",
@@ -75,8 +51,6 @@ MODELS = [
      "accepted #76"),
 ]
 
-# The shipped model. Its per-row predictions were never persisted by Experiment
-# #77, so its classification metrics cannot be computed without retraining.
 FINAL = {
     "label": "Diversity blend w=0.60 (38f + 32f)",
     "objective": "Tweedie (p=1.1), both members",
@@ -109,7 +83,6 @@ def load_pred(fname):
 
 
 def occurrence(y, p, thr=THRESHOLD):
-    """Binary demand-occurrence metrics: actual > 0 vs predicted >= thr."""
     a = y > 0
     q = p >= thr
     tp = int(np.sum(a & q)); fp = int(np.sum(~a & q))
@@ -146,7 +119,6 @@ def main():
                 problems.append(f"{label}: y_true differs from the reference set")
             r, m = metrics.rmse(y, p), metrics.mae(y, p)
             rec["RMSE"], rec["MAE"], rec["n"] = r, m, len(y)
-            # cross-check against the registry
             for k, v in (("RMSE", r), ("MAE", m)):
                 reg_v = rm[k]
                 if reg_v is not None and abs(reg_v - v) > 5e-4:
@@ -162,7 +134,6 @@ def main():
             rec["Occurrence metrics"] = "N/A - predictions not saved"
         rows.append(rec)
 
-    # ---- the shipped model: metrics from #77, predictions never persisted ----
     r77 = json.loads((REG / f"{FINAL['registry']}.json").read_text(encoding="utf-8"))
     op = pd.DataFrame(r77["operating_point"])
     prim = op[(op.pair == "AB2") & (op.window == "primary_spring_2016")].iloc[0]

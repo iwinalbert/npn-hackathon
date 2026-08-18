@@ -1,11 +1,3 @@
-"""
-Builds reports/EXPERIMENT_69_BIAS_CORRECTION_REPORT.md and .pdf.
-
-All figures read from artifacts/exp69_summary.json and exp69_by_decile.csv,
-written by an executed run.
-
-    python scripts/28_exp69_report.py
-"""
 
 from __future__ import annotations
 
@@ -98,7 +90,6 @@ def main():
     A("---")
     A("")
 
-    # ---------------- headline ----------------
     A("## Result")
     A("")
     A("| | RMSE | MAE |")
@@ -113,7 +104,6 @@ def main():
       "validation window was ever touched.")
     A("")
 
-    # ---------------- methodology ----------------
     A("## What was done")
     A("")
     A("The idea came from the error autopsy, which found that per-series bias "
@@ -171,7 +161,6 @@ def main():
       "would have cost. That is the number in the result table above.")
     A("")
 
-    # ---------------- safeguards ----------------
     A("## Safeguards applied")
     A("")
     A("| Safeguard | Implementation |")
@@ -182,7 +171,6 @@ def main():
     A("| Nothing else changed | no new features, no ensemble, no weighting, no store-level term, no retraining |")
     A("")
 
-    # ---------------- leakage ----------------
     A("## Leakage checks")
     A("")
     A("| Check | Result | Detail |")
@@ -196,7 +184,6 @@ def main():
       "identical**. No d_1914–d_1941 sales entered the correction at any point.")
     A("")
 
-    # ---------------- factors ----------------
     A("## Distribution of the correction factors")
     A("")
     A("| | |")
@@ -218,7 +205,6 @@ def main():
       "*very gentle* correction. Even that gentle version made things worse.")
     A("")
 
-    # ---------------- deciles ----------------
     A("## Performance by demand-volume decile")
     A("")
     A("| Decile | Historical mean/day | Rows | Base RMSE | Corrected RMSE | ΔRMSE | ΔMAE | Mean factor |")
@@ -243,7 +229,6 @@ def main():
       "and this is the only place the correction does real harm.")
     A("")
 
-    # ---------------- noise floor ----------------
     A("## Comparison against the validation noise floor")
     A("")
     A("| | |")
@@ -260,7 +245,6 @@ def main():
       "than an unlucky draw.")
     A("")
 
-    # ---------------- why ----------------
     A("## Why it failed — the interesting part")
     A("")
     A("The autopsy's evidence was real. Per-series bias genuinely does persist at "
@@ -290,7 +274,6 @@ def main():
       "remaining hypothesis in the project with evidence rather than assumption.")
     A("")
 
-    # ---------------- decision ----------------
     A("## Decision")
     A("")
     A("The rule was fixed in writing before the result was seen:")

@@ -1,32 +1,3 @@
-"""
-INDEPENDENT AUDIT — reproduction and verification.
-
-Writes ONLY into MY_RESEARCH_PAPER/. Touches no existing project file.
-
-Three jobs:
-
-  1. LEAKAGE CORRUPTION TEST, run independently at the validation origin on the
-     champion's 38-feature builder. Overwrite every day after the origin with
-     9999 and confirm not one feature value changes. Then the mirror test:
-     corrupt future PRICES and confirm the price features DO change, because
-     prices and the calendar are legitimately known ahead of the horizon and
-     failing to use them would be a different kind of error.
-
-  2. REPRODUCE THE SHIPPED MODEL at the primary validation origin. Experiment
-     #77 recorded RMSE 2.0929 / MAE 1.0395 for the 0.60/0.40 blend but never
-     persisted per-row predictions, so that number has never been checked
-     against anything except itself, and no distributional metric (WAPE, bias,
-     demand-occurrence) exists for the model actually shipped. This retrains
-     both members from scratch and re-derives everything.
-
-     This is a reproduction, not a new experiment: no configuration is searched,
-     no threshold tuned, no selection made. If the number does not reproduce,
-     that is itself the finding.
-
-  3. Emit the verified metric table and the figure data.
-
-    python MY_RESEARCH_PAPER/audit_reproduce.py
-"""
 
 from __future__ import annotations
 
@@ -88,9 +59,7 @@ def main():
     R = {}
     data = M5Data()
 
-    # ==================================================================
     banner("1. LEAKAGE CORRUPTION TEST (independent, validation origin d_1913)")
-    # ==================================================================
     fb = FeatureBuilderV5(data)
     clean = fb.build_origin_frame(VO, include_target=False)
 
@@ -107,7 +76,6 @@ def main():
     del corrupt, d2, dirty
     gc.collect()
 
-    # mirror test: future prices SHOULD move the price features
     pc = data.price_wide.copy()
     wk_of_day = data.day_to_week
     future_weeks = np.unique(wk_of_day[VO + 1:])
@@ -133,9 +101,7 @@ def main():
         "price_mirror_passed": "sell_price" in price_changed,
     }
 
-    # ==================================================================
     banner("2. REPRODUCE THE SHIPPED MODEL (primary window, w=0.60)")
-    # ==================================================================
     bt = Backtester(data, feature_builder=fb)
     valid = bt.build_validation_frame(VO)
     y = valid["sales"].to_numpy()
@@ -206,9 +172,7 @@ def main():
         REPRO / "shipped_blend_w060_validation.csv", index=False)
     log(f"  wrote {REPRO / 'shipped_blend_w060_validation.csv'}")
 
-    # ==================================================================
     banner("3. VERIFIED METRICS FOR THE SHIPPED MODEL")
-    # ==================================================================
     hist = data.sales_wide[:, :VO + 1].mean(axis=1)
     high = hist[si] > 3.0
     for lab, p_ in [("member A (direct 38f)", p_direct),
@@ -223,7 +187,6 @@ def main():
         log(f"    high-volume RMSE {metrics.rmse(y[high], p_[high]):.4f}")
         R[lab] = {**m, "high_volume_RMSE": metrics.rmse(y[high], p_[high])}
 
-    # per-decile and per-horizon tables for the figures
     dec = pd.qcut(hist[si], 10, labels=False, duplicates="drop")
     sq = (p_blend - y) ** 2
     dtab = []

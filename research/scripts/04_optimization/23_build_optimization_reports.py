@@ -1,12 +1,3 @@
-"""
-Builds every optimization-stage report (markdown + PDF) from executed results.
-
-    python scripts/23_build_optimization_reports.py
-
-All figures are read from artifacts/*.csv|json and experiments/*.json. Verdict
-sentences are derived from the measured numbers at build time, so the prose
-cannot contradict the tables.
-"""
 
 from __future__ import annotations
 
@@ -94,7 +85,6 @@ def verdict(delta, tol=0.0005):
     return "changed nothing measurable"
 
 
-# ==========================================================================
 def chart_power(pw):
     fig, ax = plt.subplots(figsize=(8.4, 3.2))
     d = pw.sort_values("power")
@@ -171,7 +161,6 @@ def chart_scorecard(sc):
     return "charts/final_scorecard.png"
 
 
-# ==========================================================================
 def main():
     print("Building optimization reports...")
     ph2 = load_csv("phase2_feature_results.csv")
@@ -188,7 +177,6 @@ def main():
     sel = load_json("final_selection.json")
     sc = load_csv("final_scorecard.csv")
 
-    # ---------------- 1. baseline ----------------
     b = EXPS.get("opt_00_baseline_reproduce", {})
     bm = b.get("metrics", {})
     L = head("Optimization Baseline",
@@ -228,7 +216,6 @@ def main():
     emit(L, "OPTIMIZATION_BASELINE_REPORT.md", "OPTIMIZATION_BASELINE_REPORT.pdf",
          "Optimization Baseline", "Phase 1 — reproducibility and starting diagnostics")
 
-    # ---------------- 2. features ----------------
     if ph2 is not None:
         L = head("Feature Optimization",
                  "Phase 2 — fourteen new candidate features, tested one group at a time.")
@@ -271,7 +258,6 @@ def main():
         emit(L, "FEATURE_OPTIMIZATION_REPORT.md", "FEATURE_OPTIMIZATION_REPORT.pdf",
              "Feature Optimization", "Phase 2 — fourteen candidates, one group at a time")
 
-    # ---------------- 3. high volume ----------------
     if ph3 is not None:
         L = head("High-Volume Error Attack",
                  "Phase 3 — where the error really is, and three attempts to fix it.")
@@ -320,7 +306,6 @@ def main():
         emit(L, "HIGH_VOLUME_ERROR_REPORT.md", "HIGH_VOLUME_ERROR_REPORT.pdf",
              "High-Volume Error Attack", "Phase 3 — diagnosis and three failed fixes")
 
-    # ---------------- 4. tweedie ----------------
     if ph4 is not None:
         c = chart_power(ph4)
         ap = (ph46 or {}).get("applied_primary", {})
@@ -365,7 +350,6 @@ def main():
         emit(L, "TWEEDIE_OPTIMIZATION_REPORT.md", "TWEEDIE_OPTIMIZATION_REPORT.pdf",
              "Tweedie Optimization", "Phase 4 — power search and a failed transfer")
 
-    # ---------------- 5. recursive ----------------
     if ph5 and ph5h is not None:
         c = chart_horizon(ph5h)
         rec = ph5["recursive"]
@@ -422,7 +406,6 @@ def main():
         emit(L, "RECURSIVE_FORECAST_REPORT.md", "RECURSIVE_FORECAST_REPORT.pdf",
              "Recursive Forecasting", "Phase 5 — the one RMSE gain, and why we rejected it")
 
-    # ---------------- 6. objectives ----------------
     if ph6 is not None:
         L = head("Objective Comparison",
                  "Phase 6 — four loss functions, identical features and window.")
@@ -465,7 +448,6 @@ def main():
         emit(L, "OBJECTIVE_COMPARISON_REPORT.md", "OBJECTIVE_COMPARISON_REPORT.pdf",
              "Objective Comparison", "Phase 6 — the objective must match the metric")
 
-    # ---------------- 7. hurdle ----------------
     if ph78:
         hr, hc = ph78["hurdle_raw"], ph78["hurdle_calibrated"]
         L = head("Hurdle Model — Second Attempt",
@@ -507,7 +489,6 @@ def main():
         emit(L, "HURDLE_MODEL_REPORT.md", "HURDLE_MODEL_REPORT.pdf",
              "Hurdle Model — Second Attempt", "Phase 7 — improved, tested, still rejected")
 
-        # ---------------- 8. ensemble ----------------
         en = ph78["ensemble"]
         grid = pd.DataFrame(ph78["ensemble_weight_grid"])
         L = head("Ensemble",
@@ -542,7 +523,6 @@ def main():
         emit(L, "ENSEMBLE_REPORT.md", "ENSEMBLE_REPORT.pdf",
              "Ensemble", "Phase 8 — a real MAE gain, no RMSE gain")
 
-    # ---------------- 9. robustness ----------------
     if rb is not None and rbs is not None:
         c = chart_robust(rb)
         L = head("Robustness Across Windows",
@@ -585,7 +565,6 @@ def main():
         emit(L, "ROBUSTNESS_REPORT.md", "ROBUSTNESS_REPORT.pdf",
              "Robustness Across Windows", "Phase 9 — how big a difference has to be to matter")
 
-    # ---------------- 10 + 11 ----------------
     if sel and sc is not None:
         c = chart_scorecard(sc)
         L = head("Final Model Selection",

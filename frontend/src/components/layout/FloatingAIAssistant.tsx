@@ -1,24 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
 
-/**
- * Quick access to the assistant from anywhere in the application.
- *
- * A shortcut, not a replacement: the sidebar keeps its full "AI Assistant"
- * entry with its description, which is what tells a first-time visitor the
- * feature exists at all. This is for the visitor who already knows, is three
- * pages deep looking at a chart, and wants to ask about it.
- *
- * Deliberately restrained. A forecasting product's credibility rests on looking
- * like an analytical instrument, so this borrows the card palette — surface
- * fill, `line-strong` border — rather than announcing itself with a gradient or
- * a glow. It reads as one more control in the same system.
- *
- * The tooltip is laid out in flow rather than absolutely positioned: the
- * container is anchored at its bottom-right corner, so content grows up and to
- * the left and the button itself never moves when the label appears. Above the
- * `sm` breakpoint the label sits to the left, where there is room; below it,
- * where there may not be, it sits above.
- */
 export function FloatingAIAssistant() {
   const { pathname } = useLocation()
   const onAssistant = pathname === '/assistant'

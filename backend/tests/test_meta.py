@@ -1,11 +1,8 @@
-"""Model card, capability honesty matrix and provenance."""
 from .conftest import API
 
 
 def test_model_card_matches_the_frozen_champion(client):
     card = client.get(f"{API}/meta/model").json()
-    # These are the frozen model's validated numbers. If this test fails, either
-    # the model changed (which requires approval) or the DB is stale.
     assert card["validation_rmse"] == 2.0929
     assert card["validation_mae"] == 1.0395
     assert card["blend_weight_direct"] == 0.60
@@ -25,13 +22,6 @@ def test_capability_matrix_declares_all_three_categories(client):
 
 
 def test_price_whatif_is_declared_unsupported(client):
-    """
-    Guard against someone reintroducing the rejected price-scenario feature.
-
-    The frozen model's measured response to simulated price changes is
-    non-monotone and sometimes economically backwards, so the product must
-    never present it as a capability.
-    """
     caps = client.get(f"{API}/meta/capabilities").json()
     names = " ".join(c["name"].lower() for c in caps["not_supported"])
     assert "price what-if" in names or "elasticity" in names

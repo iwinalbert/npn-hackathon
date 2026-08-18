@@ -1,15 +1,3 @@
-"""
-Apply the inner-window-selected Tweedie power to the PRIMARY window — once.
-
-The variance power 1.5 was chosen in scripts/12_tweedie_power_probe.py using only
-d_1886..d_1913. The primary window played no part in that choice, so running it
-here exactly once gives an unbiased held-out estimate.
-
-This does NOT overwrite Model 4 or any existing artefact. It is recorded as a new
-experiment, model file and prediction file.
-
-    python scripts/14_apply_tweedie_power.py
-"""
 
 from __future__ import annotations
 

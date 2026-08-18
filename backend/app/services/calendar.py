@@ -1,16 +1,3 @@
-"""
-Day-index <-> date translation.
-
-The research pipeline works in zero-based day indices (idx 0 == d_1 ==
-2011-01-29); humans and charts work in dates. The mapping is loaded once from
-the `calendar` table in the product database — which was built from the same
-calendar.csv the model itself was trained against — so the product cannot drift
-from the research layer's notion of what day d_1942 is.
-
-Reading it from the database rather than the CSV means the API needs no access
-to data/raw/ at runtime, which is what lets the container run without the
-research tree mounted.
-"""
 
 from __future__ import annotations
 
@@ -51,7 +38,6 @@ def date_of(day_idx: int) -> str:
 
 
 def day_label(day_idx: int) -> str:
-    """Zero-based day index -> the research layer's 'd_N' label."""
     return f"d_{int(day_idx) + 1}"
 
 
@@ -67,11 +53,9 @@ def snap_for_state(day_idx: int, state_id: str) -> int:
 
 
 def origin_day_idx() -> int:
-    """Zero-based index of the forecast origin: 1940 == d_1941 == 2016-05-22."""
     return settings.forecast_origin_idx
 
 
 def forecast_days() -> list[int]:
-    """The 28 zero-based day indices the frozen forecast covers (1941..1968)."""
     o = origin_day_idx()
     return [o + h for h in range(1, settings.horizon + 1)]

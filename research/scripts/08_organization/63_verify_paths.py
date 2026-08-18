@@ -1,23 +1,3 @@
-"""
-PATH RESOLUTION VERIFICATION — do the scripts still find their files?
-
-READ-ONLY, and deliberately NON-EXECUTING. It imports modules and resolves paths
-but never runs a pipeline script, because most of them WRITE into
-experiments/artifacts/ or predictions/, which would modify protected artefacts
-and invalidate the integrity manifest. Proving the paths resolve is the point;
-re-running the research is not.
-
-Checks:
-  1. every path constant in pipeline/config.py points at something that exists
-  2. every pipeline module imports cleanly
-  3. the walk-up root-resolution idiom used by 56 scripts resolves to the real
-     project root from each script's location
-  4. MY_RESEARCH_PAPER's parent.parent idiom still lands on the project root
-  5. the intra-folder import in scripts/07_usecase11 still resolves
-  6. the frozen-model copies are byte-identical to their canonical sources
-
-    python scripts/08_organization/63_verify_paths.py
-"""
 
 from __future__ import annotations
 
@@ -45,7 +25,6 @@ def check(name, ok, detail=""):
 def main():
     print(f"  project root resolved to: {ROOT}\n")
 
-    # 1. config path constants -----------------------------------------
     from pipeline import config
     consts = {
         "RAW_DIR": config.RAW_DIR, "PROCESSED_DIR": config.PROCESSED_DIR,
@@ -68,7 +47,6 @@ def main():
     check("PROJECT_ROOT is the real project root",
           Path(config.PROJECT_ROOT).resolve() == ROOT, str(config.PROJECT_ROOT))
 
-    # 2. pipeline modules import ---------------------------------------
     mods = sorted(p.stem for p in (ROOT / "pipeline").glob("*.py")
                   if p.stem != "__init__")
     bad = []
@@ -80,7 +58,6 @@ def main():
     check("all pipeline modules import", not bad,
           f"{len(mods)} modules" + (f"; FAILED {bad}" if bad else ""))
 
-    # 3. walk-up idiom from every script location ----------------------
     script_dirs = sorted({p.parent for p in (ROOT / "scripts").rglob("*.py")})
     bad = []
     for d in script_dirs:
@@ -94,14 +71,12 @@ def main():
     check("walk-up root resolution works from every script folder", not bad,
           f"{len(script_dirs)} folders" + (f"; FAILED {bad}" if bad else ""))
 
-    # 4. MY_RESEARCH_PAPER parent.parent idiom -------------------------
     mrp = ROOT / "MY_RESEARCH_PAPER"
     derived = (mrp / "build_paper.py").resolve().parent.parent
     check("MY_RESEARCH_PAPER parent.parent lands on project root",
           derived == ROOT and (derived / "pipeline" / "config.py").exists(),
           str(derived))
 
-    # 5. intra-folder import in scripts/07_usecase11 -------------------
     uc = ROOT / "scripts" / "07_usecase11"
     needed = ["53_exp80_item_level_probe.py", "54_exp80b_level_sweep.py",
               "56_exp80c_orthogonality.py", "57_exp81_four_window_validation.py",
@@ -110,17 +85,11 @@ def main():
           all((uc / n).exists() for n in needed),
           f"{sum((uc / n).exists() for n in needed)}/{len(needed)} present")
 
-    # 6. frozen copies identical to canonical sources ------------------
     def sha(p):
         h = hashlib.sha256()
         h.update(Path(p).read_bytes())
         return h.hexdigest()
 
-    # The canonical artefacts live here in research/; the curated copies are
-    # documentation, one level up in docs/. `03_FORECASTS/` and
-    # `09_SUBMISSION/` each held a copy of the same forecast under the same
-    # filename; they were folded into one deliverable copy, so there are three
-    # pairs now rather than four.
     DOCS = ROOT.parent / "docs"
     pairs = [
         (ROOT / "models/champion/model_11_blend_direct_final_forecast.txt",
@@ -134,7 +103,6 @@ def main():
     check("frozen copies byte-identical to canonical sources", not mismatched,
           f"{len(pairs)} pairs" + (f"; MISMATCH {mismatched}" if mismatched else ""))
 
-    # 7. registry still loadable through the pipeline API ---------------
     from pipeline import experiment
     recs = experiment.load_all()
     champ = experiment.load("exp_78_blend_final_forecast")

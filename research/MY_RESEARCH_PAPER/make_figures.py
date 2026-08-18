@@ -1,16 +1,3 @@
-"""
-Figures for my research paper.
-
-Every figure is built from an artifact already on disk or from the reproduction
-run in audit_reproduce.py. Nothing is simulated, smoothed or illustrative.
-
-Palette: slots 1-4 of the reference categorical theme, validated for light mode
-(lightness band, chroma floor, CVD separation, normal-vision floor all PASS;
-the sub-3:1 contrast WARN is discharged by direct labels and by the fact that
-every figure is accompanied by its numeric table in the paper).
-
-    python MY_RESEARCH_PAPER/make_figures.py
-"""
 
 from __future__ import annotations
 
@@ -66,9 +53,7 @@ def save(fig, name):
     print(f"  wrote {name}")
 
 
-# ----------------------------------------------------------------------
 def fig1_demand_distribution():
-    """Job: show the target's shape — zero-inflation is the defining property."""
     from pipeline.data_loader import M5Data
     d = M5Data(load_prices=False)
     S = d.sales_wide
@@ -91,7 +76,6 @@ def fig1_demand_distribution():
 
 
 def fig2_model_comparison():
-    """Job: magnitude comparison across the model lineage."""
     T = pd.read_csv(Path(__file__).resolve().parent / "MODEL_COMPARISON.csv")
     T = T[(T.Class != "member") & (~T.Model.str.contains("last value"))].copy()
     T["RMSE"] = T.RMSE.astype(float)
@@ -118,7 +102,6 @@ def fig2_model_comparison():
 
 
 def fig3_error_concentration():
-    """Two panels — never a dual axis."""
     D = pd.read_csv(OUT / "decile_table.csv")
     fig, axes = plt.subplots(1, 2, figsize=(6.6, 2.8))
 
@@ -154,7 +137,6 @@ def fig4_horizon():
 
 
 def fig5_frontier():
-    """Parametric RMSE/MAE curve over the blend weight."""
     r77 = json.loads((ART / "exp77_summary.json").read_text(encoding="utf-8"))
     fr = pd.DataFrame([w for w in r77["windows"]
                        if w["window"] == "primary_spring_2016"][0]["frontier"]["AB2"])

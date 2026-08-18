@@ -1,17 +1,7 @@
-/**
- * UI primitives.
- *
- * Kept in one module because they are small, share a visual language, and are
- * imported together on nearly every page. Splitting them into eight files would
- * add navigation cost without adding clarity.
- */
 import type { ReactNode } from 'react'
 
 import { ApiError } from '../../api/client'
 
-// ---------------------------------------------------------------------------
-// Card
-// ---------------------------------------------------------------------------
 
 interface CardProps {
   title?: ReactNode
@@ -45,27 +35,12 @@ export function Card({
   )
 }
 
-// ---------------------------------------------------------------------------
-// VizStage — the frame around a page's primary visualization
-// ---------------------------------------------------------------------------
 
-/**
- * The one big thing on a page.
- *
- * A page has at most one of these and it comes first, so a viewer meeting the
- * screen for the first time reads: what am I looking at → one sentence of
- * context → the visualization itself. Everything else on the page is a normal
- * `Card`, which is deliberately quieter: smaller heading, tighter padding.
- *
- * Both visualization pages use this so they read as one application.
- */
 export function VizStage({
   title, description, meta, actions, footer, children,
 }: {
   title: string
-  /** One or two sentences. What the picture shows, in plain words. */
   description: ReactNode
-  /** Optional identity line: which series, which window. */
   meta?: ReactNode
   actions?: ReactNode
   footer?: ReactNode
@@ -95,9 +70,6 @@ export function VizStage({
   )
 }
 
-// ---------------------------------------------------------------------------
-// Metric
-// ---------------------------------------------------------------------------
 
 const TONE: Record<string, string> = {
   default: 'text-ink',
@@ -113,7 +85,6 @@ export function Metric({
   label: string
   value: ReactNode
   unit?: string
-  /** One plain-English sentence. Every metric on screen should carry one. */
   hint?: string
   tone?: keyof typeof TONE
   size?: 'sm' | 'md'
@@ -134,9 +105,6 @@ export function Metric({
   )
 }
 
-// ---------------------------------------------------------------------------
-// Badge
-// ---------------------------------------------------------------------------
 
 const VARIANTS = {
   neutral: 'border-line-strong text-ink-muted',
@@ -159,9 +127,6 @@ export function Badge({
   )
 }
 
-// ---------------------------------------------------------------------------
-// States: loading / error / empty
-// ---------------------------------------------------------------------------
 
 export function Spinner({ label = 'Loading' }: { label?: string }) {
   return (
@@ -232,10 +197,6 @@ export function EmptyState({ title, children }: { title: string; children?: Reac
   )
 }
 
-/**
- * Plain-English explanation attached to a chart or metric group.
- * Used heavily: no metric should appear on screen without one.
- */
 export function Explain({ children }: { children: ReactNode }) {
   return (
     <p className="mt-3 border-l-2 border-line-strong pl-3 text-xs leading-relaxed text-ink-muted">
@@ -244,7 +205,6 @@ export function Explain({ children }: { children: ReactNode }) {
   )
 }
 
-/** An unmissable caveat, usually carried verbatim from the backend. */
 export function Caveat({ children }: { children: ReactNode }) {
   return (
     <p className="mt-3 rounded border border-warn/30 bg-warn/5 px-3 py-2 text-xs leading-relaxed text-ink-muted">
@@ -254,9 +214,6 @@ export function Caveat({ children }: { children: ReactNode }) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Async boundary — one place that renders loading / error / empty consistently
-// ---------------------------------------------------------------------------
 
 export function Async<T>({
   query, children, height = 'h-48', empty,

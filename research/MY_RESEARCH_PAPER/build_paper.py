@@ -1,11 +1,3 @@
-"""
-Assemble MY_RESEARCH_PAPER.md / .pdf / .docx and AUDIT_SUMMARY.md.
-
-Every quantitative claim is read from a project artifact at build time rather
-than typed in, so the paper cannot drift from the evidence.
-
-    python MY_RESEARCH_PAPER/build_paper.py
-"""
 
 from __future__ import annotations
 
@@ -72,7 +64,6 @@ def table(df, cols=None, floatfmt="{:.4f}"):
         A("| " + " | ".join(cells) + " |")
 
 
-# ======================================================================
 A("# Frozen-Origin 28-Day Demand Forecasting at Store-Item Granularity: "
   "An Architectural-Diversity Ensemble and an Independent Integrity Audit")
 A("")
@@ -85,7 +76,6 @@ A("**Audit stance:** adversarial-neutral. No claim in this paper is accepted "
   "artifact or is explicitly labelled as unverifiable.")
 A("")
 
-# ---------------------------------------------------------------- Abstract
 A("## Abstract")
 A("")
 A(f"We audit and document a demand-forecasting system that predicts daily unit "
@@ -137,7 +127,6 @@ A("retail demand forecasting; M5; intermittent demand; zero-inflated count "
   "forecasting; ensemble diversity; data leakage audit; rolling-origin validation")
 A("")
 
-# ---------------------------------------------------------------- 1
 A("## 1. Introduction")
 A("")
 A("Retail replenishment decisions are made per store, per item, days to weeks "
@@ -165,7 +154,6 @@ A("3. **A negative-results catalogue.** Seven candidate directions were rejected
 A("4. **An honest non-comparability analysis** of an external reference score.")
 A("")
 
-# ---------------------------------------------------------------- 2
 A("## 2. Problem Statement")
 A("")
 A("| Property | Value |")
@@ -191,7 +179,6 @@ A("**Operational use.** The output feeds replenishment: how many units to "
   "Because the cost of error is convex, RMSE is the primary metric.")
 A("")
 
-# ---------------------------------------------------------------- 3
 A("## 3. Research Objectives")
 A("")
 A("| # | Objective | Status |")
@@ -202,7 +189,6 @@ A("| O3 | Determine where remaining error lives and whether it is reducible | Ac
 A("| O4 | Explain the gap to an external reported score | Achieved (leakage quantified) |")
 A("")
 
-# ---------------------------------------------------------------- 4
 A("## 4. Dataset Description")
 A("")
 A("Source: the M5 competition files, held read-only in `data/raw/`. The audit "
@@ -239,7 +225,6 @@ A("**Limitations of the data itself.** No promotion calendar, no inventory or "
   "identifiable. This ceiling is a property of M5, not of the modelling.")
 A("")
 
-# ---------------------------------------------------------------- 5
 A("## 5. Data Preprocessing")
 A("")
 A("The pipeline is deliberately thin, and the audit confirms the claim in "
@@ -270,7 +255,6 @@ A("**Train/validation construction.** Training rows are built from 15 origins "
   "window.")
 A("")
 
-# ---------------------------------------------------------------- 6
 A("## 6. Feature Engineering")
 A("")
 A("The direct member uses 38 features in seven original groups plus two later "
@@ -323,7 +307,6 @@ A(f"The single strongest shape feature, `wday_ratio_52w`, ranks "
   f"{int(IMP.index[IMP.feature == 'wday_ratio_52w'][0]) + 1} of 38 by split gain.")
 A("")
 
-# ---------------------------------------------------------------- 7
 A("## 7. Methodology and Model Architecture")
 A("")
 A("### 7.1 Why Tweedie")
@@ -374,7 +357,6 @@ A("**Audit note.** `num_boost_round` is fixed at 400 with **no early stopping**.
   "support, but it is not optimised.")
 A("")
 
-# ---------------------------------------------------------------- 8
 A("## 8. Training Procedure")
 A("")
 A("1. Build 15 origin frames, stack to a `(12,805,800 × 38)` float32 matrix (~1.9 GB).")
@@ -390,7 +372,6 @@ A("**Computational cost (measured, 24-core CPU):** member A ≈ 157 s, member B�
   "roughly doubles training and inference cost versus the single direct model.")
 A("")
 
-# ---------------------------------------------------------------- 9
 A("## 9. Validation Strategy")
 A("")
 A("| Property | Value |")
@@ -419,7 +400,6 @@ A("**One residual concern we flag rather than resolve.** The primary window was 
   "the primary-window figure should be read as the most optimistic of the four.")
 A("")
 
-# ---------------------------------------------------------------- 10
 A("## 10. Experimental Design and History")
 A("")
 A(f"The registry contains **{len(list(REG.glob('*.json')))} records**. The audit "
@@ -481,7 +461,6 @@ A("The last five are the audit's favourite part of this project: they were "
   "recorded so the decisions are checkable.")
 A("")
 
-# ---------------------------------------------------------------- 11
 A("## 11. Results")
 A("")
 A("### 11.1 Verified performance of the shipped model")
@@ -548,7 +527,6 @@ A("They are reported because they describe one real behaviour: the recursive "
   "which is a symptom of the architectural difference the ensemble exploits.")
 A("")
 
-# ---------------------------------------------------------------- 12
 A("## 12. Model Comparison")
 A("")
 A("All rows scored on the same 853,720 predictions. Metrics are recomputed from "
@@ -588,7 +566,6 @@ A("The defensible like-for-like comparison is `model_08_team_style_reproduction`
   "**2.1835**.")
 A("")
 
-# ---------------------------------------------------------------- 13
 A("## 13. Error Analysis")
 A("")
 A("### 13.1 The error is variance, and it is concentrated")
@@ -665,7 +642,6 @@ A("The per-series bound is large, and it is the reason the shape features were "
   "specialisation and turned to ensembling.")
 A("")
 
-# ---------------------------------------------------------------- 14
 A("## 14. Leakage and Integrity Audit")
 A("")
 A("### 14.1 Corruption test (run independently by this audit)")
@@ -742,7 +718,6 @@ A("**No target leakage detected in the shipped pipeline.** The leakage-safety is
   "empirically verified, not merely asserted.")
 A("")
 
-# ---------------------------------------------------------------- 15
 A("## 15. Discussion")
 A("")
 A("### 15.1 The one transferable finding")
@@ -789,7 +764,6 @@ A("The audit agrees with the project's own diminishing-returns conclusion. Every
   "validation-set overfitting than genuine gain.")
 A("")
 
-# ---------------------------------------------------------------- 16
 A("## 16. Practical Applications and Interpretation")
 A("")
 A(f"**What the numbers mean.** MAE {BL['MAE']:.4f} says a typical forecast misses "
@@ -820,7 +794,6 @@ A("- *Forecast staleness is real:* at horizon 28 the freshest sales input is 27 
   "improvement than anything in this report.")
 A("")
 
-# ---------------------------------------------------------------- 17
 A("## 17. Limitations")
 A("")
 A("**Data.** No promotions, inventory, stockouts, footfall, weather or "
@@ -851,7 +824,6 @@ A("**Compute.** ~10 minutes and ~4.5 GB to retrain the ensemble; the recursive "
   "member cannot be parallelised across horizon days.")
 A("")
 
-# ---------------------------------------------------------------- 18
 A("## 18. Reproducibility")
 A("")
 A("**Verdict: reproducible, with caveats.** The audit reproduced the shipped "
@@ -885,7 +857,6 @@ A("3. **The shipped model had no saved predictions** before this audit "
 A("4. **No environment lockfile or container**; Python 3.13 on Windows.")
 A("")
 
-# ---------------------------------------------------------------- 19
 A("## 19. Conclusion")
 A("")
 A(f"The project delivers a leakage-safe frozen-origin 28-day forecaster scoring "
@@ -908,7 +879,6 @@ A("4. **The project is near its information ceiling.** Remaining directions are 
   "bounded below 0.008 by oracle analysis.")
 A("")
 
-# ---------------------------------------------------------------- 20
 A("## 20. Future Work")
 A("")
 A("Ordered by expected value given the evidence:")
@@ -928,7 +898,6 @@ A("5. **Probabilistic forecasts.** Replenishment needs service levels; quantile 
   "regression would serve the decision better than a point forecast.")
 A("")
 
-# ---------------------------------------------------------------- 21
 A("## 21. References")
 A("")
 A("Sources are limited to materials present in the project directory. No external "
@@ -951,7 +920,6 @@ A("7. Pipeline source — `pipeline/` (feature builders, backtester, validation 
 A("8. LightGBM 4.7.0; NumPy 2.5.1; pandas 3.0.5 — `requirements.txt`.")
 A("")
 
-# ---------------------------------------------------------------- 22
 A("## 22. Independent Technical Assessment")
 A("")
 A("| Dimension | Rating | Evidence |")

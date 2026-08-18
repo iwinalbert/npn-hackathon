@@ -1,11 +1,3 @@
-"""
-Builds reports/AUTONOMOUS_RESEARCH_CAMPAIGN_REPORT.md and .pdf.
-
-Documents the autonomous campaign: the audit, Experiments #70 and #71, the
-ceiling analysis, and the decision to stop.
-
-    python scripts/31_research_campaign_report.py
-"""
 
 from __future__ import annotations
 
@@ -92,7 +84,6 @@ def main():
     A_("---")
     A_("")
 
-    # ---------------- audit ----------------
     A_("## The audit that set the strategy")
     A_("")
     A_("Across 69 prior experiments, exactly one thing ever beat the champion "
@@ -114,7 +105,6 @@ def main():
        "measured a metric trade-off, not variance reduction.")
     A_("")
 
-    # ---------------- exp 70 ----------------
     A_("## Experiment #70 — variance-reduction ensemble")
     A_("")
     A_("**Hypothesis.** Averaging several individually-strong models that make "
@@ -154,7 +144,6 @@ def main():
        "help either.")
     A_("")
 
-    # ---------------- exp 71 ----------------
     A_("## Experiment #71 — year-over-year features")
     A_("")
     A_("**Why this followed.** If model variance is not the lever, only new "
@@ -192,7 +181,6 @@ def main():
        "guide to next month than last month's demand is.")
     A_("")
 
-    # ---------------- ceiling ----------------
     A_("## The practical ceiling, quantified")
     A_("")
     A_("### Bound 1 — ensembling cannot get there, and the maths is checkable")
@@ -252,7 +240,6 @@ def main():
        "anywhere in the dataset, the information needed simply is not present.")
     A_("")
 
-    # ---------------- decision ----------------
     A_("## Decision: stop")
     A_("")
     A_("Research rule 20 permits stopping when the evidence shows further "
@@ -281,7 +268,6 @@ def main():
        "this dataset, and no amount of modelling recovers them.")
     A_("")
 
-    # ---------------- final ----------------
     A_("## Final position")
     A_("")
     A_("| | |")

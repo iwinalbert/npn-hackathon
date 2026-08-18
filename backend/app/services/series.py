@@ -1,19 +1,3 @@
-"""
-Per store-item series: metadata, history and the frozen 28-day forecast.
-
-This is the heart of the product — Use Case 11 asks for 28-day-ahead forecasts
-*per store/item*, and this module is what serves them.
-
-ON THE ERROR BANDS
-------------------
-`forecast()` attaches `lower`/`upper` to each point. These are **empirical
-backtest error quantiles**, not model output. The frozen model produces a point
-forecast and nothing else; inventing a distribution around it would be
-fabrication. What we can honestly say is: "on held-out windows, for series in
-this demand regime at this horizon, the model's actual error fell inside these
-bounds 90% of the time" — and measured coverage is 90.0%. That is useful for
-safety-stock decisions and is labelled as measured error everywhere it surfaces.
-"""
 
 from __future__ import annotations
 
@@ -64,14 +48,6 @@ def detail(store_id: str, item_id: str) -> dict:
 
 
 def history(store_id: str, item_id: str, days: int = 90) -> dict:
-    """
-    Daily actuals leading up to the forecast origin.
-
-    Reads the product-owned history sidecar (sorted by series, zstd parquet):
-    a single series' window resolves in ~8-13 ms because DuckDB's zone maps
-    prune all other row groups. See scripts/build_product_db.py for why this is
-    a sidecar rather than a view over the research parquet.
-    """
     meta = _series_row(store_id, item_id)
     origin = settings.forecast_origin_idx
     state = meta["state_id"]
@@ -105,7 +81,6 @@ def history(store_id: str, item_id: str, days: int = 90) -> dict:
     }
 
 
-#: Must match BAND_SCALE_FLOOR in scripts/build_product_db.py.
 BAND_SCALE_FLOOR = 1.0
 
 BAND_BASIS = (
@@ -128,7 +103,6 @@ def _bands_for_regime(regime: str) -> dict[int, dict]:
 
 
 def forecast(store_id: str, item_id: str, with_bands: bool = True) -> dict:
-    """The frozen 28-day forecast for one series, optionally with error bands."""
     meta = _series_row(store_id, item_id)
     rows = query(
         "SELECT horizon, day_idx, yhat FROM forecast "
@@ -146,9 +120,6 @@ def forecast(store_id: str, item_id: str, with_bands: bool = True) -> dict:
         lower = upper = None
         if h in bands:
             b = bands[h]
-            # Residual is (actual - predicted) on a sqrt(yhat)-normalised scale,
-            # so undo that scaling before adding it back to the point forecast.
-            # Clipped at 0 because negative demand is not a thing.
             scale = max(yhat, BAND_SCALE_FLOOR) ** 0.5
             lower = max(0.0, yhat + float(b["q05"]) * scale)
             upper = max(0.0, yhat + float(b["q95"]) * scale)
@@ -177,7 +148,6 @@ def list_series(store_id: str | None = None, item_id: str | None = None,
                 dept_id: str | None = None, cat_id: str | None = None,
                 state_id: str | None = None, regime: str | None = None,
                 limit: int = 100, offset: int = 0) -> list[dict]:
-    """Filtered series listing. Every filter is a bound parameter."""
     clauses, params = [], []
     for col, val in (("store_id", store_id), ("item_id", item_id),
                      ("dept_id", dept_id), ("cat_id", cat_id),

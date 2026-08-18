@@ -1,54 +1,3 @@
-"""
-USE CASE 11 / STEP 2 — WHAT WOULD A RECONCILIATION ACTUALLY HAVE TO DELIVER?
-
-READ-ONLY. Trains nothing. Writes uc11_reconciliation_threshold.{json,csv}.
-
-WHY THIS EXISTS
----------------
-Step 1 (50_hierarchy_headroom.py) established that if you hand the system the
-TRUE aggregate, the recoverable error is negligible at every coarse level
-(<= -0.022 RMSE at store x dept, and only -0.0007 at chain total) but large at
-the two item-bearing levels:
-
-    L10 item (across 10 stores)   proportional oracle  -0.2272
-    L11 item x state              proportional oracle  -0.5154
-
-Those oracles assume PERFECT knowledge of the aggregate. No forecast is perfect.
-The decision therefore rests on one number that Step 1 did not produce:
-
-    how much of the bottom-up aggregate error must a dedicated aggregate model
-    remove before the bottom-level RMSE actually improves?
-
-MODEL OF A PARTIALLY-INFORMATIVE AGGREGATE FORECAST
----------------------------------------------------
-Let F be the bottom-up aggregate (what we have) and A the truth. Any aggregate
-forecast can be written
-
-    A_hat(lambda) = F + lambda * (A - F)
-
-lambda = 0 is the bottom-up sum itself (no new information); lambda = 1 is the
-oracle. lambda is exactly the fraction of the bottom-up aggregate discrepancy
-that the aggregate model recovers, and it is OPTIMISTIC at every value in
-between, because it adds no noise of its own: a real model that recovers 30% of
-the discrepancy also injects its own error, so its true gain is strictly below
-the curve computed here.
-
-That makes the resulting break-even lambda a LOWER bound on the difficulty. If
-the required lambda is implausible, the direction is dead without training
-anything.
-
-THREE RECONCILIATION FORMS ARE MEASURED
----------------------------------------
-  prop   proportional (forecast-proportions top-down) — scale each member by
-         A_hat / F
-  equal  additive equal-share — add (A_hat - F) / n to each member
-  shrunk proportional with a global shrinkage alpha fitted on the window, i.e.
-         the best linear compromise between "trust the aggregate" and "trust the
-         bottom" — this is the form a MinT-style estimator converges to when the
-         aggregate is noisy
-
-    python scripts/07_usecase11/51_reconciliation_threshold.py
-"""
 
 from __future__ import annotations
 
@@ -127,14 +76,12 @@ def main():
             f"{'alpha*':>9}{'prop dRMSE':>12}")
 
         for lam in LAMBDAS:
-            Dhat = lam * D                       # A_hat - F
+            Dhat = lam * D
             with np.errstate(divide="ignore", invalid="ignore"):
                 scale = np.where(F > 1e-9, 1.0 + Dhat / F, 1.0)
             p_prop = np.clip(P * scale[g], 0, None)
             p_equal = np.clip(P + (Dhat / sizes[:, None])[g], 0, None)
 
-            # Optimal global shrinkage on the proportional correction:
-            #   P' = P + alpha * (P*scale - P) ; alpha minimising SSE in closed form
             delta = P * scale[g] - P
             dd = float((delta ** 2).sum())
             alpha = float(((Y - P) * delta).sum() / dd) if dd > 1e-12 else 0.0
@@ -164,8 +111,6 @@ def main():
             beat = sub[sub[col] < 0]
             out[f"{form}_breakeven_lambda"] = (float(beat["lambda"].min())
                                                if len(beat) else None)
-            # lambda needed for a gain at least as large as the ensemble's own
-            # validated effect (-0.024), the project's notion of "meaningful"
             mean = sub[sub[col] <= -0.010]
             out[f"{form}_lambda_for_-0.010"] = (float(mean["lambda"].min())
                                                 if len(mean) else None)

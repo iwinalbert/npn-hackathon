@@ -1,13 +1,3 @@
-"""
-Named feature-set definitions used by the model experiments.
-
-Keeping these in one place means every experiment refers to a feature set by
-name, so the ablation table can never drift from what was actually trained.
-
-Group letters follow features.FEATURE_GROUPS:
-    A calendar   B historical demand   C recency   D listing
-    E price      F hierarchy           G horizon
-"""
 
 from __future__ import annotations
 
@@ -22,20 +12,11 @@ F = FEATURE_GROUPS["F_hierarchy"]
 G = FEATURE_GROUPS["G_horizon"]
 
 
-# --------------------------------------------------------------------------
-# Main model progression
-#
-# BASE deliberately excludes recency (C) and listing (D) so that Models 3 and 4
-# can measure what those groups are actually worth. Model 1 vs Model 2 changes
-# only the objective, holding features fixed.
-# --------------------------------------------------------------------------
-
 FEATURE_SETS: dict[str, list[str]] = {
     "base":                 A + B + E + F + G,
     "base_recency":         A + B + C + E + F + G,
-    "base_recency_listing": A + B + C + D + E + F + G,   # == every feature
+    "base_recency_listing": A + B + C + D + E + F + G,
 
-    # ---- feature-group ablation ladder (spec section 9) ----
     "abl_1_calendar":                 A,
     "abl_2_calendar_demand":          A + B,
     "abl_3_plus_recency":             A + B + C,
@@ -45,7 +26,6 @@ FEATURE_SETS: dict[str, list[str]] = {
     "abl_7_full":                     A + B + C + D + E + F + G,
 }
 
-# Human-readable description for the reports.
 FEATURE_SET_LABELS: dict[str, str] = {
     "base": "Calendar + Historical demand + Price + Hierarchy + Horizon",
     "base_recency": "BASE + Recency",
@@ -67,7 +47,6 @@ def get(name: str) -> list[str]:
 
 
 def groups_in(name: str) -> list[str]:
-    """Which group letters a named set contains."""
     cols = set(FEATURE_SETS[name])
     out = []
     for letter, grp in [("A", A), ("B", B), ("C", C), ("D", D),

@@ -1,10 +1,3 @@
-/**
- * Explanatory diagrams.
- *
- * Drawn as accessible HTML/flex rather than SVG so they reflow on narrow
- * screens, inherit the theme, and are readable by a screen reader in order.
- * Each one describes only what the system verifiably does.
- */
 import type { ReactNode } from 'react'
 
 function Node({
@@ -35,7 +28,6 @@ function Arrow({ label }: { label?: string }) {
   )
 }
 
-/** How a forecast is produced, end to end. */
 export function PipelineDiagram() {
   return (
     <figure>
@@ -64,7 +56,6 @@ export function PipelineDiagram() {
   )
 }
 
-/** How the hierarchy aggregates. */
 export function HierarchyDiagram() {
   const rows = [
     { label: 'Chain total', n: '1' },
@@ -105,7 +96,6 @@ export function HierarchyDiagram() {
   )
 }
 
-/** How validation works, and why the origin matters. */
 export function ValidationDiagram() {
   return (
     <figure>
@@ -139,7 +129,6 @@ export function ValidationDiagram() {
   )
 }
 
-/** What one row of the dataset is. */
 export function DataRowDiagram() {
   const fields = [
     { k: 'store', v: 'CA_3', note: '10 stores, 3 states' },

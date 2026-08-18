@@ -40,12 +40,6 @@ function MoverRow({ m, direction }: { m: Mover; direction: 'up' | 'down' }) {
   )
 }
 
-/**
- * Decision support: the last step of the flow the product teaches.
- *
- * Every figure here is arithmetic over the frozen forecast and the observed
- * history — there is no separate "insight model", and nothing is hard-coded.
- */
 export function Insights() {
   const [level, setLevel] = useState('total')
   const [nodeId, setNodeId] = useState('ALL')

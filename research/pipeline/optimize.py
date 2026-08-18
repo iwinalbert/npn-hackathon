@@ -1,13 +1,3 @@
-"""
-Shared harness for the optimization phases.
-
-One place that knows how to: build the standard setup, train a LightGBM model on
-a named feature set, evaluate it on the primary (or inner) window, compute the
-diagnostics every phase report needs, and record the experiment.
-
-Existing modules are reused rather than reimplemented — this calls
-FeatureBuilder(V2), Backtester, metrics and Experiment directly.
-"""
 
 from __future__ import annotations
 
@@ -24,8 +14,6 @@ from .data_loader import M5Data
 from .experiment import Experiment
 from .features_v2 import FeatureBuilderV2, categorical_for
 
-# Our current best, measured. Every delta in the optimization phases is quoted
-# against these two numbers.
 BEST_RMSE = 2.1210429411947650
 BEST_MAE = 1.0319268155496617
 
@@ -42,7 +30,6 @@ N_ORIGINS = 15
 
 
 class Setup:
-    """Loaded once and shared by every experiment in a phase script."""
 
     def __init__(self, origin_idx: int = config.VALIDATION_ORIGIN_IDX,
                  n_origins: int = N_ORIGINS):
@@ -55,7 +42,6 @@ class Setup:
         self.y = self.valid["sales"].to_numpy()
         self.origins = self.bt.training_origins(origin_idx, n_origins=n_origins)
 
-        # Volume tiers, measured on pre-origin history only.
         hist = self.data.sales_wide[:, :origin_idx + 1].mean(axis=1)
         self.tier = pd.Series(pd.cut(
             hist[self.valid["series_idx"].to_numpy()],
@@ -77,7 +63,6 @@ class Setup:
 
 
 def diagnostics(y: np.ndarray, p: np.ndarray, s: Setup) -> dict:
-    """The numbers every optimization report quotes."""
     m = metrics.evaluate(y, p)
     hi = metrics.evaluate(y[s.high], p[s.high])
     tot_sq = ((y - p) ** 2).sum()
@@ -99,7 +84,6 @@ def diagnostics(y: np.ndarray, p: np.ndarray, s: Setup) -> dict:
 
 
 def build_matrix(s: Setup, cols: list[str], origins=None, verbose=False):
-    """Assemble (X, y) over the training origins for the given feature set."""
     origins = s.origins if origins is None else origins
     n = config.N_SERIES
     rows_per = n * config.HORIZON
@@ -144,7 +128,6 @@ def predict(booster, s: Setup, cols: list[str]) -> np.ndarray:
 def run(name: str, s: Setup, cols: list[str], *, params=None,
         n_estimators=N_ESTIMATORS, weights=None, label="", notes=(),
         save_model=True, save_preds=True, extra=None) -> dict:
-    """Train + evaluate + record one experiment. Returns the diagnostics dict."""
     print(f"  [{name}] {label}  ({len(cols)} features)")
     exp = Experiment(
         name, model_type="LightGBM",

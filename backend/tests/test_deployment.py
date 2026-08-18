@@ -1,14 +1,3 @@
-"""
-DEPLOYMENT READINESS — the tests that prove this runs somewhere other than the
-machine it was written on.
-
-The single most valuable test here is
-`test_api_serves_with_no_research_tree_present`: it launches the app in a
-subprocess whose environment points at a data directory containing only the
-three product artefacts, with the project root redirected to an empty temp
-directory. If the API can serve forecasts, hierarchy and accuracy under those
-conditions, it can serve them from a container with the research data absent.
-"""
 from __future__ import annotations
 
 import json
@@ -25,19 +14,9 @@ from app.config import Settings, settings
 from .conftest import API
 
 BACKEND = Path(__file__).resolve().parents[1]
-# backend/ now sits directly at the repository root, so these are the same
-# directory. PRODUCT_ROOT is kept as a name because the assertions below read
-# more clearly with it.
 REPO_ROOT = BACKEND.parent
 PRODUCT_ROOT = REPO_ROOT
-# docker-compose.yml stays at the REPOSITORY root because the `full` image does
-# `COPY research/pipeline /research/pipeline` — a build context rooted at
-# backend/ could not reach the research tree.
 
-
-# ---------------------------------------------------------------------------
-# Configuration is environment-driven and portable
-# ---------------------------------------------------------------------------
 
 def test_all_paths_are_configurable_by_env(monkeypatch, tmp_path):
     monkeypatch.setenv("NPN_DATA_DIR", str(tmp_path / "d"))
@@ -58,7 +37,6 @@ def test_cors_origins_accept_a_comma_separated_env_var(monkeypatch):
 
 
 def test_no_windows_paths_are_hard_coded_in_the_app():
-    """A single `C:\\` in shipped code would break every Linux deployment."""
     offenders = []
     for p in (BACKEND / "app").rglob("*.py"):
         text = p.read_text(encoding="utf-8")
@@ -69,11 +47,6 @@ def test_no_windows_paths_are_hard_coded_in_the_app():
 
 
 def test_product_database_contains_no_baked_absolute_paths():
-    """
-    DuckDB bakes absolute paths into view SQL. A view over an external file
-    would make the database file non-portable, which is why this build defines
-    none.
-    """
     if not Path(settings.product_db).exists():
         pytest.skip("product.duckdb not built — run scripts/build_product_db.py")
     import duckdb
@@ -90,16 +63,11 @@ def test_product_database_contains_no_baked_absolute_paths():
 
 
 def test_api_layer_imports_no_ml_libraries():
-    """
-    The API container must not need lightgbm/pandas/numpy. They are imported
-    lazily inside the inference service only.
-    """
     import ast
     eager = []
     for p in (BACKEND / "app").rglob("*.py"):
         tree = ast.parse(p.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
-            # module-level imports only: anything nested is lazy by construction
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 names = ([a.name for a in node.names]
                          if isinstance(node, ast.Import)
@@ -107,7 +75,6 @@ def test_api_layer_imports_no_ml_libraries():
                 for n in names:
                     root = n.split(".")[0]
                     if root in {"lightgbm", "pandas", "numpy", "pipeline"}:
-                        # is it at module level?
                         if node.col_offset == 0:
                             eager.append(f"{p.relative_to(BACKEND)}: {n}")
     assert not eager, f"eager ML imports would bloat the API container: {eager}"
@@ -117,7 +84,6 @@ def test_requirements_declare_every_api_dependency():
     req = (BACKEND / "requirements.txt").read_text(encoding="utf-8").lower()
     for pkg in ("fastapi", "uvicorn", "pydantic", "pydantic-settings", "duckdb"):
         assert pkg in req, f"{pkg} missing from requirements.txt"
-    # ML libraries belong in the inference extra, not the API runtime
     for pkg in ("lightgbm", "pandas", "numpy"):
         assert pkg not in req.split("# live inference")[0], (
             f"{pkg} should not be an API runtime dependency")
@@ -135,15 +101,7 @@ def test_dockerfile_and_compose_exist_and_run_as_non_root():
     assert ":ro" in compose, "research artefacts must be mounted read-only"
 
 
-# ---------------------------------------------------------------------------
-# Graceful failure
-# ---------------------------------------------------------------------------
-
 def test_missing_data_layer_returns_503_not_a_crash(monkeypatch, tmp_path):
-    """
-    A container started before its data volume is mounted must report the
-    problem, not die. 503 with a remedy is the correct behaviour.
-    """
     from fastapi.testclient import TestClient
 
     import app.db as dbmod
@@ -155,7 +113,6 @@ def test_missing_data_layer_returns_503_not_a_crash(monkeypatch, tmp_path):
         dbmod.settings = Settings(data_dir=tmp_path / "empty")
         import app.main as mainmod
         with TestClient(mainmod.app) as c:
-            # liveness still succeeds: the process is healthy
             assert c.get(f"{API}/health").status_code == 200
             ready = c.get(f"{API}/ready").json()
             assert ready["ready"] is False
@@ -166,10 +123,6 @@ def test_missing_data_layer_returns_503_not_a_crash(monkeypatch, tmp_path):
         dbmod.settings = original
         dbmod.close_connection()
 
-
-# ---------------------------------------------------------------------------
-# The portability proof
-# ---------------------------------------------------------------------------
 
 PORTABILITY_SCRIPT = textwrap.dedent("""
     import json, sys
@@ -199,14 +152,6 @@ PORTABILITY_SCRIPT = textwrap.dedent("""
 
 @pytest.mark.slow
 def test_api_serves_with_no_research_tree_present(tmp_path):
-    """
-    THE DEPLOYMENT PROOF.
-
-    Copies only the three product artefacts to a fresh directory, points the
-    project root at an empty directory, and runs the API in a clean subprocess.
-    Everything except live inference must work — which is exactly the contract
-    the `api` Docker target promises.
-    """
     data_dir = tmp_path / "product"
     data_dir.mkdir()
     for name in ("product.duckdb", "history.parquet", "backtest.parquet"):
@@ -243,7 +188,6 @@ def test_api_serves_with_no_research_tree_present(tmp_path):
                 if ln.startswith("RESULT_JSON:"))
     out = json.loads(line[len("RESULT_JSON:"):])
 
-    # Everything that does not need the model must work
     assert out["ready"] is True
     assert out["levels"] == 12
     assert out["forecast_points"] == 28
@@ -252,6 +196,5 @@ def test_api_serves_with_no_research_tree_present(tmp_path):
     assert out["accuracy_windows"] == 8
     assert out["history_points"] == 30
 
-    # ...and inference must degrade gracefully, explaining itself
     assert out["inference_available"] is False
     assert any("not found" in r for r in out["inference_reasons"])

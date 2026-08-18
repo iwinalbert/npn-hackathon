@@ -1,35 +1,3 @@
-"""
-DIAGNOSTIC — is segmentation worth testing, and is there a better lead?
-
-READ-ONLY. Trains nothing. Two questions, both answered from artefacts already
-on disk plus the raw sales matrix.
-
-Q1. SEGMENTATION HEADROOM
-    If a segment-specialised model could help, then at minimum a per-SEGMENT
-    recalibration of our existing predictions should beat a single global
-    recalibration. We already know the best global multiplier is worth almost
-    nothing (2.1210 -> 2.1195). If per-segment multipliers are worth little more,
-    then whatever a segmented model could offer is not a level/scale effect, and
-    given Experiment #70 (residual correlation 0.9897 across architectures) it is
-    unlikely to be a variance effect either.
-
-    This is deliberately generous to the hypothesis: the oracle sees the answers.
-    A negative result under an oracle is close to conclusive.
-
-Q2. WEEKDAY-SHAPE HEADROOM
-    The error autopsy measured two oracles:
-        per-series constant mean        RMSE 1.9818
-        per-series x weekday mean       RMSE 1.6764
-    That 0.31 gap says a per-series weekly SHAPE is worth much more than a
-    per-series LEVEL. But an oracle knows the validation window's weekday means.
-    The question that matters is how much of that is recoverable from history.
-
-    So: build a simple predictor  level(origin) x weekday_ratio(history)  and see
-    how far it closes the gap versus a flat level-only predictor. No model, no
-    training - just arithmetic on past sales.
-
-    python scripts/06_research_campaign/33_segmentation_diagnostic.py
-"""
 
 from __future__ import annotations
 
@@ -70,7 +38,6 @@ def main():
     hist = S[:, :VO + 1]
     hmean = hist.mean(axis=1)
     hzero = (hist == 0).mean(axis=1)
-    # volatility and spike behaviour measured on pre-origin history only
     hstd = hist[:, -180:].astype(np.float64).std(axis=1)
     with np.errstate(divide="ignore", invalid="ignore"):
         hcv = np.where(hmean > 0, hstd / hmean, np.nan)
@@ -79,15 +46,12 @@ def main():
     base_rmse = metrics.rmse(y, p)
     print(f"  champion on this window: RMSE {base_rmse:.6f}")
 
-    # ==================================================================
     banner("Q1 — SEGMENTATION HEADROOM (per-segment ORACLE rescale)")
-    # ==================================================================
     print("  For each scheme: give every segment its own optimal multiplier,")
     print("  fitted with full knowledge of the answers. That is the ceiling on")
     print("  what any segment-level specialisation could buy through scale.\n")
 
     def oracle_rescale(labels) -> tuple[float, int]:
-        """Best per-group multiplier, chosen with the answers visible."""
         df = pd.DataFrame({"g": labels, "y": y, "p": p})
         num = df.groupby("g").apply(lambda t: (t.p * t.y).sum(), include_groups=False)
         den = df.groupby("g").apply(lambda t: (t.p * t.p).sum(), include_groups=False)
@@ -130,19 +94,16 @@ def main():
           f"(vs global rescale {seg.iloc[0].oracle_RMSE:.4f}, "
           f"per-series {seg.iloc[-1].oracle_RMSE:.4f})")
 
-    # ==================================================================
     banner("Q2 — WEEKDAY-SHAPE HEADROOM (recoverable from history?)")
-    # ==================================================================
     print("  predictor = series level at origin  x  series weekday ratio from history")
     print("  no model, no fitting, only past sales.\n")
 
-    wd_all = d.calendar.wday.to_numpy()          # 1..7
+    wd_all = d.calendar.wday.to_numpy()
     wd_t = wd_all[ti]
 
-    level28 = hist[:, -28:].astype(np.float64).mean(axis=1)     # level at origin
+    level28 = hist[:, -28:].astype(np.float64).mean(axis=1)
 
     def weekday_ratio(weeks: int) -> np.ndarray:
-        """(series x weekday) mean over the trailing `weeks`, divided by its own mean."""
         days = weeks * 7
         blk = hist[:, -days:]
         wd_blk = wd_all[VO + 1 - days: VO + 1]
@@ -156,7 +117,7 @@ def main():
         return np.nan_to_num(ratio, nan=1.0, posinf=1.0, neginf=1.0)
 
     print(f"  {'predictor':<44} {'RMSE':>8} {'vs level-only':>14}")
-    flat = np.tile(level28, 28).reshape(28, -1)  # placeholder shape check
+    flat = np.tile(level28, 28).reshape(28, -1)
     pred_flat = level28[si]
     r_flat = metrics.rmse(y, pred_flat)
     print(f"  {'level only (28-day mean, repeated)':<44} {r_flat:>8.4f} {'—':>14}")
@@ -165,7 +126,6 @@ def main():
     q2 = [{"predictor": "level only", "RMSE": r_flat}]
     for weeks in [8, 13, 26, 52]:
         ratio = weekday_ratio(weeks)
-        # shrink the ratio toward 1 for thin series, same guard as elsewhere
         n_obs = level28 * weeks * 7
         shrink = (n_obs / (n_obs + 20.0))[:, None]
         ratio_s = 1.0 + (ratio - 1.0) * shrink
@@ -175,7 +135,6 @@ def main():
         print(f"  {'level x weekday ratio (' + str(weeks) + 'w history)':<44} "
               f"{r:>8.4f} {r - r_flat:>+14.4f}")
 
-    # oracle version for reference: weekday means from the validation window itself
     dfo = pd.DataFrame({"s": si, "w": wd_t, "y": y})
     orc = dfo.groupby(["s", "w"])["y"].transform("mean").to_numpy()
     r_orc = metrics.rmse(y, orc)
@@ -189,23 +148,19 @@ def main():
           f"{recovered:.1f}%")
     R["q2_pct_of_oracle_gap_recovered"] = float(recovered)
 
-    # ==================================================================
     banner("Q2b — DOES THE CHAMPION ALREADY CAPTURE WEEKDAY SHAPE?")
-    # ==================================================================
     print("  If the model already knows each series' weekly shape, its residuals")
     print("  will show no weekday pattern *within* a series. If a pattern remains,")
     print("  the information is on the table.\n")
 
     err = p - y
     dfe = pd.DataFrame({"s": si, "w": wd_t, "e": err})
-    # per-series-per-weekday mean residual, then how much variance that explains
     g = dfe.groupby(["s", "w"])["e"].mean()
     sw_mean = dfe.set_index(["s", "w"]).index.map(g).to_numpy()
     ss_tot = float(np.sum((err - err.mean()) ** 2))
     ss_sw = float(np.sum((sw_mean - err.mean()) ** 2))
     print(f"  variance of residuals explained by (series x weekday) cell means: "
           f"{ss_sw / ss_tot * 100:.2f}%")
-    # compare with what weekday alone explains
     gw = dfe.groupby("w")["e"].mean()
     w_mean = dfe["w"].map(gw).to_numpy()
     ss_w = float(np.sum((w_mean - err.mean()) ** 2))

@@ -1,34 +1,3 @@
-"""
-EXPERIMENT #72 — per-series response-shape features.
-
-HYPOTHESIS
-  The champion knows each series' demand LEVEL well but represents its weekly
-  SHAPE poorly, because that requires a 3,049 x 7 categorical interaction.
-
-EVIDENCE
-  Diagnostic 33 showed `level x weekday_ratio(52w)` beats level-only by 0.0578
-  RMSE out of sample - real signal, recoverable from history alone. It also
-  showed only ~10% of the per-series-x-weekday oracle gap is recoverable, so the
-  expected gain is modest.
-
-WHY NOT A REPEAT OF PHASE 2 / EXPERIMENT #71
-  All fourteen Phase 2 features and all four Experiment #71 features described
-  LEVEL. These describe SHAPE relative to a series' own average.
-
-MECHANISM
-  Hand the model the interaction directly instead of asking it to discover one
-  from high-cardinality categorical splits.
-
-LEAKAGE
-  All ratios from sales at or before the origin; only the calendar comes from
-  target days. Proved by corruption test below.
-
-SUCCESS CRITERION (fixed before running)
-  PROMOTE to robustness testing if dRMSE <= -0.010; REJECT otherwise.
-  A gain must also survive three further windows to become champion.
-
-    python scripts/06_research_campaign/34_exp72_shape_features.py
-"""
 
 from __future__ import annotations
 
@@ -75,7 +44,6 @@ def main():
 
     s = build_setup(config.VALIDATION_ORIGIN_IDX)
 
-    # ---------------- leakage ----------------
     banner("LEAKAGE TEST")
     clean = s.fb.build_origin_frame(s.origin_idx, include_target=False)
     corrupt = s.data.sales_wide.copy()
@@ -97,7 +65,6 @@ def main():
         print(f"    {c:<16} range [{v.min():.3f}, {v.max():.3f}]  "
               f"mean {v.mean():.4f}  sd {v.std():.4f}")
 
-    # ---------------- train ----------------
     banner("TRAIN (identical config to champion; only the feature set differs)")
     X, Y = optimize.build_matrix(s, cols, verbose=True)
     booster, info = optimize.train(X, Y, cols)
@@ -154,7 +121,6 @@ def main():
                "with_shape": d, "delta": {"RMSE": dr, "MAE": dm},
                "gain_share_pct": newshare, "decision": decision}
 
-    # ---------------- robustness, only if it earned it ----------------
     if decision == "PROMOTE":
         banner("ROBUSTNESS — three further windows (champion vs shape)")
         cal = s.data.calendar

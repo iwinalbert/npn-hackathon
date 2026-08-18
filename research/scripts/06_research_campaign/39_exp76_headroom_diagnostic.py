@@ -1,47 +1,3 @@
-"""
-DIAGNOSTIC #76-D — where is the remaining headroom, now that the champion is the
-38-feature shape+cycle model (RMSE 2.1157 / MAE 1.0287)?
-
-READ-ONLY. Trains nothing. Every number comes from validation-prediction files
-already on disk plus the raw sales matrix. The point is to spend zero GPU/CPU
-before deciding what Experiment #76 should actually be.
-
-WHY THIS COMES FIRST
---------------------
-Experiments #72-#75 changed the champion. Every prior diagnostic (#25 error
-autopsy, #33 segmentation) was measured against the OLD 32-feature champion.
-Directions that looked open then may be closed now, and vice versa. Re-measuring
-against the new champion costs nothing and is the only honest basis for choosing
-the next experiment.
-
-THE FIVE QUESTIONS
-------------------
-Q1  SHAPE AXIS EXHAUSTION.  #33 found that (series x weekday) cell means explain
-    38.98% of the OLD champion's residual variance. If the four shape features
-    absorbed that, the number should have fallen sharply, and "more weekday
-    profiles" is a dead end. If it barely moved, the axis is still open.
-
-Q2  ENSEMBLE HEADROOM ON THE NEW CHAMPION.  #70 rejected ensembling, but it
-    ensembled members that were individually 0.01-0.04 RMSE WORSE than the
-    champion, so the test confounded "ensembling does not work" with "these
-    members are bad". Here we measure, for every model whose predictions are on
-    disk, the residual correlation with the new champion and the best achievable
-    two-model blend. In-sample optimal, so it is an upper bound - but a cheap one
-    that can kill the direction outright.
-
-Q3  PER-SERIES RECALIBRATION HEADROOM, RE-MEASURED.  #33's per-series oracle was
-    -0.2388 against the old champion. Did the shape features eat into it?
-
-Q4  ERROR RELOCATION.  Did the shape features move error between volume deciles,
-    horizons and weekdays, or scale it uniformly? Where error moved TO is where
-    the next experiment should look.
-
-Q5  HORIZON STRUCTURE.  One model serves h=1..28 with `horizon` as a feature.
-    An oracle per-horizon rescale bounds what any horizon-specialised model could
-    buy through scale alone.
-
-    python scripts/06_research_campaign/39_exp76_headroom_diagnostic.py
-"""
 
 from __future__ import annotations
 
@@ -62,11 +18,9 @@ from pipeline.data_loader import M5Data
 VO = config.VALIDATION_ORIGIN_IDX
 PD_ = config.PREDICTIONS_DIR
 
-CHAMPION_FILE = "exp_74_new_champion_validation.csv"      # 38 feat, the new champion
+CHAMPION_FILE = "exp_74_new_champion_validation.csv"
 OLD_CHAMPION_FILE = "model_04_tweedie_recency_listing_validation.csv"
 
-# Every other model with predictions on the primary window. The label records
-# what makes it different, which is what matters for ensemble diversity.
 CANDIDATES = {
     "shape_36feat_tweedie1.1":      "exp_72_shape_validation.csv",
     "old_champ_32feat_tweedie1.1":  OLD_CHAMPION_FILE,
@@ -140,9 +94,7 @@ def main():
     print(f"  old champ  : RMSE {old_rmse:.6f}   "
           f"(new champion is {champ_rmse - old_rmse:+.4f})")
 
-    # ======================================================================
     banner("Q1 — IS THE WEEKDAY-SHAPE AXIS EXHAUSTED?")
-    # ======================================================================
     print("  Diagnostic #33 measured, on the OLD champion, how much of the residual")
     print("  variance is explained by per-(series x weekday) cell means. If the four")
     print("  shape features did their job, that share should have dropped.\n")
@@ -178,7 +130,6 @@ def main():
         "old_weekday_only_pct": old_w, "new_weekday_only_pct": new_w,
     }
 
-    # How much would an ORACLE per-(series x weekday) additive correction buy now?
     def oracle_sw_correction(pred: np.ndarray) -> float:
         err = pred - y
         dfe = pd.DataFrame({"s": si, "w": wd_t, "e": err})
@@ -196,9 +147,7 @@ def main():
         "new": {"base": champ_rmse, "oracle": orc_new, "gain": orc_new - champ_rmse},
     }
 
-    # ======================================================================
     banner("Q2 — ENSEMBLE HEADROOM ON TOP OF THE NEW CHAMPION")
-    # ======================================================================
     print("  For every model with predictions on disk: its own RMSE, the correlation")
     print("  of its residuals with the champion's, the best two-model blend weight")
     print("  and what that blend scores.\n")
@@ -225,7 +174,6 @@ def main():
         pm = df.y_pred.to_numpy(np.float64)
         e_m = pm - y
         r_resid = float(np.corrcoef(e_c, e_m)[0, 1])
-        # optimal w on champion in  w*champ + (1-w)*member , closed form
         diff = e_c - e_m
         denom = float(np.dot(diff, diff))
         w = 1.0 if denom == 0 else float(-np.dot(e_m, diff) / denom)
@@ -248,8 +196,6 @@ def main():
     print(f"\n  best single partner : {best['model']}  "
           f"(oracle-weighted gain {best['gain_vs_champion']:+.4f})")
 
-    # Full non-negative least squares over ALL members at once — the absolute
-    # ceiling for any linear stack of what we already have.
     banner("Q2b — CEILING FOR A LINEAR STACK OF EVERYTHING ON DISK")
     mats, names = [p_champ], ["champion"]
     for row in rows:
@@ -258,7 +204,6 @@ def main():
         names.append(row["model"])
     A = np.column_stack(mats)
 
-    # non-negative least squares with weights summing to 1, by projected gradient
     w = np.full(A.shape[1], 1.0 / A.shape[1])
     AtA = A.T @ A / n
     Aty = A.T @ y / n
@@ -285,9 +230,7 @@ def main():
         "note": "in-sample optimal weights: an upper bound, not an achievable result",
     }
 
-    # ======================================================================
     banner("Q3 — PER-SERIES RECALIBRATION HEADROOM, RE-MEASURED")
-    # ======================================================================
     def oracle_rescale(pred, labels):
         df = pd.DataFrame({"g": labels, "y": y, "p": pred})
         num = df.groupby("g", observed=True).apply(
@@ -316,9 +259,7 @@ def main():
         "global_gain_new": global_new - champ_rmse,
     }
 
-    # ======================================================================
     banner("Q4 — WHERE DID THE ERROR GO?")
-    # ======================================================================
     dec = pd.qcut(hmean[si], 10, labels=False, duplicates="drop")
     sq_old = (p_old - y) ** 2
     sq_new = (p_champ - y) ** 2
@@ -351,9 +292,7 @@ def main():
         "mean_excess_when_over": float((p_champ - y)[~under].mean()),
     }
 
-    # ======================================================================
     banner("Q5 — HORIZON STRUCTURE")
-    # ======================================================================
     hz_oracle = oracle_rescale(p_champ, hz.astype(str))
     hzw_oracle = oracle_rescale(
         p_champ, np.char.add(np.char.add(hz.astype(str), "|"), wd_t.astype(str)))

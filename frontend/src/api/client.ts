@@ -1,11 +1,3 @@
-/**
- * API client.
- *
- * One place that knows how to reach the backend, so no component ever builds a
- * URL. The base URL is resolved from the environment at build time and falls
- * back to a SAME-ORIGIN path — never to a hard-coded localhost — so the same
- * bundle works behind any reverse proxy.
- */
 
 export class ApiError extends Error {
   constructor(
@@ -19,13 +11,7 @@ export class ApiError extends Error {
     this.name = 'ApiError'
   }
 
-  /** A short, human-readable line safe to render in an error panel. */
   get userMessage(): string {
-    // A 503 carrying `provider_error` came from the AI assistant's own
-    // classification (services/genai.py: _provider_failure), not from the
-    // forecasting API being unready — those are unrelated systems, and
-    // labelling a transient Gemini hiccup as "the forecasting service is
-    // not ready" tells the user the wrong thing is broken.
     if (this.status === 503 && this.context?.provider_error) {
       return this.message || 'The AI assistant is temporarily unavailable.'
     }
@@ -36,14 +22,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Resolution order:
- *   1. VITE_API_BASE_URL          explicit, for split deployments
- *   2. same-origin "/api/v1"      default: frontend served behind the same proxy
- *
- * In development, vite.config.ts proxies /api to the local backend, so the
- * same-origin default works there too.
- */
 export const API_BASE: string =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') ??
   '/api/v1'

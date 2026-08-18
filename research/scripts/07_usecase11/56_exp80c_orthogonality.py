@@ -1,49 +1,3 @@
-"""
-EXPERIMENT #80c — IS THE ITEM-LEVEL GAIN ANYTHING MORE THAN A LEVEL CORRECTION?
-
-INNER WINDOW ONLY. Read-only with respect to the champion.
-
-WHY THIS EXISTS
----------------
-Experiment #80b ran three negative controls and one of them fired. Rescaling
-every prediction by a single fitted constant improved the inner window by
--0.0230, which is MORE than the -0.0160 that the whole item-level machinery
-delivered. That control used the evaluation window's own truth to fit the
-constant, so it is an oracle rather than an achievable method — but it exposes
-something that has to be settled before anything is promoted:
-
-    the champion over-forecasts this particular window by +0.0817 units per row
-    (mean actual 1.3864, mean predicted 1.4681, 5.9% high),
-
-whereas on the primary window it is essentially calibrated (bias -0.0081, and
-the same global-rescale oracle is worth -0.0000 there). The inner window is
-therefore ATYPICAL, and an alpha chosen on it may be measuring how well the
-item-level model happens to undo a level anomaly rather than how much
-cross-store information it carries.
-
-THE TEST
---------
-Split the item-level correction into the only two things it can be:
-
-    ratio_i,d = Ahat_i,d / F_i,d           the multiplicative correction
-    log ratio = (global mean)  +  (item-specific remainder)
-
-Then compare, on identical rows:
-
-  1. champion
-  2. champion x best global constant                    (level only, oracle)
-  3. champion reconciled, full correction                (level + item-specific)
-  4. champion reconciled with the DEMEANED correction    (item-specific ONLY —
-     the global component is removed, so this cannot act as a rescale)
-  5. champion x best global constant, THEN reconciled with the demeaned
-     correction                                          (both, non-overlapping)
-
-If (4) is worth nothing, the direction is a calibration trick and must be
-rejected as hierarchical forecasting. If (4) carries most of the gain, the
-cross-store channel is real and the level anomaly is a separate matter.
-
-    python scripts/07_usecase11/56_exp80c_orthogonality.py
-"""
 
 from __future__ import annotations
 
@@ -112,11 +66,9 @@ def main():
     Ahat[valid["group_idx"].to_numpy(),
          [pos[d] for d in valid["target_day_idx"].to_numpy()]] = p_agg
 
-    # --- decompose the multiplicative correction ------------------------
     ok = (F > 1e-6) & (Ahat > 1e-6)
     ratio = np.where(ok, Ahat / np.where(ok, F, 1.0), 1.0)
     logr = np.where(ok, np.log(np.where(ok, ratio, 1.0)), 0.0)
-    # volume-weighted global component, so it matches what a global rescale does
     wts = np.where(ok, F, 0.0)
     g_mean = float((logr * wts).sum() / wts.sum())
     ratio_demeaned = np.where(ok, np.exp(logr - g_mean), 1.0)
@@ -144,24 +96,19 @@ def main():
 
     results = {}
 
-    # 1 champion
     results["1_champion"] = {**score(Pm), "alpha": None}
 
-    # 2 global rescale only (oracle constant)
     c = float((Ym * Pm).sum() / (Pm * Pm).sum())
     results["2_global_rescale_oracle"] = {**score(np.clip(c * Pm, 0, None)),
                                           "alpha": None, "c": c}
 
-    # 3 full reconciliation
     results["3_reconcile_full"] = best_over_alpha(
         lambda a: np.clip(Pm + a * share * (Ahat - F)[g], 0, None))
 
-    # 4 demeaned (item-specific only)
     Ahat_dm = ratio_demeaned * F
     results["4_reconcile_demeaned"] = best_over_alpha(
         lambda a: np.clip(Pm + a * share * (Ahat_dm - F)[g], 0, None))
 
-    # 5 global rescale THEN demeaned reconciliation
     Pc = np.clip(c * Pm, 0, None)
     Fc = np.zeros((n_g, n_d))
     np.add.at(Fc, g, Pc)

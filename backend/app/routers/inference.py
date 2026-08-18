@@ -1,11 +1,3 @@
-"""
-Live model inference — the frozen champion, executed on demand.
-
-The only supported operation is VERIFY: reload the frozen boosters, rebuild
-features from the raw panel, re-run both members, blend at w=0.60 and compare
-against the shipped forecast artefact. That proves the model runs and the
-artefact is authentic, without claiming anything the model cannot support.
-"""
 from __future__ import annotations
 
 from fastapi import APIRouter, Query
@@ -25,12 +17,6 @@ def status() -> dict:
 
 @router.post("/verify", summary="Start a forecast verification run (~35 s)")
 def verify() -> dict:
-    """
-    Re-runs the frozen model and compares it against the shipped artefact.
-
-    Returns immediately with a job id; poll `/inference/jobs/{job_id}`.
-    Returns 503 if inference is unavailable, 409 if one is already running.
-    """
     svc.require_available()
     try:
         job_id = runner.submit("verify", svc.run_verification)

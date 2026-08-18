@@ -1,44 +1,3 @@
-"""
-EXPERIMENT #78 — retrain the accepted blend at the real forecast origin and
-produce the 28-day deliverable for d_1942..d_1969.
-
-THE CONFIGURATION BEING PROMOTED
---------------------------------
-    member A   direct champion, 38 features (Experiments #72-#75)
-    member B'  one-step recursive, 32 features = the Phase-5 architecture plus
-               the champion's six shape/cycle features (Experiment #77)
-    blend      w = 0.60 on member A
-
-Both members and the weight come from accepted experiments:
-  #76 established the direct+recursive blend    (4/4 windows, 3/3 seeds)
-  #77 upgraded member B and accepted it         (D1 4/4, D2 -0.0042, D3 3/4)
-
-The weight w = 0.60 was selected on an INNER window (origin d_1885, targets
-d_1886..d_1913) which lies strictly before this forecast origin, so no
-information from the forecast horizon influenced it. Across the four evaluation
-windows w = 0.60 gave mean dRMSE -0.0242 against member A alone, matching
-w = 0.50's -0.0240 while costing +0.0186 MAE instead of +0.0244.
-
-Runs only if BOTH #76 and #77 were accepted; the script checks their registry
-records and refuses otherwise, so it cannot quietly promote a rejected
-configuration.
-
-Every earlier artefact is left untouched. The champion model, the shape+cycle
-model, and both previous forecasts stay exactly where they are — everything
-written here uses a new name.
-
-WHAT IS DIFFERENT AT THE FORECAST ORIGIN
-----------------------------------------
-There is no ground truth for d_1942..d_1969, so no accuracy number applies to
-this file. The accuracy estimate for this configuration is the one Experiment
-#77 measured on four held-out windows, and that is what gets recorded.
-
-The recursive member has to roll 28 days past the end of the sales matrix here,
-which is why pipeline/recursive.py sizes its working matrix by what the rollout
-needs rather than by how much history exists.
-
-    python scripts/06_research_campaign/41_exp77_blend_final_forecast.py
-"""
 
 from __future__ import annotations
 
@@ -64,9 +23,6 @@ from pipeline.features_v5 import FeatureBuilderV5, CHAMPION_FEATURES, V5_FEATURE
 EXP76 = config.EXPERIMENTS_DIR / "exp_76_architectural_diversity_blend.json"
 EXP77 = config.EXPERIMENTS_DIR / "exp_77_recursive_member_upgrade.json"
 
-# Member B' — the Phase-5 recursive architecture plus the champion's six
-# shape/cycle features. Recency and listing features stay out for the reason
-# Phase 5 gave: a fractional prediction fed back in would corrupt them.
 REC_COLS_V5 = list(recursive.REC_COLS) + list(V4_FEATURES) + list(V5_FEATURES)
 
 
@@ -107,9 +63,7 @@ def main():
     print(f"\n  forecast origin : {fw['forecast_origin_day']}")
     print(f"  forecast window : {fw['validation_days']} ({fw['validation_dates']})")
 
-    # ==================================================================
     banner("LEAKAGE TEST AT THE FORECAST ORIGIN (direct member)")
-    # ==================================================================
     clean = fb.build_origin_frame(FO, include_target=False)
     corrupt = data.sales_wide.copy()
     corrupt[:, FO + 1:] = 9999
@@ -125,9 +79,7 @@ def main():
         raise SystemExit(f"STOP: leakage in {changed}")
     del clean, dirty, corrupt, d2
 
-    # ==================================================================
     banner("MEMBER A — direct, 38 features")
-    # ==================================================================
     origins = bt.training_origins(FO, n_origins=optimize.N_ORIGINS)
     assert max(origins) + config.HORIZON <= config.LAST_KNOWN_DAY_IDX
     print(f"  training origins: {len(origins)} "
@@ -157,9 +109,7 @@ def main():
     del booster_d
     print(f"  direct forecast mean {p_direct.mean():.4f}")
 
-    # ==================================================================
     banner(f"MEMBER B' — one-step recursive, {len(REC_COLS_V5)} features")
-    # ==================================================================
     booster_r, info_r = recursive.train_one_step(
         data, FO, verbose=True, builder_cls=FeatureBuilderV5, cols=REC_COLS_V5)
     mp_r = config.CHAMPION_DIR / "model_12_blend_recursive_shape_final.txt"
@@ -175,9 +125,7 @@ def main():
     print(f"  recursive forecast mean {p_rec.mean():.4f}")
     del booster_r, work
 
-    # ==================================================================
     banner("BLEND")
-    # ==================================================================
     preds = np.clip(w * p_direct + (1 - w) * p_rec, 0, None)
     print(f"  {len(preds):,} rows   mean {preds.mean():.4f}   "
           f"min {preds.min():.5f}   max {preds.max():.2f}")
@@ -188,9 +136,7 @@ def main():
     fc = pd.DataFrame(wide, columns=[f"F{i}" for i in range(1, config.HORIZON + 1)])
     fc.insert(0, "id", data.series_meta["id"].to_numpy())
 
-    # ==================================================================
     banner("STRUCTURE VALIDATION")
-    # ==================================================================
     sub = pd.read_csv(config.SAMPLE_SUBMISSION_CSV, usecols=["id"])
     eval_ids = sub.loc[sub["id"].str.endswith("_evaluation"), "id"]
     vals = fc.iloc[:, 1:].to_numpy()

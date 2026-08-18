@@ -1,14 +1,3 @@
-"""
-Phases 11-14: select the final model on measured evidence, retrain it on all
-usable history, forecast d_1942..d_1969, and validate the output structure.
-
-The forecast origin moves to d_1941 (2016-05-22), the last day with any observed
-sales. Training origins therefore run up to d_1913, so the 28-day target blocks
-reach d_1941 and not one day further. There is nothing beyond that to reach for:
-no file contains sales for d_1942..d_1969.
-
-    python scripts/08_final_forecast.py
-"""
 
 from __future__ import annotations
 
@@ -33,14 +22,6 @@ TWEEDIE = {"objective": "tweedie", "tweedie_variance_power": 1.1, "metric": "rms
 
 
 def select_final() -> dict:
-    """
-    Lowest measured RMSE on the primary validation window. No hand-picking.
-
-    Ablation rungs are excluded. They are diagnostic runs measuring what a
-    feature group contributes, and several of them share a configuration with a
-    numbered model — picking one would name a diagnostic as the shipped model
-    and make the provenance harder to follow, without changing the result.
-    """
     cands = []
     for r in experiment.load_all():
         if r.get("status") != "completed":
@@ -92,7 +73,6 @@ def main() -> None:
     print(f"    rounds={n_estimators} leaves={params.get('num_leaves')} "
           f"lr={params.get('learning_rate')} origins={n_origins}")
 
-    # ==================================================================
     print()
     print("=" * 78)
     print("PHASE 12 — RETRAIN ON ALL USABLE HISTORY (targets through d_1941)")
@@ -102,7 +82,7 @@ def main() -> None:
     bt = Backtester(data)
     cols = feature_sets.get(feature_set)
 
-    FO = config.FINAL_FORECAST_ORIGIN_IDX          # 1940 -> d_1941
+    FO = config.FINAL_FORECAST_ORIGIN_IDX
     fw = bt.make_window(FO).describe()
     print(f"  forecast origin : {fw['forecast_origin_day']} ({fw['forecast_origin_date']})")
     print(f"  forecast window : {fw['validation_days']} ({fw['validation_dates']})")
@@ -153,7 +133,6 @@ def main() -> None:
     booster.save_model(str(mpath))
     exp.set(model_path=str(mpath.relative_to(config.PROJECT_ROOT)))
 
-    # ==================================================================
     print()
     print("=" * 78)
     print("PHASE 13 — FORECAST d_1942 .. d_1969")
@@ -174,14 +153,12 @@ def main() -> None:
             forecast_min=round(float(preds.min()), 6),
             forecast_max=round(float(preds.max()), 6))
 
-    # Reshape horizon-major -> wide (one row per series, F1..F28)
     wide = preds.reshape(config.HORIZON, config.N_SERIES).T
     series_ids = data.series_meta["id"].to_numpy()
 
     fc = pd.DataFrame(wide, columns=[f"F{i}" for i in range(1, config.HORIZON + 1)])
     fc.insert(0, "id", series_ids)
 
-    # ==================================================================
     print()
     print("=" * 78)
     print("PHASE 14 — VALIDATE FORECAST STRUCTURE")
@@ -207,7 +184,6 @@ def main() -> None:
     chk("no_negative_predictions", vals.min() >= 0, f"minimum value {vals.min():.6f}")
     chk("all_finite", np.isfinite(vals).all(), "all values finite")
 
-    # Cross-check ids against the official template.
     sub = pd.read_csv(config.SAMPLE_SUBMISSION_CSV, usecols=["id"])
     eval_ids = sub.loc[sub["id"].str.endswith("_evaluation"), "id"]
     chk("ids_match_sample_submission_evaluation_block",
@@ -215,7 +191,6 @@ def main() -> None:
         f"{len(eval_ids):,} evaluation-block ids in the template, "
         f"{len(set(fc['id']) & set(eval_ids)):,} matched")
 
-    # Ordering must match the template's evaluation block exactly.
     chk("id_order_matches_template",
         list(fc["id"]) == list(eval_ids),
         "row order identical to sample_submission.csv's evaluation block")
@@ -225,9 +200,6 @@ def main() -> None:
     print(f"\n  wrote {out_core.relative_to(config.PROJECT_ROOT)} "
           f"({len(fc):,} rows x {len(fc.columns)} cols)")
 
-    # Full M5-format file: 60,980 rows. The _validation block carries our
-    # backtest predictions for d_1914..d_1941 (days that are now known history);
-    # the _evaluation block carries the genuine d_1942..d_1969 forecast.
     full = None
     vpath = config.PROJECT_ROOT / "predictions" / "model_06_tuned_primary_validation.csv"
     if vpath.exists():

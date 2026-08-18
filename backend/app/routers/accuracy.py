@@ -1,4 +1,3 @@
-"""Model performance from verified backtest artefacts."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Query
@@ -13,11 +12,6 @@ PRIMARY = 1912
 @router.get("/windows",
             summary="Backtest windows where ground truth exists")
 def windows() -> list[dict]:
-    """
-    Only windows with real observed sales are listed. The delivered forecast
-    window (d_1942-d_1969) is deliberately absent: it has no ground truth, so no
-    accuracy figure can honestly be quoted against it.
-    """
     return svc.windows()
 
 
@@ -83,11 +77,6 @@ def aggregate_backtest(
 @router.get("/occurrence",
             summary="Demand-occurrence diagnostics (did it spot the selling days?)")
 def occurrence(origin_idx: int = Query(default=PRIMARY)) -> dict:
-    """
-    Classification-style diagnostics from thresholding the point forecast at
-    0.5 units. The model was never trained to classify — these describe a
-    behaviour, they are not the task metric.
-    """
     return svc.occurrence(origin_idx)
 
 

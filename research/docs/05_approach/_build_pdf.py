@@ -1,9 +1,3 @@
-"""
-Renders FINAL_PROJECT_APPROACH.md into FINAL_PROJECT_APPROACH.pdf.
-Read-only w.r.t. every existing project file; only touches FINAL_APPROACH/.
-A lightweight markdown -> reportlab renderer: headings, paragraphs, pipe-tables,
-bullet lists, blockquotes (used here for callouts), bold spans, hr.
-"""
 import re
 import os
 from reportlab.lib.pagesizes import LETTER
@@ -55,7 +49,6 @@ styles.add(ParagraphStyle(name="TOCItem", fontSize=9.6, leading=15, fontName="He
 
 
 def inline_md(text):
-    """Convert **bold**, `code`, and escape for reportlab mini-HTML."""
     text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
     text = re.sub(r"`([^`]+)`", r'<font face="Courier" size="8">\1</font>', text)
@@ -75,7 +68,6 @@ def parse_table(lines):
             ln = ln[:-1]
         cells = [c.strip().replace(_PIPE_PLACEHOLDER, "|") for c in ln.split("|")]
         rows.append(cells)
-    # drop separator row (---|---)
     rows = [r for r in rows if not all(re.match(r"^:?-+:?$", c) for c in r)]
     return rows
 
@@ -115,7 +107,6 @@ def build_story(md_text):
     i = 0
     n = len(lines)
 
-    # Title block from first H1
     story.append(Paragraph("Final Project Approach", styles["DocTitle"]))
     story.append(Paragraph("M5 Retail Demand Forecasting &mdash; Problem Statement 11", styles["DocSubtitle"]))
     story.append(Paragraph("Senior Review, Discrepancy Resolution &amp; Team-Ready ML Strategy", styles["DocSubtitle"]))
@@ -141,7 +132,6 @@ def build_story(md_text):
             i += 1
             continue
 
-        # Headings
         m = re.match(r"^(#{1,3})\s+(.*)$", stripped)
         if m:
             level = len(m.group(1))
@@ -162,13 +152,11 @@ def build_story(md_text):
             i += 1
             continue
 
-        # italic-only line used as document meta (e.g. *Problem Statement...*)
         if stripped.startswith("*") and stripped.endswith("*") and not stripped.startswith("**"):
             story.append(Paragraph(f"<i>{inline_md(stripped[1:-1])}</i>", styles["DocSubtitle"]))
             i += 1
             continue
 
-        # Table block
         if stripped.startswith("|"):
             block = []
             while i < n and lines[i].strip().startswith("|"):
@@ -183,7 +171,6 @@ def build_story(md_text):
                 story.append(Spacer(1, 8))
             continue
 
-        # Blockquote / callout (>)
         if stripped.startswith(">"):
             block = []
             while i < n and lines[i].strip().startswith(">"):
@@ -205,14 +192,13 @@ def build_story(md_text):
             story.append(Spacer(1, 6))
             continue
 
-        # Code block fenced
         if stripped.startswith("```"):
             i += 1
             code_lines = []
             while i < n and not lines[i].strip().startswith("```"):
                 code_lines.append(lines[i])
                 i += 1
-            i += 1  # skip closing fence
+            i += 1
             code_text = "\n".join(code_lines)
             code_text = code_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             code_text = code_text.replace("\n", "<br/>").replace(" ", "&nbsp;")
@@ -220,7 +206,6 @@ def build_story(md_text):
             story.append(Spacer(1, 6))
             continue
 
-        # Bullet list
         if re.match(r"^(-|\d+\.)\s+", stripped):
             items = []
             while i < n:
@@ -237,7 +222,6 @@ def build_story(md_text):
             story.append(Spacer(1, 4))
             continue
 
-        # Regular paragraph (collect contiguous non-blank lines)
         para_lines = [stripped]
         i += 1
         while i < n and lines[i].strip() != "" and not re.match(r"^(#{1,3})\s+", lines[i].strip()) \

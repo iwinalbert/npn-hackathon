@@ -1,8 +1,3 @@
-"""
-Builds reports/05_diagnostics_and_research/SEGMENTATION_RESEARCH_BRANCH_REPORT.{md,pdf}
-
-    python scripts/06_research_campaign/38_segmentation_branch_report.py
-"""
 
 from __future__ import annotations
 

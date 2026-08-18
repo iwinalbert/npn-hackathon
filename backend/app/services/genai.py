@@ -119,7 +119,7 @@ _POLICIES: tuple[_Policy, ...] = (
                        r"env(?:ironment)?\s+var|system\s+prompt|instructions)", re.I),
             re.compile(r"\bwhat(?:'s| is)\s+(?:your|the)\s+(?:api[_\s-]?key|"
                        r"secret|token|system\s+prompt)", re.I),
-            re.compile(r"\bGEMINI_API_KEY\b", re.I),
+            re.compile(r"\bGEMINI_API_KEY\b(?!\s+environment\s+variable)", re.I),
         ),
         answer=(
             "I don't have access to API keys, credentials or configuration "
@@ -157,6 +157,10 @@ _POLICIES: tuple[_Policy, ...] = (
             re.compile(_ADDRESSED + _MUTATION_VERBS + r"\s+" + _MUTATION_TARGETS, re.I),
             re.compile(_IMPERATIVE + r"(?:make|force)\s+" + _MUTATION_TARGETS
                        + r"\s+(?:be\s+)?\d", re.I),
+            # Pronoun form: "...explain it, then set IT to 100". A repeated
+            # noun isn't required for a human reader to know "it" means the
+            # forecast just discussed, and an attacker doesn't need one either.
+            re.compile(_IMPERATIVE + _MUTATION_VERBS + r"\s+(?:it|this|that)\s+(?:to\s+)?-?\d", re.I),
         ),
         answer=(
             "I can't change the forecast, and neither can anything else in this "

@@ -21,6 +21,14 @@ export class ApiError extends Error {
 
   /** A short, human-readable line safe to render in an error panel. */
   get userMessage(): string {
+    // A 503 carrying `provider_error` came from the AI assistant's own
+    // classification (services/genai.py: _provider_failure), not from the
+    // forecasting API being unready — those are unrelated systems, and
+    // labelling a transient Gemini hiccup as "the forecasting service is
+    // not ready" tells the user the wrong thing is broken.
+    if (this.status === 503 && this.context?.provider_error) {
+      return this.message || 'The AI assistant is temporarily unavailable.'
+    }
     if (this.status === 503) return 'The forecasting service is not ready yet.'
     if (this.status === 404) return this.message
     if (this.status === 0) return 'Cannot reach the forecasting service.'

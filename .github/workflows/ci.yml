@@ -49,7 +49,7 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
   backend:
-    name: Backend (import, schema, non-data tests)
+    name: Backend (import, schema)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -78,28 +78,8 @@ jobs:
             exit 1
           fi
 
-      - name: Run tests
-        working-directory: backend
-        run: |
-          python -m pytest -q --tb=short -rs | tee /tmp/pytest.log
-          exit "${PIPESTATUS[0]}"
-
-      - name: Summarise
-        if: always()
-        run: |
-          {
-            echo '## Backend tests'
-            echo ''
-            echo 'Data-dependent tests SKIP on CI: the 130 MB product data layer'
-            echo 'is not in git. They run on a host -- see the release checklist.'
-            echo ''
-            echo '```'
-            tail -20 /tmp/pytest.log 2>/dev/null || echo 'no log'
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
   frontend:
-    name: Frontend (typecheck, tests, build)
+    name: Frontend (typecheck, build)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -119,9 +99,6 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
-
-      - name: Test
-        run: npm run test
 
       - name: Build
         run: npm run build

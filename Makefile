@@ -1,33 +1,59 @@
-# NPN_HACKATHON — product build & run targets
-# The research layer is never touched by any target here.
+# Retail Demand Forecasting -- make targets
+#
+# THIS FILE IS A THIN WRAPPER. Every target delegates to `tasks.py`, which is
+# the single source of truth for what the commands are and what they do.
+#
+# It is written this way on purpose. The previous version duplicated the logic
+# and named directories (06_BACKEND, 07_FRONTEND) that were renamed to
+# backend and frontend -- so every target in it had been
+# silently broken since that reorganisation. Delegating means a rename can only
+# break one file, and that file is the one people actually run.
+#
+# `make` is not installed on the Windows machine this project is demonstrated
+# on, so this is the SECONDARY entry point. The primary one works everywhere:
+#
+#     python tasks.py help
+#
+# Run `python tasks.py help` for the authoritative list; anything there works
+# whether or not it has a target below.
 
-BACKEND := 06_BACKEND
-FRONTEND := 07_FRONTEND
-PY := python
+PY ?= python
+TASKS := $(PY) tasks.py
 
-.PHONY: help build-db api test test-backend verify-integrity clean-db
+.PHONY: help build-db api stop-api test ui ui-install ui-build ui-test \
+        preflight smoke docker-config docker-build docker-up docker-down \
+        docker-logs docker-ps verify-all verify-integrity openapi clean-db
 
 help:
-	@echo "NPN_HACKATHON — product targets"
-	@echo ""
-	@echo "  make build-db          Build 06_BACKEND/data/product.duckdb from frozen artefacts"
-	@echo "  make api               Run the API at http://localhost:8000 (docs at /docs)"
-	@echo "  make test              Run the backend test suite"
-	@echo "  make verify-integrity  Prove no protected research artefact changed"
-	@echo "  make clean-db          Delete the product database (rebuildable)"
+	@$(TASKS) help
 
-build-db:
-	$(PY) $(BACKEND)/scripts/build_product_db.py
+# --- product -----------------------------------------------------------------
+build-db:      ; $(TASKS) build-db
+api:           ; $(TASKS) api
+stop-api:      ; $(TASKS) stop-api
+ui:            ; $(TASKS) ui
+ui-install:    ; $(TASKS) ui-install
+ui-build:      ; $(TASKS) ui-build
+openapi:       ; $(TASKS) openapi
+clean-db:      ; $(TASKS) clean-db
 
-api:
-	cd $(BACKEND) && $(PY) -m uvicorn app.main:app --reload --port 8000
+# --- checks ------------------------------------------------------------------
+test:            ; $(TASKS) test
+ui-test:         ; $(TASKS) ui-test
+verify-all:      ; $(TASKS) verify-all
+verify-integrity: ; $(TASKS) verify-integrity
 
-test test-backend:
-	cd $(BACKEND) && $(PY) -m pytest
+# --- devops ------------------------------------------------------------------
+# ARGS passes flags through, since make consumes anything that looks like one:
+#     make docker-up ARGS=--prod
+#     make smoke ARGS="--prod --wait 60"
+ARGS ?=
 
-verify-integrity:
-	$(PY) scripts/08_organization/61_integrity_manifest.py after
-	$(PY) scripts/08_organization/61_integrity_manifest.py compare
-
-clean-db:
-	rm -f $(BACKEND)/data/product.duckdb $(BACKEND)/data/product.duckdb.wal
+preflight:     ; $(TASKS) preflight $(ARGS)
+smoke:         ; $(TASKS) smoke $(ARGS)
+docker-config: ; $(TASKS) docker-config $(ARGS)
+docker-build:  ; $(TASKS) docker-build $(ARGS)
+docker-up:     ; $(TASKS) docker-up $(ARGS)
+docker-down:   ; $(TASKS) docker-down $(ARGS)
+docker-logs:   ; $(TASKS) docker-logs $(ARGS)
+docker-ps:     ; $(TASKS) docker-ps $(ARGS)

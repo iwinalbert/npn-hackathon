@@ -1,7 +1,7 @@
 # Build context for the BACKEND image is the REPOSITORY ROOT.
 #
-# It has to be: the `full` target does `COPY 03_RESEARCH/pipeline` to get the
-# frozen feature pipeline, so a context rooted at 01_PROJECT/ could not reach it.
+# It has to be: the `full` target does `COPY research/pipeline` to get the
+# frozen feature pipeline, so a context rooted at backend/ could not reach it.
 # The cost is that the context root also contains ~2.3 GB of research data,
 # documentation and node_modules — none of which belongs in an image.
 #
@@ -11,35 +11,57 @@
 # other way, which is the right direction for an image that must not contain
 # datasets or secrets.
 #
-# Exactly five things are needed by 01_PROJECT/backend/Dockerfile:
-#   01_PROJECT/backend/requirements.txt
-#   01_PROJECT/backend/requirements-inference.txt
-#   01_PROJECT/backend/app/
-#   01_PROJECT/backend/scripts/
-#   03_RESEARCH/pipeline/
+# Exactly five things are needed by backend/Dockerfile:
+#   backend/requirements.txt
+#   backend/requirements-inference.txt
+#   backend/app/
+#   backend/scripts/
+#   research/pipeline/
 #
-# The frontend image uses its own context (01_PROJECT/frontend) and its own
+# The frontend image uses its own context (frontend/) and its own
 # .dockerignore; nothing here applies to it.
 
-# --- 01_PROJECT: only the backend source and its two requirement files -----
-01_PROJECT/**
-!01_PROJECT/backend/app/**
-!01_PROJECT/backend/scripts/**
-!01_PROJECT/backend/requirements.txt
-!01_PROJECT/backend/requirements-inference.txt
+# --- backend: only the app source and its two requirement files ------------
+backend/**
+!backend/app/**
+!backend/scripts/**
+!backend/requirements.txt
+!backend/requirements-inference.txt
 
-# The generated product data layer (~130 MB) is MOUNTED at runtime, never baked
-# in: it is rebuildable from the frozen artefacts and would make the image stale
-# the moment it is rebuilt.
-01_PROJECT/backend/data/**
+# Restated AFTER the re-includes, because last match wins. The generated
+# product data layer (~130 MB) is MOUNTED at runtime, never baked in: it is
+# rebuildable from the frozen artefacts and would make the image stale the
+# moment it is rebuilt.
+backend/data/**
 
-# --- 02_DOCUMENTATION: reports and PDFs, ~84 MB, never needed at runtime ---
-02_DOCUMENTATION/**
+# --- frontend: builds from its own context with its own .dockerignore. -----
+frontend/**
 
-# --- 03_RESEARCH: ~2 GB. Only the feature pipeline is copied; the datasets,
+# --- docs: reports and PDFs, ~84 MB, never needed at runtime ---------------
+docs/**
+
+# --- research: ~2 GB. Only the feature pipeline is copied; the datasets,
 #     model binaries and predictions are mounted read-only at runtime. --------
-03_RESEARCH/**
-!03_RESEARCH/pipeline/**
+research/**
+!research/pipeline/**
+
+# --- study-materials: role guides. Never a build input. --------------------
+study-materials/**
+
+# --- infra: pipeline definitions, ops scripts and docs. They CONFIGURE
+#     the build; they are never inside the image it produces. -----------------
+infra/**
+
+# --- CI definitions ---------------------------------------------------------
+.github/**
+
+# NOTE — this list is enumerated per top-level area, which means a NEW top-level
+# directory is not covered by anything and would be sent wholesale. That is not
+# hypothetical: the team study-material folder was added after this file was
+# first written and leaked 14 PDFs into the context until an entry was added.
+# `infra/scripts/preflight.py` now FAILS on any top-level directory with no
+# rule, so the next one is caught before a build rather than after. If you add a
+# top-level folder, add it here too.
 
 # --- repository-level files that are not build inputs ----------------------
 .git/**
@@ -48,7 +70,9 @@
 .claude/**
 tasks.py
 Makefile
-docker-compose.yml
+# Glob, not the bare filename: the inference overlay was added later and the
+# literal `docker-compose.yml` entry did not cover it.
+docker-compose*.yml
 README.md
 *.md
 

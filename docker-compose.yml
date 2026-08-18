@@ -5,14 +5,14 @@
 #
 # PREREQUISITE — the product data layer
 # -------------------------------------
-# 01_PROJECT/backend/data/ must contain product.duckdb, history.parquet and
+# backend/data/ must contain product.duckdb, history.parquet and
 # backtest.parquet before `up`. That directory is gitignored (125 MB,
 # rebuildable) and is bind-mounted READ-ONLY into the API.
 # If it is empty the API starts but /api/v1/ready reports not-ready, its
 # healthcheck never passes, and the frontend — which waits for service_healthy —
 # never starts. That looks like a hang; it is a missing data layer.
 #
-# THIS STACK DOES NOT NEED 03_RESEARCH
+# THIS STACK DOES NOT NEED research
 # ------------------------------------
 # The API serves every route, including the frozen 28-day forecast, from the
 # three files above. Verified against an EMPTY project root: forecast,
@@ -38,7 +38,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: 01_PROJECT/backend/Dockerfile
+      dockerfile: backend/Dockerfile
       # Lean target: no LightGBM, no research tree, no pipeline import.
       # docker-compose.inference.yml switches this to `full`.
       target: api
@@ -67,7 +67,7 @@ services:
     volumes:
       # The ONLY runtime data the API needs: product.duckdb + two parquet
       # sidecars. Read-only — the service never writes to it.
-      - ./01_PROJECT/backend/data:/data/product:ro
+      - ./backend/data:/data/product:ro
     healthcheck:
       test: ["CMD", "python", "-c",
              "import urllib.request,sys,json;r=json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready',timeout=4));sys.exit(0 if r.get('ready') else 1)"]
@@ -84,7 +84,7 @@ services:
 
   frontend:
     build:
-      context: ./01_PROJECT/frontend
+      context: ./frontend
       dockerfile: Dockerfile
     image: npn-forecast-frontend:latest
     container_name: npn-frontend

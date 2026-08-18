@@ -2,7 +2,7 @@
 #
 #   docker compose -f docker-compose.yml -f docker-compose.inference.yml up --build
 #
-# The base stack deliberately needs nothing from 03_RESEARCH. This overlay adds
+# The base stack deliberately needs nothing from research. This overlay adds
 # the one feature that does: POST /api/v1/inference/verify reloads the two frozen
 # LightGBM boosters, rebuilds features from the panel, re-runs the blend at
 # w=0.60/0.40 and checks the result against the shipped forecast. It is the
@@ -19,7 +19,7 @@
 #
 # Nothing here is writable. The two research mounts are read-only; the scratch
 # volumes exist only because pipeline/config.py calls mkdir() at import time —
-# see 02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md §4.
+# see docs/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md §4.
 
 services:
   api:
@@ -33,11 +33,11 @@ services:
       # path, so this is a no-op re-declaration of the same mount rather than a
       # requirement — but it makes the effective mount set readable in one place
       # instead of only after mentally merging two files.
-      - ./01_PROJECT/backend/data:/data/product:ro
+      - ./backend/data:/data/product:ro
       # Frozen model artefacts — read-only, so they cannot be modified even by
       # accident by a process running inside the container.
-      - ./03_RESEARCH/models/champion:/research/models/champion:ro
-      - ./03_RESEARCH/predictions/final_forecast:/research/predictions/final_forecast:ro
+      - ./research/models/champion:/research/models/champion:ro
+      - ./research/predictions/final_forecast:/research/predictions/final_forecast:ro
       # Writable scratch for the import-time mkdirs. Named volumes, so they are
       # seeded from the image (owned by app) rather than created root-owned.
       - npn-scratch:/research/experiments

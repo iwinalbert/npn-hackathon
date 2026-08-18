@@ -8,15 +8,18 @@ and be honest about how accurate that can be.
 
 ---
 
-## The repository, in three folders
+## The repository
 
 | | | |
 |---|---|---|
-| **`01_PROJECT/`** | *what we ship* | FastAPI backend, React frontend, tests, containers |
-| **`02_DOCUMENTATION/`** | *what we explain* | Model, data, architecture, validation, reports, submission |
-| **`03_RESEARCH/`** | *how we got here* | Pipeline, datasets, 86 experiments, models, research reports |
+| **`backend/`** | *what we ship* | FastAPI service, tests, container definition |
+| **`frontend/`** | *what we ship* | React app, tests, nginx container |
+| **`docs/`** | *what we explain* | Model, data, architecture, validation, reports, submission |
+| **`research/`** | *how we got here* | Pipeline, datasets, 86 experiments, models, research reports |
+| **`infra/`** | *how we run it* | CI, pre-deploy gate, smoke tests, production overlay, runbook |
+| **`study-materials/`** | *how the team learns it* | Role guides, two depths each |
 
-Full map: [`02_DOCUMENTATION/01_PROJECT_OVERVIEW/PROJECT_STRUCTURE.md`](02_DOCUMENTATION/01_PROJECT_OVERVIEW/PROJECT_STRUCTURE.md)
+Full map: [`docs/01_PROJECT_OVERVIEW/PROJECT_STRUCTURE.md`](docs/01_PROJECT_OVERVIEW/PROJECT_STRUCTURE.md)
 
 ## Run it
 
@@ -33,7 +36,7 @@ python tasks.py verify-all   # everything, plus artefact integrity
 python tasks.py help         # all commands
 ```
 
-Optional AI assistant: put `GEMINI_API_KEY=…` in `01_PROJECT/backend/.env`
+Optional AI assistant: put `GEMINI_API_KEY=…` in `backend/.env`
 (gitignored). Without it every other feature works unchanged.
 
 ## Run it in Docker
@@ -47,8 +50,20 @@ docker compose up --build                  # http://localhost:8080
 `python tasks.py docker-up` / `docker-ps` / `docker-logs` / `docker-down` wrap
 the same commands and work identically on Windows.
 
-The default stack needs **nothing from `03_RESEARCH/`** — the API serves every
-route, including the frozen forecast, from `01_PROJECT/backend/data/`. Live
+Before starting, and after: two commands that decide whether a deploy is good.
+
+```bash
+python tasks.py preflight    # safe to build? data layer, config, secrets
+python tasks.py docker-up    # runs preflight first, then starts
+python tasks.py smoke        # is it actually serving CORRECT data?
+```
+
+`smoke` asserts the frozen forecast (`total_28d = 3331.3681`), which is what
+separates "responding" from "correct". Operating this system, deploying it, and
+what to do when it breaks: [`infra/`](infra/).
+
+The default stack needs **nothing from `research/`** — the API serves every
+route, including the frozen forecast, from `backend/data/`. Live
 model verification is the one feature that reads the research tree, and it is
 opt-in:
 
@@ -57,7 +72,7 @@ python tasks.py docker-up --inference
 ```
 
 Full details, security model and cloud handoff notes:
-[`02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md`](02_DOCUMENTATION/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md)
+[`docs/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md`](docs/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md)
 
 ## The model
 
@@ -87,4 +102,4 @@ ever quoted against it.
 - **No promotion modelling.** The dataset has no promotion field, and nothing
   here pretends to recover one.
 
-Reasoning and measurements: [`02_DOCUMENTATION/04_ARCHITECTURE/`](02_DOCUMENTATION/04_ARCHITECTURE/).
+Reasoning and measurements: [`docs/04_ARCHITECTURE/`](docs/04_ARCHITECTURE/).

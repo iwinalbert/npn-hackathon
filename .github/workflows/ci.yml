@@ -381,3 +381,126 @@ jobs:
         run: |
           echo "::error::One or more CI gates failed -- see the job summary"
           exit 1
+
+  # -------------------------------------------------------------------------
+  # 6. Publish — build both images for real (not just boot-test them, as the
+  #    `images` job above does) and push to ECR, tagged with the commit sha
+  #    (never `latest` -- see infra/docs/ci-cd.md, "tag with github.sha").
+  #
+  #    Runs only on a push to main, only after every gate above passes.
+  #    Authenticates to AWS via OIDC -- no static AWS key is stored in
+  #    GitHub. The trust is scoped to THIS repo and THIS branch only; see
+  #    infra/scripts/aws_bootstrap.sh, which created the role.
+  # -------------------------------------------------------------------------
+  publish:
+    name: Publish images
+    runs-on: ubuntu-latest
+    needs: [deploy-gate]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Build and push api image
+        run: |
+          docker build -f backend/Dockerfile --target api \
+            -t "${{ steps.ecr.outputs.registry }}/npn-api:${{ github.sha }}" .
+          docker push "${{ steps.ecr.outputs.registry }}/npn-api:${{ github.sha }}"
+
+      - name: Build and push frontend image
+        run: |
+          docker build -f frontend/Dockerfile \
+            -t "${{ steps.ecr.outputs.registry }}/npn-frontend:${{ github.sha }}" frontend
+          docker push "${{ steps.ecr.outputs.registry }}/npn-frontend:${{ github.sha }}"
+
+      - name: Publish the deploy compose file and deploy script
+        run: |
+          aws s3 cp infra/compose/docker-compose.deploy.yml \
+            "s3://${{ vars.DATA_BUCKET }}/compose/docker-compose.deploy.yml"
+          aws s3 cp infra/scripts/remote_deploy.sh \
+            "s3://${{ vars.DATA_BUCKET }}/compose/remote_deploy.sh"
+
+  # -------------------------------------------------------------------------
+  # 7. Deploy -- tell the EC2 host to pull the new images and restart, via
+  #    AWS Systems Manager (no SSH, no open port 22 -- see the security
+  #    group aws_bootstrap.sh created). This is the one step CI cannot
+  #    prove for itself: the actual data-dependent, frozen-forecast-serving
+  #    verification happens in the smoke-test step below, against the real
+  #    running box -- exactly the gap the deploy-gate job above names.
+  # -------------------------------------------------------------------------
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    needs: [publish]
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Send deploy command over SSM and wait for it
+        env:
+          ECR_REGISTRY: ${{ vars.ECR_REGISTRY }}
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          EC2_INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          DATA_BUCKET: ${{ vars.DATA_BUCKET }}
+          GEMINI_PARAM_NAME: ${{ vars.GEMINI_PARAM_NAME }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cat > /tmp/ssm-params.json <<JSON
+          {
+            "commands": [
+              "set -e",
+              "aws s3 cp s3://${DATA_BUCKET}/compose/docker-compose.deploy.yml /opt/npn/docker-compose.deploy.yml",
+              "aws s3 cp s3://${DATA_BUCKET}/compose/remote_deploy.sh /opt/npn/remote_deploy.sh && chmod +x /opt/npn/remote_deploy.sh",
+              "ECR_REGISTRY=${ECR_REGISTRY} IMAGE_TAG=${IMAGE_TAG} AWS_REGION=${AWS_REGION} GEMINI_PARAM_NAME=${GEMINI_PARAM_NAME} /opt/npn/remote_deploy.sh"
+            ]
+          }
+          JSON
+
+          CMD_ID=$(aws ssm send-command \
+            --instance-ids "$EC2_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters file:///tmp/ssm-params.json \
+            --query 'Command.CommandId' --output text)
+          echo "SSM command: $CMD_ID"
+
+          for i in $(seq 1 30); do
+            STATUS=$(aws ssm get-command-invocation --command-id "$CMD_ID" \
+              --instance-id "$EC2_INSTANCE_ID" --query Status --output text 2>/dev/null || echo Pending)
+            echo "poll $i: $STATUS"
+            case "$STATUS" in
+              Success) break ;;
+              Failed|Cancelled|TimedOut)
+                aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$EC2_INSTANCE_ID" \
+                  --query '{Output:StandardOutputContent,Err:StandardErrorContent}' --output text
+                echo "::error::deploy command ended with status $STATUS"
+                exit 1 ;;
+            esac
+            sleep 6
+          done
+
+          aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$EC2_INSTANCE_ID" \
+            --query '{Output:StandardOutputContent,Err:StandardErrorContent}' --output text
+
+      - name: Smoke test the live deployment
+        run: |
+          python infra/scripts/smoke_test.py \
+            --api-url "http://${{ vars.EC2_PUBLIC_IP }}:8080" \
+            --web-url "http://${{ vars.EC2_PUBLIC_IP }}:8080" \
+            --wait 30

@@ -57,6 +57,7 @@ services:
       - /var/cache/nginx:size=32m
       - /var/run:size=8m
       - /tmp:size=16m
+      - /etc/nginx/conf.d:size=8m
     cap_drop:
       - ALL
     cap_add:

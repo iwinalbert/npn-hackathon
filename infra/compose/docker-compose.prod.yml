@@ -104,6 +104,11 @@ services:
       - /var/cache/nginx:size=32m
       - /var/run:size=8m
       - /tmp:size=16m
+      # The image's entrypoint renders /etc/nginx/templates/*.template into
+      # this directory via envsubst on every boot (see frontend/Dockerfile).
+      # Without it the container crash-loops immediately with "Read-only
+      # file system" and never serves a single request.
+      - /etc/nginx/conf.d:size=8m
 
     cap_drop:
       - ALL

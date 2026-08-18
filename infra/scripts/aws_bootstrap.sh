@@ -40,13 +40,21 @@ else
 fi
 
 OIDC_ARN="arn:aws:iam::${ACCOUNT_ID}:oidc-provider/token.actions.githubusercontent.com"
+GH_THUMBPRINT=$(openssl s_client -servername token.actions.githubusercontent.com \
+    -connect token.actions.githubusercontent.com:443 -showcerts </dev/null 2>/dev/null \
+    | awk '/BEGIN CERT/{c++} c==2' \
+    | openssl x509 -noout -fingerprint -sha1 \
+    | sed 's/.*=//; s/://g' | tr 'A-Z' 'a-z')
 if aws iam get-open-id-connect-provider --open-id-connect-provider-arn "$OIDC_ARN" >/dev/null 2>&1; then
-    echo "[ ok ] GitHub OIDC provider already exists"
+    aws iam update-open-id-connect-provider-thumbprint \
+        --open-id-connect-provider-arn "$OIDC_ARN" \
+        --thumbprint-list "$GH_THUMBPRINT" >/dev/null
+    echo "[ ok ] GitHub OIDC provider exists, thumbprint refreshed"
 else
     aws iam create-open-id-connect-provider \
         --url "https://token.actions.githubusercontent.com" \
         --client-id-list "sts.amazonaws.com" \
-        --thumbprint-list "6938fd4d98bab03faadb97b34396831e3780aea1" \
+        --thumbprint-list "$GH_THUMBPRINT" \
         --tags Key=Project,Value="$PROJECT" >/dev/null
     echo "[ + ]  created GitHub OIDC provider"
 fi

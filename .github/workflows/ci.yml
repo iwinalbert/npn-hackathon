@@ -315,7 +315,8 @@ jobs:
             echo '## Image sizes'
             echo '```'
             docker images --format '{{.Repository}}:{{.Tag}}  {{.Size}}' \
-              npn-forecast-api npn-forecast-frontend
+              --filter reference='npn-forecast-api' \
+              --filter reference='npn-forecast-frontend'
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -383,14 +384,7 @@ jobs:
           exit 1
 
   # -------------------------------------------------------------------------
-  # 6. Publish — build both images for real (not just boot-test them, as the
-  #    `images` job above does) and push to ECR, tagged with the commit sha
-  #    (never `latest` -- see infra/docs/ci-cd.md, "tag with github.sha").
-  #
-  #    Runs only on a push to main, only after every gate above passes.
-  #    Authenticates to AWS via OIDC -- no static AWS key is stored in
-  #    GitHub. The trust is scoped to THIS repo and THIS branch only; see
-  #    infra/scripts/aws_bootstrap.sh, which created the role.
+  # 6. Publish images to ECR, tagged with the commit sha.
   # -------------------------------------------------------------------------
   publish:
     name: Publish images
@@ -431,12 +425,7 @@ jobs:
             "s3://${{ vars.DATA_BUCKET }}/compose/remote_deploy.sh"
 
   # -------------------------------------------------------------------------
-  # 7. Deploy -- tell the EC2 host to pull the new images and restart, via
-  #    AWS Systems Manager (no SSH, no open port 22 -- see the security
-  #    group aws_bootstrap.sh created). This is the one step CI cannot
-  #    prove for itself: the actual data-dependent, frozen-forecast-serving
-  #    verification happens in the smoke-test step below, against the real
-  #    running box -- exactly the gap the deploy-gate job above names.
+  # 7. Deploy — tell the EC2 host to pull and restart, via SSM.
   # -------------------------------------------------------------------------
   deploy:
     name: Deploy to EC2

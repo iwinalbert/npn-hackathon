@@ -20,8 +20,8 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-BACKEND = ROOT / "01_PROJECT" / "backend"
-FRONTEND = ROOT / "01_PROJECT" / "frontend"
+BACKEND = ROOT / "backend"
+FRONTEND = ROOT / "frontend"
 PY = sys.executable
 
 
@@ -160,7 +160,22 @@ def genai_check() -> int:
     return _run([PY, "-m", "pytest", "-m", "live", "-v"], cwd=BACKEND)
 
 
-def _compose(*args: str, inference: bool = False) -> int:
+def _overlays() -> list[str]:
+    """
+    The compose file list, assembled from flags on the command line.
+
+    Order is the contract: later `-f` files override earlier ones, so `--prod`
+    must come last or its hardening would be overwritten by the base file.
+    """
+    files = ["-f", "docker-compose.yml"]
+    if "--inference" in sys.argv:
+        files += ["-f", "docker-compose.inference.yml"]
+    if "--prod" in sys.argv:
+        files += ["-f", "infra/compose/docker-compose.prod.yml"]
+    return files
+
+
+def _compose(*args: str) -> int:
     """
     Run `docker compose`, or explain clearly why it cannot.
 
@@ -180,58 +195,97 @@ def _compose(*args: str, inference: bool = False) -> int:
         print(f"{bar}\n")
         return 1
 
-    files = ["-f", "docker-compose.yml"]
-    if inference:
-        files += ["-f", "docker-compose.inference.yml"]
-    return _run(["docker", "compose", *files, *args])
+    return _run(["docker", "compose", *_overlays(), *args])
 
 
 def docker_config() -> int:
     """Validate and print the resolved compose configuration."""
-    return _compose("config", inference="--inference" in sys.argv)
+    return _compose("config")
 
 
 def docker_build() -> int:
     """Build the container images."""
-    return _compose("build", inference="--inference" in sys.argv)
+    return _compose("build")
 
 
 def docker_up() -> int:
-    """Start the stack in the background. Add --inference for live verification."""
-    rc = _compose("up", "-d", "--build", inference="--inference" in sys.argv)
+    """Start the stack detached. Flags: --inference, --prod."""
+    # Preflight first. Starting a stack with no data layer produces a hang that
+    # looks like a Docker problem and is not one; catching it here costs a
+    # second and saves the twenty minutes of debugging it usually triggers.
+    if preflight() != 0:
+        print("\npreflight failed - not starting the stack "
+              "(see the failures above)")
+        return 1
+
+    rc = _compose("up", "-d", "--build")
     if rc == 0:
+        prod = "--prod" in sys.argv
         print("\n  app  -> http://localhost:8080")
-        print("  api  -> http://localhost:8000/docs")
+        if prod:
+            print("  api  -> internal only (--prod removes the published port)")
+        else:
+            print("  api  -> http://localhost:8000/docs")
         print("  logs -> python tasks.py docker-logs")
+        print(f"  next -> python tasks.py smoke{' --prod' if prod else ''}")
     return rc
 
 
 def docker_down() -> int:
     """Stop the stack and remove its containers."""
-    return _compose("down", inference="--inference" in sys.argv)
+    return _compose("down")
 
 
 def docker_logs() -> int:
     """Follow container logs (Ctrl-C to stop)."""
-    return _compose("logs", "-f", "--tail", "100",
-                    inference="--inference" in sys.argv)
+    return _compose("logs", "-f", "--tail", "100")
 
 
 def docker_ps() -> int:
     """Show container status and health."""
-    return _compose("ps", inference="--inference" in sys.argv)
+    return _compose("ps")
+
+
+def preflight() -> int:
+    """Pre-deploy checks: data layer, compose, build context, secrets."""
+    cmd = [PY, str(ROOT / "infra" / "scripts" / "preflight.py")]
+    if "--skip-data" in sys.argv:
+        cmd.append("--skip-data")
+    if "--json" in sys.argv:
+        cmd.append("--json")
+    return _run(cmd)
+
+
+def smoke() -> int:
+    """Smoke-test a RUNNING stack. Flags: --prod, --skip-web, --api <url>."""
+    cmd = [PY, str(ROOT / "infra" / "scripts" / "smoke_test.py")]
+
+    if "--api" in sys.argv:
+        cmd += ["--api-url", sys.argv[sys.argv.index("--api") + 1]]
+    elif "--prod" in sys.argv:
+        # --prod unpublishes port 8000, so the API is reachable only through
+        # the frontend's proxy. Test it there rather than reporting a
+        # connection refused that is actually correct behaviour.
+        cmd += ["--api-url", "http://localhost:8080"]
+
+    for flag in ("--skip-web", "--skip-api", "--json"):
+        if flag in sys.argv:
+            cmd.append(flag)
+    if "--wait" in sys.argv:
+        cmd += ["--wait", sys.argv[sys.argv.index("--wait") + 1]]
+    return _run(cmd)
 
 
 def verify_integrity() -> int:
     """Prove that no protected research artefact has changed."""
-    script = (ROOT / "03_RESEARCH" / "scripts" / "08_organization"
+    script = (ROOT / "research" / "scripts" / "08_organization"
               / "61_integrity_manifest.py")
     rc = _run([PY, str(script), "after"])
     return rc or _run([PY, str(script), "compare"])
 
 
 def openapi() -> int:
-    """Write the OpenAPI schema to 01_PROJECT/backend/openapi.json."""
+    """Write the OpenAPI schema to backend/openapi.json."""
     sys.path.insert(0, str(BACKEND))
     import json
 
@@ -266,7 +320,7 @@ def ui() -> int:
 
 
 def ui_build() -> int:
-    """Build the production frontend bundle into 01_PROJECT/frontend/dist."""
+    """Build the production frontend bundle into frontend/dist."""
     return _npm("run", "build")
 
 
@@ -330,6 +384,8 @@ COMMANDS = {
     "docker-down": docker_down,
     "docker-logs": docker_logs,
     "docker-ps": docker_ps,
+    "preflight": preflight,
+    "smoke": smoke,
     "verify-all": verify_all,
     "verify-integrity": verify_integrity,
     "openapi": openapi,

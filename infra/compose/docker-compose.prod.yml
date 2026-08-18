@@ -1,0 +1,143 @@
+# PRODUCTION OVERLAY — hardening on top of the base stack.
+#
+#   docker compose -f docker-compose.yml \
+#                  -f infra/compose/docker-compose.prod.yml up -d
+#
+#   python tasks.py docker-up --prod          # same thing, cross-platform
+#
+# Paths inside this file are resolved relative to the FIRST compose file on the
+# command line — the repository root — not relative to this file's directory.
+# That is why any volume path here would start with ./backend and not ../../.
+#
+# What this overlay changes, and why each one is a production concern rather
+# than something the base stack should already do:
+#
+#   1. The API is taken OFF the host network. The base stack publishes 8000 so
+#      /docs and the raw API are reachable during development. In production the
+#      browser reaches the API only through the frontend's nginx proxy, so
+#      publishing it is a second, unhardened front door.
+#   2. Read-only root filesystems. Neither service writes to its own filesystem;
+#      making that explicit turns a code-execution bug into a much smaller one.
+#      nginx needs three writable tmpfs paths for its own scratch — that is a
+#      property of the nginx image, not a concession.
+#   3. All capabilities dropped. Both processes bind unprivileged ports as
+#      non-root and need nothing from the Linux capability set.
+#   4. Log rotation. The default json-file driver grows without bound; an API
+#      logging every request will fill a disk given enough uptime.
+#   5. Real restart and update policy, and a stricter healthcheck interval, so
+#      a wedged container is noticed in ~30 s rather than ~90 s.
+#
+# What it deliberately does NOT do: TLS, authentication, rate limiting. Those
+# belong at the edge (a load balancer or ingress in front of this stack), not
+# inside it. See infra/docs/deployment-guide.md §6.
+
+services:
+  api:
+    # Remove the published port entirely. `ports: []` is the documented way to
+    # clear a list the base file set — Compose replaces sequence values rather
+    # than appending, so this wins.
+    ports: []
+    # Reachable from the frontend container over the internal network only.
+    expose:
+      - "8000"
+
+    read_only: true
+    tmpfs:
+      # Python writes nothing here at runtime, but a bare /tmp is cheap
+      # insurance for any library that assumes it exists.
+      - /tmp:size=64m,mode=1777
+
+    cap_drop:
+      - ALL
+    security_opt:
+      - "no-new-privileges:true"
+
+    environment:
+      NPN_ENVIRONMENT: production
+      NPN_LOG_LEVEL: INFO
+      # Same-origin through the proxy means CORS is never exercised. Empty, not
+      # a dev list: if this ever IS reached cross-origin, it should fail loudly
+      # rather than silently accept a localhost origin in production.
+      NPN_CORS_ORIGINS: ""
+      NPN_CORS_ALLOW_ALL: "false"
+
+    healthcheck:
+      interval: 15s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+    restart: always
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: "1.0"
+        reservations:
+          memory: 256M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  frontend:
+    ports:
+      # Bound to all interfaces on purpose: in production something in front of
+      # this — an ALB, an ingress controller, a reverse proxy terminating TLS —
+      # needs to reach it. Change to "127.0.0.1:8080:8080" if that proxy runs
+      # on the same host.
+      - "8080:8080"
+
+    read_only: true
+    tmpfs:
+      # nginx writes its pid and its proxy/fastcgi scratch buffers. Without
+      # these three the container starts and then fails on the first request
+      # that needs to buffer a response — which is most of them.
+      - /var/cache/nginx:size=32m
+      - /var/run:size=8m
+      - /tmp:size=16m
+
+    cap_drop:
+      - ALL
+    cap_add:
+      # The official nginx entrypoint renders templates and spawns workers as
+      # root before dropping to the nginx user. CHOWN/SETGID/SETUID are what
+      # that drop itself requires. Removing them stops the container booting.
+      - CHOWN
+      - SETGID
+      - SETUID
+    security_opt:
+      - "no-new-privileges:true"
+
+    healthcheck:
+      interval: 15s
+      timeout: 4s
+      start_period: 5s
+      retries: 3
+
+    restart: always
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s

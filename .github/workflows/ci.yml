@@ -1,0 +1,383 @@
+# Retail Demand Forecasting -- CI
+#
+# Source of truth for what this pipeline is and why each gate exists:
+#   infra/docs/ci-cd.md
+#
+# THE CONSTRAINT THAT SHAPES THIS WHOLE FILE
+# ------------------------------------------
+# The 130 MB product data layer is NOT in git, and neither are the frozen model
+# binaries it is generated from. A CI runner therefore cannot build it, and the
+# API cannot reach /ready there.
+#
+# Pretending otherwise would produce a pipeline that is either permanently red
+# or quietly meaningless. So this pipeline is explicit about the split:
+#
+#   VERIFIED HERE          config correctness, build-context hygiene, secret
+#                          hygiene, frontend tests/typecheck/build, images
+#                          build, containers boot as non-root, no secret in a
+#                          layer, and the API degrades CORRECTLY without data
+#                          (200 on /health, ready=false with a reason).
+#
+#   VERIFIED ON A HOST     everything that needs the data layer: the backend
+#                          suite's data-dependent tests and the full smoke test
+#                          including the frozen-forecast canary.
+#                          -> infra/docs/runbook.md "Release checklist"
+#
+# The `deploy-gate` job at the bottom states that split in the run summary, so
+# nobody reads a green tick as more assurance than it is.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A new push to the same branch makes the in-flight run obsolete.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+  NODE_VERSION: "22"
+
+jobs:
+  # -------------------------------------------------------------------------
+  # 1. Configuration and hygiene. Fast, and catches the failures that a
+  #    successful `docker build` does NOT catch.
+  # -------------------------------------------------------------------------
+  preflight:
+    name: Preflight (config, context, secrets)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # preflight scans tracked files for committed keys; a shallow clone
+          # is enough for that, but full history makes the check meaningful.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install preflight dependencies
+        run: pip install --quiet pyyaml
+
+      - name: Run preflight
+        # --skip-data: the data layer cannot exist on a runner. Every other
+        # section still runs and still gates the build.
+        run: python infra/scripts/preflight.py --skip-data
+
+      - name: Publish preflight report
+        if: always()
+        run: |
+          {
+            echo '## Preflight'
+            echo '```'
+            python infra/scripts/preflight.py --skip-data || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # -------------------------------------------------------------------------
+  # 2. Backend. Data-dependent tests SKIP here by design (conftest.py skips
+  #    when product.duckdb is absent) -- so this job asserts the app imports,
+  #    the schema is generatable, and nothing errors. Skips are counted and
+  #    surfaced rather than hidden behind a green tick.
+  # -------------------------------------------------------------------------
+  backend:
+    name: Backend (import, schema, non-data tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: pip install --quiet -r requirements-dev.txt
+
+      - name: Import the app
+        # Cheap, and it fails loudly on the class of error that would otherwise
+        # only appear when a container starts: a bad import, a missing package,
+        # a settings field that will not validate.
+        working-directory: backend
+        run: python -c "from app.main import app; print(f'{len(app.routes)} routes')"
+
+      - name: Check the committed OpenAPI schema is current
+        # openapi.json is committed and consumed by the frontend. If it drifts
+        # from the code, the drift should be a review comment, not a surprise.
+        run: |
+          python tasks.py openapi
+          if ! git diff --quiet -- backend/openapi.json; then
+            echo "::error::openapi.json is stale. Run: python tasks.py openapi"
+            git diff -- backend/openapi.json
+            exit 1
+          fi
+
+      - name: Run tests
+        working-directory: backend
+        run: |
+          python -m pytest -q --tb=short -rs | tee /tmp/pytest.log
+          exit "${PIPESTATUS[0]}"
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo '## Backend tests'
+            echo ''
+            echo 'Data-dependent tests SKIP on CI: the 130 MB product data layer'
+            echo 'is not in git. They run on a host -- see the release checklist.'
+            echo ''
+            echo '```'
+            tail -20 /tmp/pytest.log 2>/dev/null || echo 'no log'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # -------------------------------------------------------------------------
+  # 3. Frontend. This one IS fully meaningful on CI -- no data layer needed.
+  # -------------------------------------------------------------------------
+  frontend:
+    name: Frontend (typecheck, tests, build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        # `ci`, not `install`: it honours the lockfile exactly and fails if
+        # package.json and the lockfile disagree.
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        # package.json already defines this as `vitest run` -- non-watching.
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Assert no secret reached the bundle
+        # The Gemini key lives only in the API. Vite inlines any VITE_-prefixed
+        # variable at build time, so this is the check that a mis-named env var
+        # did not put a key in front of every user.
+        run: |
+          if grep -rEl 'AIza[0-9A-Za-z_-]{35}' dist/ 2>/dev/null; then
+            echo "::error::An API key shape was found in the built bundle"
+            exit 1
+          fi
+          echo "no key-shaped strings in dist/"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+
+  # -------------------------------------------------------------------------
+  # 4. Images. Builds for real, boots for real, and asserts the security
+  #    properties that were previously only checked statically.
+  # -------------------------------------------------------------------------
+  images:
+    name: Images (build, boot, harden)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [preflight]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build API image (lean target -- the deployed default)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          target: api
+          tags: npn-forecast-api:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build API image (full target -- opt-in inference)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          target: full
+          tags: npn-forecast-api:ci-full
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          tags: npn-forecast-frontend:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Containers run as non-root
+        run: |
+          for img in npn-forecast-api:ci npn-forecast-api:ci-full; do
+            uid=$(docker run --rm --entrypoint id "$img" -u)
+            echo "$img -> uid $uid"
+            [ "$uid" = "10001" ] || { echo "::error::$img runs as uid $uid, expected 10001"; exit 1; }
+          done
+
+      - name: No secret baked into any layer
+        run: |
+          val=$(docker run --rm --entrypoint printenv npn-forecast-api:ci GEMINI_API_KEY || true)
+          if [ -n "$val" ]; then
+            echo "::error::GEMINI_API_KEY is baked into the image"
+            exit 1
+          fi
+          echo "no GEMINI_API_KEY in the image environment"
+          # A key could also be present in a layer's filesystem rather than its
+          # env. Scan the flattened filesystem for the key shape.
+          docker run --rm --entrypoint sh npn-forecast-api:ci -c \
+            'grep -rEl "AIza[0-9A-Za-z_-]{35}" /app 2>/dev/null && exit 1 || exit 0'
+
+      - name: API degrades correctly with NO data layer
+        # This is the honest version of "does it work on CI". The data layer is
+        # absent, so /ready MUST be false -- and it must say so in a structured
+        # way rather than crashing or hanging. A regression here is what turns
+        # a missing mount into an unexplained hang in production.
+        run: |
+          # A user-defined network, so the frontend can resolve `api-ci` by
+          # name in the next step. nginx resolves proxy_pass upstreams at
+          # STARTUP when the host is a literal -- and envsubst has already made
+          # it one -- so on the default bridge nginx would refuse to boot with
+          # "host not found in upstream". This mirrors the compose topology.
+          docker network create ci-net
+          docker run -d --name api-ci --network ci-net -p 8000:8000 \
+            npn-forecast-api:ci
+          for i in $(seq 1 30); do
+            if curl -sf localhost:8000/api/v1/health >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          echo "--- /health ---"
+          curl -sf localhost:8000/api/v1/health | tee /tmp/health.json
+          echo ""
+          echo "--- /ready (expected: ready=false, with a reason) ---"
+          curl -s localhost:8000/api/v1/ready | tee /tmp/ready.json
+          echo ""
+          python - <<'PY'
+          import json, sys
+          ready = json.load(open('/tmp/ready.json'))
+          if ready.get('ready') is not False:
+              sys.exit(f"expected ready=false with no data layer, got: {ready}")
+          print("OK: reports not-ready, with detail:", json.dumps(ready)[:300])
+          PY
+
+      - name: Frontend image boots and serves the SPA
+        run: |
+          docker run -d --name web-ci --network ci-net -p 8080:8080 \
+            -e API_HOST=api-ci:8000 npn-forecast-frontend:ci
+          for i in $(seq 1 20); do
+            if curl -sf localhost:8080/healthz >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+          curl -sf localhost:8080/healthz
+          # SPA deep-link fallback: the single most common nginx SPA bug.
+          code=$(curl -s -o /dev/null -w '%{http_code}' localhost:8080/forecast)
+          [ "$code" = "200" ] || { echo "::error::SPA deep link returned $code"; exit 1; }
+          echo "SPA fallback OK"
+
+      - name: Image sizes
+        if: always()
+        run: |
+          {
+            echo '## Image sizes'
+            echo '```'
+            docker images --format '{{.Repository}}:{{.Tag}}  {{.Size}}' \
+              npn-forecast-api npn-forecast-frontend
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Container logs on failure
+        if: failure()
+        run: |
+          echo "=== api ==="; docker logs api-ci 2>&1 | tail -50 || true
+          echo "=== web ==="; docker logs web-ci 2>&1 | tail -50 || true
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker rm -f api-ci web-ci 2>/dev/null || true
+          docker network rm ci-net 2>/dev/null || true
+
+  # -------------------------------------------------------------------------
+  # 5. One place to read the verdict, including what CI did NOT prove.
+  # -------------------------------------------------------------------------
+  deploy-gate:
+    name: Deploy gate
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [preflight, backend, frontend, images]
+    steps:
+      - name: Verdict
+        run: |
+          {
+            echo '## Deploy gate'
+            echo ''
+            echo '| Gate | Result |'
+            echo '|---|---|'
+            echo '| Preflight | ${{ needs.preflight.result }} |'
+            echo '| Backend   | ${{ needs.backend.result }} |'
+            echo '| Frontend  | ${{ needs.frontend.result }} |'
+            echo '| Images    | ${{ needs.images.result }} |'
+            echo ''
+            echo '### Not proven by this run'
+            echo ''
+            echo 'CI has no product data layer, so it did NOT verify:'
+            echo ''
+            echo '- the frozen-forecast canary (`total_28d = 3331.3681`)'
+            echo '- any data-dependent backend test'
+            echo '- the API reaching `ready=true`'
+            echo ''
+            echo 'Run these on a host with the data layer before releasing:'
+            echo ''
+            echo '```'
+            echo 'python tasks.py build-db'
+            echo 'python tasks.py preflight'
+            echo 'python tasks.py docker-up'
+            echo 'python tasks.py smoke'
+            echo '```'
+            echo ''
+            echo 'Full procedure: `infra/docs/runbook.md`'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail if any gate failed
+        if: |
+          needs.preflight.result != 'success' ||
+          needs.backend.result   != 'success' ||
+          needs.frontend.result  != 'success' ||
+          needs.images.result    != 'success'
+        run: |
+          echo "::error::One or more CI gates failed -- see the job summary"
+          exit 1

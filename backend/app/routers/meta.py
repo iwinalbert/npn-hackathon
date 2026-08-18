@@ -1,4 +1,3 @@
-"""Model card, capability matrix and provenance."""
 from __future__ import annotations
 
 from fastapi import APIRouter

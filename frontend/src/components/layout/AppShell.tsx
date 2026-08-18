@@ -5,13 +5,6 @@ import { useModelCard, useReadiness } from '../../api/hooks'
 import { Badge } from '../ui'
 import { FloatingAIAssistant } from './FloatingAIAssistant'
 
-/**
- * Navigation follows the analytical flow the product is trying to teach:
- *
- *   data → selection → forecast → aggregation → decision support
- *
- * Grouped so an evaluator can see that shape in the sidebar itself.
- */
 const NAV = [
   {
     group: 'Forecasting',

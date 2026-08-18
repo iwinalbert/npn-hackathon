@@ -1,16 +1,3 @@
-"""
-Deep error autopsy of the selected model (Global LightGBM + Tweedie, RMSE 2.1210).
-
-READ-ONLY. Trains nothing, modifies no model, overwrites no existing artifact.
-Everything below is computed from predictions already on disk.
-
-The centrepiece is a set of ORACLE CEILINGS: predictors that cheat in a specific,
-controlled way (they are allowed to see the validation answers) to establish how
-much error is even removable. Without those, "reduce RMSE" is a wish; with them
-it becomes a budget.
-
-    python scripts/25_error_autopsy.py
-"""
 
 from __future__ import annotations
 
@@ -74,8 +61,7 @@ def main():
                    "variance": float(var),
                    "bias_share_pct": round(float(bias**2/overall_mse*100), 3)}
 
-    # ---- under vs over ----
-    under = err < 0          # predicted below actual
+    under = err < 0
     R["direction"] = {
         "rows_underpredicted_pct": round(float(under.mean()*100), 2),
         "share_of_sq_error_from_underprediction_pct": round(float(sq[under].sum()/TOT*100), 2),
@@ -86,9 +72,7 @@ def main():
           f"but they carry {R['direction']['share_of_sq_error_from_underprediction_pct']}% "
           f"of squared error")
 
-    # ==================================================================
     banner("1. DEMAND-VOLUME BUCKETS (deciles of historical mean)")
-    # ==================================================================
     dec = pd.qcut(hmean[si], 10, labels=False, duplicates="drop")
     rows = []
     for k in sorted(pd.unique(dec)):
@@ -106,9 +90,7 @@ def main():
     top2 = dv.tail(2)["sq_err_share_pct"].sum()
     print(f"\n  Top 2 deciles (20% of rows) carry {top2:.1f}% of squared error.")
 
-    # ==================================================================
     banner("2. FORECAST HORIZON")
-    # ==================================================================
     hrows = []
     for h in range(1, 29):
         m = hz == h
@@ -125,16 +107,13 @@ def main():
     print(f"\n  correlation(horizon, RMSE) = {c:+.3f}")
     print(f"  week 1 mean RMSE {hd[hd.horizon<=7]['RMSE'].mean():.4f} | "
           f"week 4 mean RMSE {hd[hd.horizon>21]['RMSE'].mean():.4f}")
-    # is horizon RMSE explained by that day's demand level rather than distance?
     c2 = np.corrcoef(hd["actual_mean"], hd["RMSE"])[0, 1]
     print(f"  correlation(that day's actual mean, RMSE) = {c2:+.3f}")
     R["horizon_corr"] = {"with_horizon": float(c), "with_daily_demand": float(c2),
                          "week1_RMSE": float(hd[hd.horizon<=7]['RMSE'].mean()),
                          "week4_RMSE": float(hd[hd.horizon>21]['RMSE'].mean())}
 
-    # ==================================================================
     banner("3. HIERARCHY")
-    # ==================================================================
     frame = pd.DataFrame({
         "y": y, "p": p, "sq": sq, "err": err,
         "cat": meta["cat_id"].to_numpy()[si], "dept": meta["dept_id"].to_numpy()[si],
@@ -153,7 +132,6 @@ def main():
         print(g[["n", "actual", "pred", "bias", "RMSE", "share_pct"]].head(7)
               .to_string(float_format=lambda v: f"{v:9.3f}"))
 
-    # concentration
     ser = frame.groupby("series")["sq"].sum().sort_values(ascending=False)
     itm = frame.groupby("item")["sq"].sum().sort_values(ascending=False)
     conc = {
@@ -169,9 +147,7 @@ def main():
     print(f"  top 5% of series (1524) -> {conc['top_5pct_series_share_pct']:.1f}%")
     print(f"  just {conc['n_series_for_50pct']} series of 30,490 -> 50% of all squared error")
 
-    # ==================================================================
     banner("4. WORST INDIVIDUAL OBSERVATIONS")
-    # ==================================================================
     k = 1000
     idx = np.argpartition(-sq, k)[:k]
     idx = idx[np.argsort(-sq[idx])]
@@ -202,7 +178,6 @@ def main():
                                           ).to_dict(orient="records"),
     }
 
-    # spike analysis
     spike = y > 2 * np.maximum(hmean[si], 0.05)
     R["spikes"] = {
         "rows_pct": round(float(spike.mean()*100), 2),
@@ -212,22 +187,18 @@ def main():
           f"{R['spikes']['rows_pct']}% of data, "
           f"{R['spikes']['share_of_sq_error_pct']}% of squared error")
 
-    # ==================================================================
     banner("5. ORACLE CEILINGS — how much error is even removable?")
-    # ==================================================================
     print("  Each of these is allowed to cheat in one specific way. They are NOT")
     print("  models; they bound what any model could achieve.\n")
 
     oracles = {}
 
-    # A. perfect global rescale (already known, recomputed here)
     from scipy.optimize import minimize_scalar
     f = minimize_scalar(lambda s: mse(y, p*s), bounds=(0.5, 2.0), method="bounded").x
     oracles["A_global_rescale"] = {
         "desc": "best single multiplier applied to all predictions",
         "RMSE": float(np.sqrt(mse(y, p*f))), "param": round(float(f), 4)}
 
-    # B. per-series optimal scale (oracle)
     dfb = pd.DataFrame({"s": si, "y": y, "p": p})
     g = dfb.groupby("s").apply(lambda t: (t.p*t.y).sum()/max((t.p*t.p).sum(), 1e-9),
                                include_groups=False)
@@ -237,14 +208,12 @@ def main():
         "desc": "optimal multiplier per series (oracle: uses the answers)",
         "RMSE": float(np.sqrt(mse(y, pb)))}
 
-    # C. per-series oracle constant = that series' own validation mean
     cmean = dfb.groupby("s")["y"].mean().reindex(range(config.N_SERIES)).fillna(0).to_numpy()
     pc = cmean[si]
     oracles["C_per_series_oracle_mean"] = {
         "desc": "predict each series' OWN validation-window mean (oracle constant)",
         "RMSE": float(np.sqrt(mse(y, pc)))}
 
-    # D. per-series x weekday oracle mean
     wd = d.calendar["wday"].to_numpy()[ti]
     dfd = pd.DataFrame({"s": si, "w": wd, "y": y})
     gm = dfd.groupby(["s", "w"])["y"].transform("mean").to_numpy()
@@ -252,7 +221,6 @@ def main():
         "desc": "predict each series' own validation mean for that weekday (oracle)",
         "RMSE": float(np.sqrt(mse(y, gm)))}
 
-    # E. perfect predictions on the high-volume tier only
     tier_high = hmean[si] > 3.0
     pe = p.copy(); pe[tier_high] = y[tier_high]
     oracles["E_perfect_high_volume"] = {
@@ -260,7 +228,6 @@ def main():
         "RMSE": float(np.sqrt(mse(y, pe))),
         "rows_replaced_pct": round(float(tier_high.mean()*100), 2)}
 
-    # F. perfect on the worst 1% of rows
     pf = p.copy()
     w1 = np.argpartition(-sq, int(len(sq)*0.01))[:int(len(sq)*0.01)]
     pf[w1] = y[w1]
@@ -268,7 +235,6 @@ def main():
         "desc": "our model everywhere, but PERFECT on the worst 1% of rows",
         "RMSE": float(np.sqrt(mse(y, pf)))}
 
-    # G. clip predictions to a sensible max (no oracle) - sanity
     oracles["G_no_change_reference"] = {"desc": "our model as-is",
                                         "RMSE": float(np.sqrt(overall_mse))}
 

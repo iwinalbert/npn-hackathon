@@ -1,29 +1,3 @@
-"""
-EXPERIMENT #74 — independent reproduction of the shape-feature gain, plus one
-extension of the validated mechanism.
-
-PART A — REPRODUCTION (required before any champion change)
-  Experiment #72 measured RMSE 2.1163 for the shape model using the exact
-  champion configuration. #73 then validated the effect across 4 windows and 3
-  seeds. Research rule 13 requires the winning result to be reproduced
-  independently before it replaces the champion, so this re-runs it from
-  scratch and checks the number lands where it should.
-
-PART B — EXTENSION
-  #72/#73 established that per-series SHAPE (how demand distributes across the
-  week) carries signal the champion was not using. The same logic extends to
-  other cyclical axes the champion only knows chain-wide:
-      - month-of-year profile per series (seasonal items)
-      - day-of-month profile per series (pay-cycle / SNAP-window items)
-  If shape genuinely helps, more shape axes should help a little more. If they
-  do not, that bounds the mechanism and we stop.
-
-  Extension is judged on the SAME paired standard as #73, not on a single
-  window: it must beat the 4-feature shape model on the primary window AND on
-  at least 2 of the 3 extra windows.
-
-    python scripts/06_research_campaign/36_exp74_reproduce_and_extend.py
-"""
 
 from __future__ import annotations
 
@@ -48,17 +22,15 @@ from pipeline.features_v4 import FeatureBuilderV4, V4_FEATURES, _shrink
 BASE = V2_SETS["v2_base"]
 SHAPE = list(BASE) + V4_FEATURES
 CHAMP_RMSE, CHAMP_MAE = 2.1210429411947650, 1.0319268155496617
-EXPECTED_SHAPE_RMSE = 2.1163       # from Experiment #72
+EXPECTED_SHAPE_RMSE = 2.1163
 
 
-# --------------------------------------------------------------------------
 class FeatureBuilderV5(FeatureBuilderV4):
-    """V4 + per-series month-of-year and day-of-month profiles."""
 
     def _cycle_profiles(self, origin: int) -> dict:
         s = self.d.sales_wide
         cal = self.d.calendar
-        a = max(0, origin + 1 - 728)                   # two years where available
+        a = max(0, origin + 1 - 728)
         blk = s[:, a:origin + 1].astype(np.float64)
         vol = blk.sum(axis=1)
         overall = blk.mean(axis=1)
@@ -131,9 +103,7 @@ def main():
     t0 = time.time()
     R = {}
 
-    # ==================================================================
     banner("PART A — INDEPENDENT REPRODUCTION OF THE SHAPE MODEL")
-    # ==================================================================
     s = setup(config.VALIDATION_ORIGIN_IDX, FeatureBuilderV4)
     r, m, p, booster, info = fit_eval(s, SHAPE)
     drift = abs(r - EXPECTED_SHAPE_RMSE)
@@ -155,9 +125,7 @@ def main():
     booster.save_model(str(mpath))
     del booster
 
-    # ==================================================================
     banner("PART B — EXTENSION: more shape axes (month, day-of-month)")
-    # ==================================================================
     print("  If per-series shape is the mechanism, more cyclical axes should add")
     print("  a little more. If not, the mechanism is bounded at the weekly axis.\n")
 
@@ -199,9 +167,7 @@ def main():
     R["extension_accepted"] = ext_accepted
     print(f"  extension accepted: {ext_accepted}")
 
-    # ==================================================================
     banner("DECISION")
-    # ==================================================================
     final_cols = EXTENDED if ext_accepted else SHAPE
     final_rmse = r5 if ext_accepted else r
     final_mae = m5 if ext_accepted else m

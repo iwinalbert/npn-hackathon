@@ -1,9 +1,3 @@
-"""
-PHASE 1 — optimization baseline (verify reproducibility, no changes)
-PHASE 2 — targeted feature experiments, one group at a time
-
-    python scripts/16_phase1_2_features.py
-"""
 
 from __future__ import annotations
 
@@ -36,7 +30,6 @@ def main():
     print(f"  origins  : {len(s.origins)} (d_{s.origins[0]+1} .. d_{s.origins[-1]+1})")
     print(f"  reference: RMSE {optimize.BEST_RMSE:.4f}  MAE {optimize.BEST_MAE:.4f}\n")
 
-    # --- leakage test on the V2 builder (not inherited on trust) ---
     print("  Leakage test on the extended feature builder...")
     cols_all = V2_SETS["v2_all"]
     clean = s.fb.build_origin_frame(s.origin_idx, include_target=False)
@@ -79,7 +72,6 @@ def main():
     print(f"  prediction spread     : p50 {base['pred_p50']}, p99 {base['pred_p99']}, "
           f"max {base['pred_max']}")
 
-    # ------------------------------------------------------------------
     banner("PHASE 2 — TARGETED FEATURE EXPERIMENTS (one group at a time)")
     for key in ["v2_A_demand", "v2_B_calendar", "v2_C_price",
                 "v2_D_interactions", "v2_all"]:
@@ -90,7 +82,6 @@ def main():
                    "identical to the baseline.",),
             save_model=False))
 
-    # ------------------------------------------------------------------
     banner("PHASE 2 RESULTS")
     df = pd.DataFrame([{
         "experiment": r["_label"], "n_feat": r["_n_features"],

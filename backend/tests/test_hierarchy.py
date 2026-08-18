@@ -1,10 +1,3 @@
-"""
-Hierarchy navigation and — most importantly — COHERENCE.
-
-The coherence tests are the scientific invariant of this product: every
-aggregate must be an exact sum of the bottom-level forecasts. If one of them
-ever fails, the hierarchy is lying to the user about what the model said.
-"""
 import pytest
 
 from .conftest import API
@@ -44,7 +37,6 @@ def test_aggregate_returns_28_days(client, level, node):
 
 
 def test_coherence_states_sum_to_total(client):
-    """Sum of the three states must equal the chain total, exactly."""
     total = client.get(f"{API}/hierarchy/aggregate",
                        params={"level": "total", "node_id": "ALL"}).json()
     parts = sum(
@@ -84,12 +76,6 @@ def test_total_covers_every_series(client):
 
 
 def test_accuracy_is_level_matched_and_rises_with_aggregation(client):
-    """
-    The same forecast is ~28% accurate per store-item and ~97% chain-wide.
-    The API must report the figure for the level being viewed, and those figures
-    must increase as aggregation rises. Showing a single global number is the
-    most likely way a demand-forecasting UI misleads its user.
-    """
     acc = {}
     for level, node in (("total", "ALL"), ("store", "CA_3"),
                         ("item", "FOODS_3_090")):
@@ -113,11 +99,9 @@ def test_history_can_be_attached_to_an_aggregate(client):
 
 
 def test_unknown_level_is_rejected_not_executed(client):
-    """Level names are whitelisted, so injection attempts cannot reach SQL."""
     r = client.get(f"{API}/hierarchy/aggregate",
                    params={"level": "x'; DROP TABLE series; --", "node_id": "X"})
     assert r.status_code == 400
-    # and the table is still there
     assert client.get(f"{API}/ready").json()["detail"]["tables"]["series"] == 30_490
 
 

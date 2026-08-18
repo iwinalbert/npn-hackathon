@@ -1,26 +1,3 @@
-"""
-Tweedie variance-power probe — the one legitimate lever our error analysis points at.
-
-MOTIVATION (from measured evidence, not intuition)
---------------------------------------------------
-Error analysis showed our model under-predicts the busiest series: high-volume
-rows are 7.7% of the validation set but carry 61% of all squared error, with a
-bias of -0.389. RMSE is dominated by exactly those rows.
-
-The Tweedie variance power controls how much probability mass the objective puts
-at zero versus in the tail. p -> 1 behaves like Poisson (lighter zero-inflation,
-more weight on getting counts right); p -> 2 behaves like Gamma. We used 1.1
-everywhere without ever testing it, so it is an untested assumption sitting
-directly on top of the thing limiting our RMSE.
-
-DISCIPLINE
-----------
-This runs on the INNER window (origin d_1885, targets d_1886..d_1913). The
-primary window d_1914..d_1941 is not touched, so it remains an unbiased estimate
-and nothing here can leak into the headline number.
-
-    python scripts/12_tweedie_power_probe.py
-"""
 
 from __future__ import annotations
 
@@ -39,9 +16,9 @@ from pipeline.backtest import Backtester
 from pipeline.data_loader import M5Data
 from pipeline.experiment import Experiment
 
-INNER_ORIGIN = config.VALIDATION_ORIGIN_IDX - config.HORIZON   # d_1885
+INNER_ORIGIN = config.VALIDATION_ORIGIN_IDX - config.HORIZON
 FEATURE_SET = "base_recency_listing"
-POWERS = [1.1, 1.3, 1.5]          # 1.1 is our current setting
+POWERS = [1.1, 1.3, 1.5]
 
 
 def main():
@@ -63,7 +40,6 @@ def main():
     cols = feature_sets.get(FEATURE_SET)
     origins = bt.training_origins(INNER_ORIGIN, n_origins=15)
 
-    # Historical volume tiers, measured on pre-origin history only.
     hist = data.sales_wide[:, :INNER_ORIGIN + 1].mean(axis=1)
     tier = pd.Series(pd.cut(hist[valid["series_idx"].to_numpy()],
                             [-0.001, 0.2, 1.0, 3.0, np.inf],

@@ -1,72 +1,23 @@
-# Retail Demand Forecasting — production-like local stack
-#
-#   python tasks.py build-db      # ONCE, on the host — see PREREQUISITE below
-#   docker compose up --build     # then: http://localhost:8080
-#
-# PREREQUISITE — the product data layer
-# -------------------------------------
-# backend/data/ must contain product.duckdb, history.parquet and
-# backtest.parquet before `up`. That directory is gitignored (125 MB,
-# rebuildable) and is bind-mounted READ-ONLY into the API.
-# If it is empty the API starts but /api/v1/ready reports not-ready, its
-# healthcheck never passes, and the frontend — which waits for service_healthy —
-# never starts. That looks like a hang; it is a missing data layer.
-#
-# THIS STACK DOES NOT NEED research
-# ------------------------------------
-# The API serves every route, including the frozen 28-day forecast, from the
-# three files above. Verified against an EMPTY project root: forecast,
-# hierarchy, accuracy, insights, /docs, /openapi.json and /genai all respond,
-# and /inference reports unavailable with a reason. Deploy this and the research
-# tree can be absent from the machine entirely.
-#
-# Live model verification — re-running the frozen boosters to prove they still
-# reproduce the shipped forecast — is the ONE feature that needs the research
-# tree. It is opt-in, so the default deployment carries no dependency on it:
-#
-#   docker compose -f docker-compose.yml -f docker-compose.inference.yml up --build
-#
-# Optional AI assistant: put GEMINI_API_KEY in a .env file beside this compose
-# file, or export it. Compose substitutes it at run time; it is never written
-# into an image layer. Leave it unset and everything else works.
-#
-# The browser talks only to the frontend container. nginx proxies /api to the
-# API service on the internal network: one origin, no CORS, and no API host
-# baked into the JavaScript bundle. Both containers run as non-root.
 
 services:
   api:
     build:
       context: .
       dockerfile: backend/Dockerfile
-      # Lean target: no LightGBM, no research tree, no pipeline import.
-      # docker-compose.inference.yml switches this to `full`.
       target: api
     image: npn-forecast-api:latest
     container_name: npn-api
     restart: unless-stopped
     security_opt: ["no-new-privileges:true"]
-    # Published so /docs and the raw API can be reached directly. The frontend
-    # does NOT use this: it proxies over the internal network to api:8000.
-    # Remove this block to keep the API off the host entirely.
     ports:
       - "8000:8000"
     environment:
       NPN_ENVIRONMENT: production
       NPN_DATA_DIR: /data/product
-      # Same-origin through the nginx proxy means CORS is not exercised in this
-      # topology. These entries only matter if a browser is pointed straight at
-      # the API, e.g. during frontend development with `npm run dev`.
       NPN_CORS_ORIGINS: "http://localhost:5173,http://localhost:4173,http://localhost:8080"
       NPN_LOG_LEVEL: INFO
-      # AI assistant. Injected at RUNTIME from the host environment or a .env
-      # file next to this compose file — never baked into the image, never sent
-      # to the browser. Leave unset to run without the assistant: every other
-      # feature works and /genai/status explains why it is unavailable.
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
-      # The ONLY runtime data the API needs: product.duckdb + two parquet
-      # sidecars. Read-only — the service never writes to it.
       - ./backend/data:/data/product:ro
     healthcheck:
       test: ["CMD", "python", "-c",
@@ -78,8 +29,6 @@ services:
     deploy:
       resources:
         limits:
-          # The lean target holds a DuckDB connection and parquet readers.
-          # The inference override raises this — see that file.
           memory: 1G
 
   frontend:
@@ -93,12 +42,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Where nginx proxies /api/. Service name + internal port, not localhost.
       API_HOST: api:8000
     depends_on:
       api:
-        # Wait for the API's data layer to be queryable, not merely for the
-        # process to exist — otherwise the first page load races the DB open.
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/healthz"]

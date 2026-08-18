@@ -1,28 +1,3 @@
-"""
-Background job runner for long inference tasks.
-
-WHY A JOB QUEUE FOR ONE ENDPOINT
---------------------------------
-A full blend re-forecast takes ~33 s. Holding an HTTP connection open that long
-is hostile to proxies, load balancers and browsers, and a client disconnect
-would orphan the work. Jobs make the runtime explicit: submit, poll, collect.
-
-WHY IN-PROCESS RATHER THAN CELERY/REDIS
----------------------------------------
-The workload is one long task, run rarely, by one user at a time
-(`inference_max_concurrent` defaults to 1). A broker plus a worker container
-would triple the deployment surface to schedule a job that runs a handful of
-times per demo. This uses a bounded thread pool and an in-memory store, which is
-honest about its limits: **jobs do not survive a restart and are not shared
-across replicas.** If the API is ever scaled beyond one replica, this is the
-component to replace, and the router boundary makes that a contained change.
-
-THREADS, NOT ASYNC
-------------------
-The work is CPU-bound NumPy/LightGBM that releases the GIL in its hot loops.
-Running it in a worker thread keeps the event loop free, so health checks and
-every other endpoint stay responsive while a verification is in flight.
-"""
 
 from __future__ import annotations
 
@@ -40,11 +15,10 @@ _running = 0
 
 
 class JobRejected(RuntimeError):
-    """Raised when the runner will not accept another job."""
+    pass
 
 
 def _prune_locked() -> None:
-    """Drop finished jobs past their TTL. Caller must hold the lock."""
     now = time.time()
     ttl = settings.inference_job_ttl_seconds
     stale = [jid for jid, j in _jobs.items()
@@ -55,12 +29,6 @@ def _prune_locked() -> None:
 
 
 def submit(kind: str, fn: Callable[..., dict], **kwargs) -> str:
-    """
-    Queue `fn` to run in a background thread. Returns a job id immediately.
-
-    `fn` receives a `progress(pct, message)` callable it may use to report
-    advancement.
-    """
     global _running
     with _lock:
         _prune_locked()
@@ -131,7 +99,6 @@ def list_jobs(limit: int = 20) -> list[dict[str, Any]]:
         _prune_locked()
         jobs = sorted(_jobs.values(), key=lambda j: j["submitted_at"],
                       reverse=True)
-        # summaries only — results can be large
         return [{k: v for k, v in j.items() if k != "result"}
                 for j in jobs[:limit]]
 
@@ -150,7 +117,6 @@ def stats() -> dict[str, Any]:
 
 
 def reset() -> None:
-    """Test helper: clear all job state."""
     global _running
     with _lock:
         _jobs.clear()

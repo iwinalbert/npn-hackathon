@@ -1,30 +1,3 @@
-"""
-Model-capacity selection on an INNER validation window.
-
-WHY THIS SCRIPT EXISTS
-----------------------
-Models 1-5 were trained with deliberately untuned, conservative settings (400
-rounds, 128 leaves). That was the right call for a controlled like-for-like
-comparison, but it leaves an obvious question: were those models simply
-under-trained?
-
-We cannot answer that by trying settings against d_1914..d_1941 and keeping the
-best — that would use the validation window to make a training decision, and the
-resulting score would be optimistically biased. It is the same mistake as early
-stopping on the test set, just slower.
-
-So we step the whole scheme back 28 days:
-
-    INNER training origins  <= d_1857
-    INNER validation        d_1886 .. d_1913   (origin d_1885)
-    PRIMARY validation      d_1914 .. d_1941   <- NEVER TOUCHED HERE
-
-Capacity is chosen purely on the inner window. Only the single winning
-configuration is then run against the primary window, in script 06. The primary
-window contributes nothing to the choice.
-
-    python scripts/05_tune_inner_window.py
-"""
 
 from __future__ import annotations
 
@@ -43,16 +16,11 @@ from pipeline.backtest import Backtester
 from pipeline.data_loader import M5Data
 from pipeline.experiment import Experiment
 
-INNER_ORIGIN = config.VALIDATION_ORIGIN_IDX - config.HORIZON   # 1884 -> d_1885
-FEATURE_SET = "base_recency_listing"                           # all 32 features
+INNER_ORIGIN = config.VALIDATION_ORIGIN_IDX - config.HORIZON
+FEATURE_SET = "base_recency_listing"
 
 TWEEDIE = {"objective": "tweedie", "tweedie_variance_power": 1.1, "metric": "rmse"}
 
-# A small, deliberate grid probing capacity and training size — not an
-# exhaustive search. Each entry changes one or two things from the previous.
-# Origin counts are capped at 20 (about 17.1M rows, ~2.2 GB for the feature
-# matrix) to stay well inside the ~5.3 GB of free RAM on this machine once
-# LightGBM's own Dataset construction is accounted for.
 GRID = [
     {"tag": "A_current_settings",  "n_estimators": 400,  "num_leaves": 128, "lr": 0.05, "origins": 15},
     {"tag": "B_more_rounds",       "n_estimators": 1200, "num_leaves": 128, "lr": 0.05, "origins": 15},
@@ -80,8 +48,6 @@ def main() -> None:
     y_inner = inner_valid["sales"].to_numpy()
     assert len(inner_valid) == config.N_SERIES * config.HORIZON
 
-    # Hard guarantee: nothing in this script may reference a day at or beyond the
-    # first primary-validation day.
     first_primary_day = config.VALIDATION_ORIGIN_IDX + 1
     assert int(inner_valid["target_day_idx"].max()) < first_primary_day, \
         "inner validation overlaps the primary validation window"

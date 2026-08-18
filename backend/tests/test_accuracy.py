@@ -1,10 +1,3 @@
-"""
-Model-performance endpoints.
-
-These tests guard the two honesty rules the accuracy layer exists to enforce:
-no accuracy is ever reported for a window without ground truth, and accuracy is
-always qualified by aggregation level.
-"""
 import pytest
 
 from .conftest import API
@@ -32,10 +25,6 @@ def test_primary_window_reports_the_published_metrics(client):
 
 
 def test_no_window_covers_the_delivered_forecast_period(client):
-    """
-    The delivered forecast (d_1942-d_1969) has no ground truth, so it must never
-    appear as a scorable window.
-    """
     w = client.get(f"{API}/accuracy/windows").json()
     for x in w:
         assert x["window_end"] <= "2016-05-22", (
@@ -69,11 +58,6 @@ def test_regime_accuracy_covers_the_syntetos_boylan_classes(client):
 
 
 def test_member_decomposition_matches_the_research_record(client):
-    """
-    The blend must still beat both members, with the residual correlation the
-    research measured (~0.95). This is the evidence that the ensemble works for
-    the stated reason.
-    """
     m = client.get(f"{API}/accuracy/members").json()
     direct = next(x for x in m["members"] if x["name"].startswith("Direct"))
     recursive = next(x for x in m["members"] if x["name"].startswith("Recursive"))
@@ -104,7 +88,6 @@ def test_aggregate_backtest_reports_level_accuracy(client):
     assert len(d["points"]) == 28
     assert d["n_series"] == 3_049
     assert 0 < d["accuracy_pct"] < 100
-    # store-level aggregation must beat bottom-level accuracy
     assert d["accuracy_pct"] > 50
 
 

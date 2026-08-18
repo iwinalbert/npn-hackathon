@@ -1,52 +1,3 @@
-"""
-EXPERIMENT #69 — Pre-Origin Per-Series Bias Correction.
-
-WHAT THIS DOES
---------------
-Leaves the selected model and its predictions completely untouched. Learns one
-multiplicative correction factor per store-item series from a window that ends
-BEFORE the forecast origin, then applies those factors to the existing
-predictions for d_1914..d_1941.
-
-WHY AUXILIARY MODELS ARE NEEDED (and why they are not "retraining")
--------------------------------------------------------------------
-A bias factor is actual / predicted. To measure it on the pre-origin window
-d_1886..d_1913 we need predictions for those days — and the base model does not
-produce any, because it was built to forecast from origin d_1913 onward.
-
-So we train two auxiliary models purely to generate pre-origin predictions:
-
-    AUX-A : origin d_1857 -> predicts d_1858..d_1885
-    AUX-B : origin d_1885 -> predicts d_1886..d_1913
-
-Both use the identical configuration to the base model, and both train only on
-origins at least 28 days before their own window, so neither ever sees a day at
-or after d_1914. The base model is never retrained, reloaded, or altered.
-
-HOW THE SHRINKAGE CONSTANT IS CHOSEN
-------------------------------------
-Shrinking a factor toward 1.0 needs a constant k. Choosing k by trying values
-against d_1914..d_1941 would be selecting on the scoring window — the exact
-mistake that produced four false positives earlier in this project. Instead:
-
-    factors fitted on d_1858..d_1885 (using AUX-A)
-        -> evaluated on d_1886..d_1913 (using AUX-B)
-        -> k chosen there
-
-Both of those windows are entirely before the forecast origin. Only after k is
-fixed do we fit the final factors on d_1886..d_1913 and apply them once.
-
-DECISION RULE, FIXED BEFORE THE RESULT IS SEEN
-----------------------------------------------
-Phase 9 measured a window-to-window RMSE standard deviation of 0.022-0.033 for
-this model. A change smaller than that is indistinguishable from which month you
-happened to score on. Therefore:
-
-    ACCEPT  if  dRMSE <= -0.022  AND  dMAE <= +0.020
-    REJECT  otherwise
-
-    python scripts/27_exp69_bias_correction.py
-"""
 
 from __future__ import annotations
 
@@ -67,18 +18,15 @@ from pipeline.data_loader import M5Data
 from pipeline.experiment import Experiment
 from pipeline.features_v2 import FeatureBuilderV2, V2_SETS
 
-COLS = V2_SETS["v2_base"]                      # the base model's 32 features
+COLS = V2_SETS["v2_base"]
 BASE_PRED = config.PREDICTIONS_DIR / "model_04_tweedie_recency_listing_validation.csv"
 
-VO = config.VALIDATION_ORIGIN_IDX              # 1912 -> d_1913
-FIT_ORIGIN = VO - config.HORIZON               # 1884 -> d_1885, fits on d_1886..d_1913
-TUNE_ORIGIN = VO - 2 * config.HORIZON          # 1856 -> d_1857, fits on d_1858..d_1885
+VO = config.VALIDATION_ORIGIN_IDX
+FIT_ORIGIN = VO - config.HORIZON
+TUNE_ORIGIN = VO - 2 * config.HORIZON
 
 CLIP_LO, CLIP_HI = 0.5, 2.0
-K_GRID = [0, 2, 5, 10, 20, 50, 100, 250, 500, 1000, 5000]   # 0 = no shrinkage
-# The selection is also allowed to choose "apply no correction at all" — the
-# k -> infinity limit. A fitting procedure that cannot reject its own correction
-# is not a fair test of whether the correction is worth applying.
+K_GRID = [0, 2, 5, 10, 20, 50, 100, 250, 500, 1000, 5000]
 
 ACCEPT_RMSE = -0.022
 ACCEPT_MAE_TOL = 0.020
@@ -90,15 +38,6 @@ def banner(t):
 
 def factors_from(pred: np.ndarray, actual: np.ndarray, series_idx: np.ndarray,
                  k: float) -> np.ndarray:
-    """
-    One multiplicative factor per series: sum(actual) / sum(predicted) over the
-    fitting window, shrunk toward 1.0 by volume and clipped.
-
-    Shrinkage weight w = P / (P + k), where P is the series' total predicted
-    units in the window. A busy series keeps almost all of its measured
-    correction; a series with barely any predicted volume is pulled back to 1.0,
-    because its ratio is mostly noise.
-    """
     df = pd.DataFrame({"s": series_idx, "a": actual, "p": pred})
     g = df.groupby("s").agg(a=("a", "sum"), p=("p", "sum"))
     g = g.reindex(range(config.N_SERIES)).fillna(0.0)
@@ -110,12 +49,11 @@ def factors_from(pred: np.ndarray, actual: np.ndarray, series_idx: np.ndarray,
     w = P / (P + k) if k > 0 else np.ones_like(P)
     f = 1.0 + (raw - 1.0) * w
     f = np.clip(f, CLIP_LO, CLIP_HI)
-    f[P <= 1e-9] = 1.0                          # nothing predicted -> no correction
+    f[P <= 1e-9] = 1.0
     return f.astype(np.float64)
 
 
 def train_aux(origin_idx: int, tag: str):
-    """Train an auxiliary model at `origin_idx` and return its window predictions."""
     s = optimize.Setup(origin_idx=origin_idx)
     print(f"    [{tag}] origin {s.window['forecast_origin_day']} -> "
           f"{s.window['validation_days']} ({s.window['validation_dates']})")
@@ -141,19 +79,13 @@ def main():
 
     r0, m0 = metrics.rmse(y, p0), metrics.mae(y, p0)
     print(f"  baseline (untouched predictions): RMSE {r0:.4f}  MAE {m0:.4f}")
-    # The prediction file stores y_pred rounded to 5 decimals, so recomputing
-    # from it differs from the in-memory figure by ~1.5e-09. The tolerance is set
-    # to 1e-7: loose enough to absorb that documented storage rounding, still
-    # tight enough that any real change to the file would fail immediately.
     recorded = 2.1210429411947650
     drift = abs(r0 - recorded)
     assert drift < 1e-7, f"baseline predictions changed! drift={drift:.3e}"
     print(f"  baseline file verified against the recorded 2.1210 result "
           f"(drift {drift:.2e}, from 5-decimal CSV storage)")
 
-    # ==================================================================
     banner("STEP 1 — AUXILIARY MODELS (pre-origin only; base model untouched)")
-    # ==================================================================
     s_tune, p_tune, b_tune, i_tune = train_aux(TUNE_ORIGIN, "AUX-A")
     s_fit, p_fit, b_fit, i_fit = train_aux(FIT_ORIGIN, "AUX-B")
 
@@ -165,9 +97,7 @@ def main():
     assert max_day_touched <= VO, "auxiliary model reached into the validation window"
     print("  PASS — no auxiliary model reached day d_1914 or later")
 
-    # ==================================================================
     banner("STEP 2 — CHOOSE SHRINKAGE k ON A PRE-ORIGIN WINDOW")
-    # ==================================================================
     print("  Factors fitted on d_1858..d_1885 (AUX-A), scored on d_1886..d_1913 (AUX-B).")
     print("  The validation window plays no part in this choice.\n")
 
@@ -203,9 +133,7 @@ def main():
         print(f"     We still apply the best finite k ({k_best:g}) once below,")
         print("     purely to document what it would have cost.")
 
-    # ==================================================================
     banner("STEP 3 — FIT FINAL FACTORS ON d_1886..d_1913 AND APPLY ONCE")
-    # ==================================================================
     fit_si = s_fit.valid["series_idx"].to_numpy()
     F = factors_from(p_fit, s_fit.y, fit_si, k_best)
     p1 = p0 * F[si]
@@ -216,9 +144,7 @@ def main():
     print(f"  change   : RMSE {d_r:+.4f} ({d_r/r0*100:+.3f}%)   "
           f"MAE {d_m:+.4f} ({d_m/m0*100:+.3f}%)")
 
-    # ==================================================================
     banner("STEP 4 — LEAKAGE CHECKS")
-    # ==================================================================
     checks = []
 
     def chk(name, ok, detail):
@@ -228,10 +154,6 @@ def main():
     chk("aux_models_never_reach_validation", max_day_touched <= VO,
         f"highest day used = d_{max_day_touched+1}, validation starts d_{VO+2}")
 
-    # Empirical: overwrite every sales value after the origin, then re-derive the
-    # actuals used for fitting and re-compute the factors from them. Both must be
-    # untouched. This goes straight at the sales matrix rather than through the
-    # feature builder, because the actuals are what the factors are made of.
     corrupt = data.sales_wide.copy()
     corrupt[:, VO + 1:] = 9999
     fit_days = np.arange(FIT_ORIGIN + 1, FIT_ORIGIN + 1 + config.HORIZON)
@@ -257,9 +179,7 @@ def main():
     if not all(c["passed"] for c in checks):
         raise SystemExit("STOP: a leakage check failed")
 
-    # ==================================================================
     banner("STEP 5 — FACTOR DISTRIBUTION")
-    # ==================================================================
     n_corrected = int((np.abs(F - 1.0) > 1e-6).sum())
     n_clipped = int(((F <= CLIP_LO + 1e-9) | (F >= CLIP_HI - 1e-9)).sum())
     qs = {f"p{q}": float(np.percentile(F, q)) for q in [1, 5, 25, 50, 75, 95, 99]}
@@ -272,9 +192,7 @@ def main():
     print("  percentiles: " + "  ".join(f"{k}={v:.3f}" for k, v in qs.items()))
     print(f"  mean {F.mean():.4f}   median {np.median(F):.4f}")
 
-    # ==================================================================
     banner("STEP 6 — PERFORMANCE BY DEMAND-VOLUME DECILE")
-    # ==================================================================
     hist = data.sales_wide[:, :VO + 1].mean(axis=1)
     dec = pd.qcut(hist[si], 10, labels=False, duplicates="drop")
     rows = []
@@ -303,9 +221,7 @@ def main():
     helps_high = hi_corr < hi_base
     print(f"  correction {'HELPS' if helps_high else 'HURTS'} high-volume series")
 
-    # ==================================================================
     banner("STEP 7 — DECISION")
-    # ==================================================================
     NOISE_LO, NOISE_HI = 0.022, 0.033
     accepted = (d_r <= ACCEPT_RMSE) and (d_m <= ACCEPT_MAE_TOL)
     print(f"  rule fixed in advance: ACCEPT if dRMSE <= {ACCEPT_RMSE} "
@@ -316,7 +232,6 @@ def main():
           f"-> {'exceeds' if abs(d_r) > NOISE_LO else 'INSIDE the noise band'}")
     print(f"\n  DECISION: {'ACCEPTED' if accepted else 'REJECTED'}")
 
-    # ==================================================================
     exp = Experiment(
         "exp_69_pre_origin_per_series_bias_correction",
         model_type="post-hoc per-series multiplicative correction",

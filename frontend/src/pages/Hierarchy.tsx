@@ -10,7 +10,6 @@ import { Async, Badge, Card, Explain, Metric, VizStage } from '../components/ui'
 import { buildDemandSeries, compact, nf, pct } from '../lib/format'
 import type { AggregateForecast, HierarchyNode } from '../api/types'
 
-/** Levels worth drilling through in a UI, in the order a planner thinks. */
 const LEVELS = [
   { key: 'total', label: 'Whole chain' },
   { key: 'state', label: 'State' },
@@ -21,7 +20,6 @@ const LEVELS = [
   { key: 'item', label: 'Item (all stores)' },
 ]
 
-/** Join a level's node list to its fetched totals, without inventing any. */
 function toFlowNodes(
   nodes: HierarchyNode[] | undefined,
   totals: Record<string, AggregateForecast>,
@@ -39,7 +37,6 @@ export function Hierarchy() {
   const [nodeId, setNodeId] = useState('CA_3')
   const drillRef = useRef<HTMLDivElement>(null)
 
-  // --- the roll-up picture ------------------------------------------------
   const levels = useLevels()
   const model = useModelCard()
   const states = useNodes('state')
@@ -80,7 +77,6 @@ export function Hierarchy() {
     },
   ]
 
-  // --- the drill-down -----------------------------------------------------
   const nodes = useNodes(level)
   const options = nodes.data ?? []
   const effectiveNode = useMemo(() => {

@@ -1,16 +1,3 @@
-"""
-Analysis of the team's end_to_end_approach.md against our implemented pipeline.
-
-READ-ONLY. Trains nothing, modifies no pipeline code, overwrites no existing
-report. It recomputes metrics from prediction files already on disk and writes:
-
-    artifacts/team_doc_analysis.json
-    reports/charts/leak_window_map.png
-    reports/charts/team_doc_candidates.png
-    reports/TEAM_APPROACH_VS_OUR_PIPELINE_REPORT.md / .pdf
-
-    python scripts/15_team_doc_analysis.py
-"""
 
 from __future__ import annotations
 
@@ -39,13 +26,9 @@ OURS_PRED = config.PREDICTIONS_DIR / "model_04_tweedie_recency_listing_validatio
 
 OUR_RMSE, OUR_MAE = 2.1210, 1.0319
 TEAM_RMSE, TEAM_MAE = 2.0324, 1.0869
-LEAKY_RMSE, LEAKY_MAE = 1.9165, 0.9754      # measured in scripts/11_leakage_probe.py
+LEAKY_RMSE, LEAKY_MAE = 1.9165, 0.9754
 TEAMSTYLE_RMSE, TEAMSTYLE_MAE = 2.1835, 1.0498
 
-
-# ==========================================================================
-# Diagnostics
-# ==========================================================================
 
 def run_diagnostics() -> dict:
     d = M5Data(load_prices=False)
@@ -56,7 +39,6 @@ def run_diagnostics() -> dict:
     si = P.series_idx.to_numpy()
     ti = P.target_day_idx.to_numpy()
 
-    # --- team's ghost-stockout rule applied to our validation window ---
     roll28 = np.empty(len(y))
     prev3 = np.empty(len(y), bool)
     for k, (s, t) in enumerate(zip(si, ti)):
@@ -81,10 +63,6 @@ def run_diagnostics() -> dict:
                      "RMSE": metrics.rmse(y[m], p[m]),
                      "MAE": metrics.mae(y[m], p[m])}
 
-    # --- leak-window arithmetic under the doc's stated feature set ---
-    # For horizon day h (1..28) and target day t = T+h:
-    #   lag_k reads day t-k = T+h-k  -> leaks when h > k
-    #   rolling window ending at t-1 reads up to T+h-1 -> leaks when h > 1
     leak_map = {
         "lag_7": [h > 7 for h in range(1, 29)],
         "lag_28": [h > 28 for h in range(1, 29)],
@@ -107,10 +85,6 @@ def run_diagnostics() -> dict:
         "leak_map": {k: [bool(x) for x in v] for k, v in leak_map.items()},
     }
 
-
-# ==========================================================================
-# Charts
-# ==========================================================================
 
 def chart_leak_map(leak_map: dict) -> str:
     feats = list(leak_map.keys())
@@ -157,10 +131,6 @@ def chart_candidates() -> str:
     return "charts/team_doc_candidates.png"
 
 
-# ==========================================================================
-# Report
-# ==========================================================================
-
 def build_report(diag: dict, c1: str, c2: str) -> None:
     g = diag["ghost_stockout"]
     v = diag["evaluation_population_variants"]
@@ -194,7 +164,6 @@ def build_report(diag: dict, c1: str, c2: str) -> None:
     A("---")
     A("")
 
-    # ---------------- PART 1 ----------------
     A("## Part 1 — What the team's document actually says")
     A("")
     A("| Feature / Method | Purpose | Team approach | Evidence in document | We use it? | Worth testing? |")
@@ -282,7 +251,6 @@ def build_report(diag: dict, c1: str, c2: str) -> None:
       "state-specific number quoted as a global one. |")
     A("")
 
-    # ---------------- PART 2 ----------------
     A("## Part 2 — What our pipeline actually does")
     A("")
     A("Every value below is read from the repository, not from memory.")
@@ -315,7 +283,6 @@ def build_report(diag: dict, c1: str, c2: str) -> None:
         A(f"- **{gname}** — {', '.join('`' + c + '`' for c in cols)}")
     A("")
 
-    # ---------------- PART 3 ----------------
     A("## Part 3 — Side by side")
     A("")
     A("| # | Topic | Team document | Our pipeline | Difference | Should test? |")
@@ -370,7 +337,6 @@ def build_report(diag: dict, c1: str, c2: str) -> None:
         A("| " + " | ".join(r) + " |")
     A("")
 
-    # ---------------- PART 4 ----------------
     A("## Part 4 — Which of their ideas actually hold up")
     A("")
     A("Ratings: **A** = strongly supported, safe to test · **B** = reasonable, "
@@ -456,7 +422,6 @@ def build_report(diag: dict, c1: str, c2: str) -> None:
       "presentation value only.")
     A("")
 
-    # ---------------- PART 5 ----------------
     A("## Part 5 — What could explain their 2.0324")
     A("")
     A("Ranked by how much evidence supports each, highest first. **Nothing here "
@@ -556,7 +521,6 @@ def build_report(diag: dict, c1: str, c2: str) -> None:
       "RMSE, and a base model or evaluation population that raises their MAE.")
     A("")
 
-    # ---------------- PART 6 ----------------
     A("## Part 6 — The experiment ladder, and what to skip")
     A("")
     A("All of these would use our exact validation window, unchanged target, and "
@@ -581,7 +545,6 @@ def build_report(diag: dict, c1: str, c2: str) -> None:
       "a time costs more time than the information is worth.")
     A("")
 
-    # ---------------- PART 7 ----------------
     A("## Part 7 — Recommended path")
     A("")
     A("### Keep from our pipeline")
@@ -635,7 +598,6 @@ def build_report(diag: dict, c1: str, c2: str) -> None:
       "features that we have already measured twice as no help.")
     A("")
 
-    # ---------------- closing ----------------
     A("## The four questions, answered directly")
     A("")
     A("**What did the team do?** We know what they *planned*: melt to long "

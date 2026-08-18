@@ -1,4 +1,3 @@
-"""Planning summaries derived from the frozen forecast."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Query

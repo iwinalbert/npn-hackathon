@@ -1,12 +1,3 @@
-"""
-PHASE 7 — can the hurdle model be rescued?
-PHASE 8 — simple ensembles, with weights chosen on the inner window.
-
-The hurdle previously lost (2.1267 vs 2.1210). The brief says do not discard it
-without trying to improve it, and do not force it if it still loses.
-
-    python scripts/20_phase7_8_hurdle_ensemble.py
-"""
 
 from __future__ import annotations
 
@@ -34,7 +25,6 @@ def banner(t):
 
 
 def hurdle_fit_predict(s, stage2_params, label):
-    """Train both stages, return combined predictions and the two components."""
     X, Y = optimize.build_matrix(s, COLS)
     ybin = (Y > 0).astype(np.float32)
     pos = Y > 0
@@ -54,9 +44,7 @@ def main():
     s = optimize.Setup()
     results = []
 
-    # ==================================================================
     banner("PHASE 7 — HURDLE, SECOND ATTEMPT")
-    # ==================================================================
     print("  Original hurdle used Poisson for stage 2 and scored 2.1267.")
     print("  Variant here: Tweedie for stage 2, plus a calibration factor on the")
     print("  product P(sale) x E[units|sale], chosen on the INNER window.\n")
@@ -70,7 +58,6 @@ def main():
           f"({d_raw['RMSE']-optimize.BEST_RMSE:+.4f})  MAE={d_raw['MAE']:.4f}")
     print(f"    mean P(sale)={prob.mean():.4f}  mean E[units|sale]={mag.mean():.4f}")
 
-    # calibration factor chosen on the inner window
     print("\n  Choosing a calibration factor on the inner window...")
     si = optimize.Setup(origin_idx=INNER)
     ip, im, _, _ = hurdle_fit_predict(
@@ -122,9 +109,7 @@ def main():
           f"{'hurdle wins' if best_hurdle < optimize.BEST_RMSE else 'hurdle still loses'}")
     del prob, mag, raw, cal
 
-    # ==================================================================
     banner("PHASE 8 — ENSEMBLE (weights chosen on the inner window)")
-    # ==================================================================
     print("  Candidates are the two objectives that won on different metrics:")
     print("  Tweedie (best RMSE) and L1 (best MAE). Blending them tests whether")
     print("  the RMSE/MAE trade can be improved rather than just moved.\n")
@@ -154,7 +139,6 @@ def main():
           f"{1-w_best:.2f} L1")
     del si, pt_i, pl_i
 
-    # apply once to the primary window using already-saved predictions
     pt = pd.read_csv(config.PREDICTIONS_DIR / "opt_00_baseline_reproduce_validation.csv")
     pl = pd.read_csv(config.PREDICTIONS_DIR / "opt_06_obj_l1_validation.csv")
     for df in (pt, pl):

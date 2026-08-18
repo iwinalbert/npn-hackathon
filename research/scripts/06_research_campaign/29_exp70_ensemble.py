@@ -1,52 +1,3 @@
-"""
-EXPERIMENT #70 — Variance-reduction ensemble of diverse strong RMSE models.
-
-HYPOTHESIS
-----------
-The error autopsy decomposed MSE into 0.0049 bias-squared and 4.4939 variance:
-99.89% of the error is variance. Every intervention tried so far has attacked
-either bias (calibration, per-series correction, volume weighting) or information
-(new features). None of those is the binding constraint, which is why all of them
-failed.
-
-Averaging several models that are individually strong but make DIFFERENT mistakes
-cancels the part of the variance that comes from the fitting procedure itself
-(bootstrap sampling, feature subsampling, split-point ties, seed). That is the
-one canonical variance-reduction technique this project has never tested on
-RMSE-competitive models.
-
-WHY EXISTING EVIDENCE SUPPORTS IT
----------------------------------
-- The variance decomposition above.
-- Phase 8 blended Tweedie with L1 and RMSE got worse — but L1 is deliberately a
-  poor RMSE model (it targets the median of a mostly-zero distribution). That
-  experiment measured a metric trade-off, not variance reduction. It does not
-  rule this out; it is a materially different hypothesis.
-- Phase 4 showed Tweedie powers 1.1-1.3 all score within 0.006 of each other on
-  the inner window, i.e. several near-equal-quality models exist to average.
-
-MECHANISM
----------
-For M models with individually equal error, equal-weight averaging leaves the
-shared (irreducible) error untouched but shrinks the independent component by
-roughly 1/M. The gain is bounded by how decorrelated the members' mistakes are,
-which is measured and reported below.
-
-LEAKAGE RISK: none beyond the champion's. Same 32 features, same origins, same
-frozen-at-origin construction. No weights are fitted, so no selection touches the
-validation window either — equal weights are chosen a priori.
-
-VALIDATION: primary window d_1914..d_1941, all 30,490 series x 28 days.
-Robustness on three further windows is run only if the primary gain warrants it.
-
-SUCCESS CRITERION (fixed before running)
-----------------------------------------
-    PROMOTE to robustness testing if dRMSE <= -0.010
-    NEW CHAMPION only if it also holds up across the robustness windows
-    REJECT if dRMSE > -0.010 or MAE degrades by more than +0.020
-
-    python scripts/29_exp70_ensemble.py
-"""
 
 from __future__ import annotations
 
@@ -68,9 +19,6 @@ from pipeline.features_v2 import V2_SETS
 COLS = V2_SETS["v2_base"]
 CHAMP_RMSE, CHAMP_MAE = 2.1210429411947650, 1.0319268155496617
 
-# Six members. All are strong RMSE models (Tweedie 1.1-1.3, the band Phase 4
-# showed to be near-equal). Diversity comes from seed, tree capacity, and the
-# subsampling fractions — the sources of fit-to-fit variance.
 MEMBERS = [
     {"tag": "m1_champion",  "tweedie_variance_power": 1.1, "num_leaves": 128,
      "seed": 42,  "feature_fraction": 0.8, "bagging_fraction": 0.8},
@@ -106,7 +54,6 @@ def main():
     print(f"  window : {s.window['validation_days']} ({s.window['validation_dates']})")
     print(f"  champion: RMSE {CHAMP_RMSE:.4f}  MAE {CHAMP_MAE:.4f}\n")
 
-    # Build the training matrix ONCE and reuse it for every member.
     print("  building shared training matrix...")
     X, Y = optimize.build_matrix(s, COLS, verbose=True)
 
@@ -129,7 +76,6 @@ def main():
 
     md = pd.DataFrame(rows)
 
-    # ---- decorrelation: how different are the members' mistakes? ----
     banner("MEMBER DIVERSITY")
     E = np.column_stack([preds[t] - y for t in preds])
     C = np.corrcoef(E.T)
@@ -138,7 +84,6 @@ def main():
           f"min {off.min():.4f}, max {off.max():.4f}")
     print("  (1.000 would mean identical mistakes and zero ensemble benefit)")
 
-    # ---- equal-weight ensemble ----
     banner("ENSEMBLE (equal weights, no fitting)")
     P = np.mean(np.column_stack([preds[t] for t in preds]), axis=1)
     d = optimize.diagnostics(y, P, s)
@@ -152,7 +97,6 @@ def main():
           f"{bool(d['RMSE'] < md.RMSE.min())}")
     print(f"  high-volume RMSE   : {d['high_volume_RMSE']:.4f} (champion 5.9756)")
 
-    # ---- how many members are worth having? ----
     print("\n  ensemble RMSE as members are added (in listed order):")
     cum = []
     for k in range(1, len(preds) + 1):

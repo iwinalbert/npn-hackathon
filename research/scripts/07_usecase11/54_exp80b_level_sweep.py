@@ -1,55 +1,3 @@
-"""
-EXPERIMENT #80b — WHICH HIERARCHY LEVEL SHOULD BE RECONCILED, AND HOW HARD?
-
-INNER WINDOW ONLY (origin d_1885, targets d_1886..d_1913). Selection of the
-level, the aggregate objective and the shrinkage alpha all happen here, strictly
-before the primary window's targets, so the four-window validation that follows
-inherits them as fixed constants and never tunes on evaluation data.
-
-WHAT #80 (PROBE) ALREADY SETTLED
---------------------------------
-At item level, with an L2 aggregate model and alpha = 0.55:
-    bottom RMSE 2.0677 -> 2.0517  (-0.0160)
-    bottom MAE  1.0294 -> 1.0192  (-0.0102)
-    high-volume 5.8436 -> 5.7776  (-0.0660)
-and the aggregate model beat the bottom-up sum at item level (8.176 vs 8.381).
-A Tweedie aggregate model was clearly worse (RMSE 10.79 at item level): the
-aggregate target is neither sparse nor zero-inflated, so the objective that wins
-at the bottom is the wrong one on top. That is a finding, not a nuisance.
-
-WHAT THIS SCRIPT ADDS
----------------------
-  1. THE SAME TEST AT EVERY PLAUSIBLE LEVEL — store_dept (70 groups), item
-     (3,049) and item_state (9,147) — because Step 1's oracle said the recoverable
-     error is concentrated in the item-bearing levels and near-zero above them,
-     and that prediction should be checked against real models rather than
-     assumed.
-
-  2. SEQUENTIAL TWO-LEVEL RECONCILIATION. Reconciling to level X and then to
-     level Y is the middle-out family's natural extension. Coherence at the
-     second level is exact; coherence at the first is only approximately
-     preserved, which is reported rather than hidden.
-
-  3. THREE NEGATIVE CONTROLS, because the correction
-
-         P'_s = P_s * ( 1 + alpha * (Ahat - F) / F )
-
-     is algebraically a blend of the bottom-up forecast with a top-down
-     disaggregation of Ahat, and a blend can improve for reasons that have
-     nothing to do with the hierarchy:
-
-       C1  GLOBAL RESCALE. Ahat = c * F for the single best constant c. If most
-           of the gain survives, this is calibration wearing a hierarchy costume.
-       C2  NAIVE AGGREGATE. Ahat = the item-level trailing 28-day mean. If a
-           model with no learning does as well, the aggregate MODEL is not the
-           active ingredient.
-       C3  NO NEW INFORMATION. Ahat = the bottom-up sum of the champion's own
-           DIRECT member. This is a different model but reads the same
-           per-store information set, so it isolates how much of the gain comes
-           from the cross-store channel rather than from averaging two models.
-
-    python scripts/07_usecase11/54_exp80b_level_sweep.py
-"""
 
 from __future__ import annotations
 
@@ -90,7 +38,6 @@ def banner(t):
 
 
 def reconcile(Pm, Ahat, F, g, alpha):
-    """Forecast-proportions top-down of the aggregate discrepancy, shrunk by alpha."""
     with np.errstate(divide="ignore", invalid="ignore"):
         share = np.where(F[g] > 1e-9, Pm / np.where(F[g] > 1e-9, F[g], 1.0), 0.0)
     return np.clip(Pm + alpha * share * (Ahat - F)[g], 0, None)
@@ -133,7 +80,6 @@ def main():
 
     results, store = [], {}
 
-    # ------------------------------------------------------------------
     banner("PART 1 — one level at a time")
     log(f"  {'level':<12}{'groups':>8}{'aggBU':>9}{'aggMdl':>9}{'alpha*':>8}"
         f"{'RMSE':>10}{'dRMSE':>9}{'MAE':>9}{'dMAE':>9}{'highvol':>9}")
@@ -178,7 +124,6 @@ def main():
         f"(alpha*={store[best_level]['best']['alpha']:.2f}, "
         f"dRMSE {store[best_level]['best']['dRMSE']:+.4f})")
 
-    # ------------------------------------------------------------------
     banner("PART 2 — sequential two-level reconciliation")
     seq = []
     for first in LEVELS:
@@ -188,8 +133,6 @@ def main():
             f1 = store[first]
             P1 = reconcile(Pm, f1["Ahat"], f1["F"], f1["g"], f1["best"]["alpha"])
             f2 = store[second]
-            # the second level must be re-aggregated from the ALREADY corrected
-            # forecast, otherwise the two corrections double-count
             F2 = aggregate(P1, f2["g"], f2["n_g"])
             bestr = None
             for a in ALPHAS:
@@ -212,21 +155,17 @@ def main():
         f"dRMSE {best_seq['dRMSE']:+.4f}  vs best single "
         f"{store[best_level]['best']['dRMSE']:+.4f}")
 
-    # ------------------------------------------------------------------
     banner("PART 3 — negative controls at the best level")
     b = store[best_level]
     g, n_g, F = b["g"], b["n_g"], b["F"]
     A = aggregate(Ym, g, n_g)
     controls = {}
 
-    # C1 global rescale
     c_star = float((Ym * Pm).sum() / (Pm * Pm).sum())
     Ahat_c1 = c_star * F
-    # C2 naive aggregate: trailing 28-day mean of the aggregated series
     agg_obj = AggregateLevel(data, best_level)
     naive = agg_obj.sales_wide[:, INNER_ORIGIN - 27:INNER_ORIGIN + 1].mean(axis=1)
     Ahat_c2 = np.repeat(naive[:, None], n_d, axis=1)
-    # C3 no new information: the direct member's own bottom-up sum
     Ahat_c3 = aggregate(Dm, g, n_g)
 
     for tag, Ah, why in [
@@ -255,7 +194,6 @@ def main():
         f"{real - worst_control:+.4f} of {real:+.4f} "
         f"({100 * (real - worst_control) / real:.0f}%)")
 
-    # ------------------------------------------------------------------
     banner("SELECTED CONFIGURATION (carried to the four-window validation)")
     log(f"  level           : {best_level}")
     log(f"  aggregate model : LightGBM L2, {len(_probe.AGG_FEATURES)} features, "

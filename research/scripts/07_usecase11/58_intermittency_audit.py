@@ -1,49 +1,3 @@
-"""
-USE CASE 11 / REQUIREMENT 7 — INTERMITTENT DEMAND AUDIT.
-
-READ-ONLY. Trains nothing. Writes uc11_intermittency_audit.json + a CSV.
-
-The brief lists Croston, SBA, TSB, hurdle and segmentation as candidate
-treatments for intermittency, and asks whether Tweedie is adequate. The project
-has already tested the hurdle family twice (model_05_hurdle 2.1267,
-opt_07_hurdle_v2 2.1241, opt_07_hurdle_v2_calibrated 2.1822, all worse than the
-then-champion's 2.1210) and measured an intermittency-quintile segmentation
-oracle of only -0.0025. Croston, SBA and TSB have NOT been tested, and
-"Tweedie is fine" has never been checked REGIME BY REGIME — only in aggregate.
-Both gaps are closed here.
-
-WHAT IS COMPUTED
-----------------
-1. SYNTETOS-BOYLAN CLASSIFICATION of all 30,490 series from pre-origin history:
-
-       ADI  = average inter-demand interval          cut at 1.32
-       CV^2 = squared coefficient of variation of the NON-ZERO demand sizes
-                                                      cut at 0.49
-
-       smooth        ADI < 1.32 and CV^2 < 0.49
-       erratic       ADI < 1.32 and CV^2 >= 0.49
-       intermittent  ADI >= 1.32 and CV^2 < 0.49
-       lumpy         ADI >= 1.32 and CV^2 >= 0.49
-
-2. THE CHAMPION'S BEHAVIOUR IN EACH REGIME — RMSE, MAE, bias, share of total
-   squared error, and share of series.
-
-3. CROSTON / SBA / TSB, implemented here and fitted on pre-origin history only.
-   Each produces one constant per series for all 28 horizon days, which is what
-   those methods are: they estimate a rate, not a calendar. Scored in each
-   regime against the champion.
-
-4. THE ORACLE FOR REGIME SPECIALISATION — the best per-regime multiplicative
-   recalibration, fitted on the evaluation window itself. It is the upper bound
-   on anything a regime-specific model could achieve through level alone, and
-   if it is negligible the whole segmentation idea is dead regardless of which
-   model would sit in each segment.
-
-5. THE ORACLE FOR A PER-REGIME BLEND with the best classical method — the upper
-   bound on "use SBA where it wins, the champion elsewhere".
-
-    python scripts/07_usecase11/58_intermittency_audit.py
-"""
 
 from __future__ import annotations
 
@@ -63,8 +17,8 @@ from pipeline.data_loader import M5Data
 PRED_FILE = config.PREDICTIONS_DIR / "exp_76_diversity_blend_validation.csv"
 OUT_JSON = config.ARTIFACTS_DIR / "uc11_intermittency_audit.json"
 ADI_CUT, CV2_CUT = 1.32, 0.49
-HIST_DAYS = 728          # two years of pre-origin history for the classification
-ALPHA = 0.1              # smoothing constant for Croston / SBA / TSB
+HIST_DAYS = 728
+ALPHA = 0.1
 
 
 def log(*a):
@@ -76,7 +30,6 @@ def banner(t):
 
 
 def classify(sales: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """ADI, CV^2 and a regime label per series, from the given history block."""
     nz = sales > 0
     counts = nz.sum(axis=1)
     n_days = sales.shape[1]
@@ -97,18 +50,6 @@ def classify(sales: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
 
 def croston_family(sales: np.ndarray, alpha: float = ALPHA):
-    """
-    Croston, SBA (Syntetos-Boylan approximation) and TSB, vectorised over series.
-
-    Croston  z <- alpha*size + (1-alpha)*z ;  p <- alpha*interval + (1-alpha)*p
-             forecast = z / p
-    SBA      = (1 - alpha/2) * Croston, the standard bias correction
-    TSB      z <- alpha*size + (1-alpha)*z on demand periods
-             prob <- beta*1 + (1-beta)*prob   every period (decays without demand)
-             forecast = prob * z
-    All three read the supplied history block only, which the caller slices to
-    end at the forecast origin.
-    """
     n, T = sales.shape
     z = np.zeros(n)
     p = np.ones(n)
@@ -122,7 +63,6 @@ def croston_family(sales: np.ndarray, alpha: float = ALPHA):
         v = sales[:, t]
         d = v > 0
         gap += 1.0
-        # --- Croston / SBA ---
         first = d & ~started
         z[first] = v[first]
         p[first] = 1.0
@@ -131,7 +71,6 @@ def croston_family(sales: np.ndarray, alpha: float = ALPHA):
         z[upd] = alpha * v[upd] + (1 - alpha) * z[upd]
         p[upd] = alpha * gap[upd] + (1 - alpha) * p[upd]
         gap[d] = 0.0
-        # --- TSB ---
         z_t[d] = alpha * v[d] + (1 - alpha) * z_t[d]
         prob = beta * d.astype(float) + (1 - beta) * prob
 
@@ -160,7 +99,6 @@ def main():
     base = metrics.rmse(y, p)
     log(f"  champion: RMSE {base:.4f}  MAE {metrics.mae(y, p):.4f}")
 
-    # ------------------------------------------------------------------
     banner("A. REGIME COMPOSITION AND CHAMPION BEHAVIOUR")
     log(f"  {'regime':<14}{'series':>8}{'rows':>10}{'zero%':>8}{'meanY':>8}"
         f"{'RMSE':>9}{'MAE':>8}{'bias':>9}{'sqerr%':>9}")
@@ -181,7 +119,6 @@ def main():
             f"{rec['RMSE']:>9.4f}{rec['MAE']:>8.4f}{rec['bias']:>+9.4f}"
             f"{rec['sq_error_share_pct']:>9.2f}")
 
-    # ------------------------------------------------------------------
     banner("B. CROSTON / SBA / TSB vs THE CHAMPION, PER REGIME")
     log("  Each classical method produces one constant per series for all 28")
     log("  days; that is what these methods are. Fitted on pre-origin history.")
@@ -214,7 +151,6 @@ def main():
     log(f"\n  regimes where a classical method beats the champion: "
         f"{beats if beats else 'NONE'}")
 
-    # ------------------------------------------------------------------
     banner("C. ORACLE — WHAT REGIME SPECIALISATION COULD BE WORTH")
     log("  Best per-regime multiplicative rescale, fitted on the evaluation")
     log("  window itself. An upper bound no honest model can reach.")
@@ -242,7 +178,6 @@ def main():
         r_ = metrics.rmse(y, np.clip(pb, 0, None))
         log(f"    per-regime blend with {k:<16} RMSE {r_:.4f}  ({r_ - base:+.4f})")
 
-    # ------------------------------------------------------------------
     banner("D. IS TWEEDIE MISCALIBRATED ANYWHERE?")
     log("  A wrong likelihood shows up as regime-dependent bias. Flat bias")
     log("  across regimes means the single Tweedie head is adequate.")

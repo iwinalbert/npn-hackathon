@@ -1,4 +1,3 @@
-"""Liveness and readiness."""
 from __future__ import annotations
 
 from fastapi import APIRouter
@@ -17,12 +16,6 @@ def health() -> dict:
 
 @router.get("/ready", summary="Readiness — are the data artefacts usable?")
 def ready() -> dict:
-    """
-    Readiness reports DEGRADED rather than failing outright when a sidecar is
-    missing: the frozen forecast still serves without history or backtest data,
-    and a partially-useful API beats a dead one. Orchestrators should treat
-    ready=false as unhealthy and degraded=true as a warning.
-    """
     detail = db.health()
     core_ok = bool(detail.get("tables"))
     sidecars_ok = (detail.get("history_queryable")

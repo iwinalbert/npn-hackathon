@@ -1,14 +1,3 @@
-"""
-Markdown -> PDF renderer for pipeline stage reports.
-
-Deliberately small: headings, paragraphs, pipe tables, bullet/numbered lists,
-blockquote callouts, fenced code blocks, bold/inline-code spans, horizontal rules.
-That is all our reports use, and a full markdown engine would be a dependency we
-do not need.
-
-Handles escaped pipes (\\|) inside table cells, which a naive splitter would
-mistake for column separators.
-"""
 
 from __future__ import annotations
 
@@ -117,7 +106,6 @@ def render_markdown_to_pdf(
     footer: str = "",
     page_break_on_h1: bool = True,
 ) -> Path:
-    """Render a markdown file to a styled PDF. Returns the output path."""
     md_path, pdf_path = Path(md_path), Path(pdf_path)
     s = _styles()
     text = md_path.read_text(encoding="utf-8")
@@ -151,7 +139,7 @@ def render_markdown_to_pdf(
             lvl, txt = len(m.group(1)), _inline(m.group(2))
             if lvl == 1:
                 if first_h1:
-                    first_h1 = False          # title already rendered above
+                    first_h1 = False
                     i += 1
                     continue
                 if page_break_on_h1:
@@ -164,7 +152,6 @@ def render_markdown_to_pdf(
             i += 1
             continue
 
-        # Image:  ![alt](relative/or/absolute/path.png)
         mimg = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)$", st)
         if mimg:
             alt, src = mimg.group(1), mimg.group(2)

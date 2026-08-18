@@ -1,13 +1,3 @@
-"""
-Builds every stage report as markdown + PDF.
-
-All figures are read from experiments/*.json and artifacts/*, i.e. from runs that
-actually executed. Narrative sentences that state a verdict ("helped", "did not
-help") are derived from the measured numbers at build time, so the prose cannot
-disagree with the table above it.
-
-    python scripts/09_build_reports.py
-"""
 
 from __future__ import annotations
 
@@ -32,10 +22,6 @@ PRIMARY_DAYS = "d_1914 .. d_1941"
 EXPS = {r["experiment_name"]: r for r in experiment.load_all()}
 
 
-# --------------------------------------------------------------------------
-# helpers
-# --------------------------------------------------------------------------
-
 def E(name: str) -> dict | None:
     return EXPS.get(name)
 
@@ -54,7 +40,6 @@ def signed(v) -> str:
 
 
 def verdict(delta_rmse: float | None, tol: float = 0.005) -> str:
-    """Turn a measured RMSE change into a plain-English verdict."""
     if delta_rmse is None:
         return "not measured"
     if delta_rmse < -tol:
@@ -134,10 +119,6 @@ def leakage_block() -> list[str]:
         "",
     ]
 
-
-# ==========================================================================
-# Model 0
-# ==========================================================================
 
 def report_model0() -> None:
     names = {
@@ -222,10 +203,6 @@ def report_model0() -> None:
            "NPN AIA Hackathon — St. Joseph's College of Engineering"],
           "ML_MODEL_0_BASELINE_REPORT.pdf — naive baselines, no model fitted")
 
-
-# ==========================================================================
-# Generic learned-model report
-# ==========================================================================
 
 def learned_report(exp_name, md_name, pdf_name, title, subtitle,
                    objective_text, whatwedid, learned_text, compare=None,
@@ -313,7 +290,6 @@ def learned_report(exp_name, md_name, pdf_name, title, subtitle,
           f"{pdf_name} — measured result, no figure entered by hand")
 
 
-# ==========================================================================
 def build_all() -> None:
     print("Building reports...")
     report_model0()
@@ -321,7 +297,6 @@ def build_all() -> None:
     b_rmse = M("model_00_baseline_rolling_mean_28", "RMSE")
     b_mae = M("model_00_baseline_rolling_mean_28", "MAE")
 
-    # ---- Model 1 ----
     learned_report(
         "model_01_lightgbm",
         "ML_MODEL_1_LIGHTGBM_REPORT.md", "ML_MODEL_1_LIGHTGBM_REPORT.pdf",
@@ -357,7 +332,6 @@ def build_all() -> None:
                  "by changing the objective and nothing else.",
     )
 
-    # ---- Model 2 ----
     learned_report(
         "model_02_tweedie",
         "ML_MODEL_2_TWEEDIE_REPORT.md", "ML_MODEL_2_TWEEDIE_REPORT.pdf",
@@ -387,7 +361,6 @@ def build_all() -> None:
                  "actually earn their place.",
     )
 
-    # ---- Model 3 ----
     d3 = (M("model_03_tweedie_recency", "RMSE") or 0) - (M("model_02_tweedie", "RMSE") or 0)
     learned_report(
         "model_03_tweedie_recency",
@@ -430,7 +403,6 @@ def build_all() -> None:
                   "carried forward as a claimed contribution."),
     )
 
-    # ---- Model 4 ----
     d4 = (M("model_04_tweedie_recency_listing", "RMSE") or 0) - (M("model_03_tweedie_recency", "RMSE") or 0)
     learned_report(
         "model_04_tweedie_recency_listing",
@@ -475,7 +447,6 @@ def build_all() -> None:
                   "than its inputs."),
     )
 
-    # ---- Model 5 ----
     r5 = E("model_05_hurdle")
     if r5:
         best_prior = min(
@@ -523,12 +494,10 @@ def build_all() -> None:
                       "does not pay for itself is not carried forward."),
         )
 
-    # ---- comparison + final ----
     comparison_report()
     final_project_report()
 
 
-# ==========================================================================
 def collect_primary_models() -> list[dict]:
     out = []
     for r in EXPS.values():
@@ -712,7 +681,6 @@ def comparison_report() -> None:
           "FINAL_MODEL_COMPARISON_REPORT.pdf — all figures from executed runs")
 
 
-# ==========================================================================
 def final_project_report() -> None:
     models = collect_primary_models()
     if not models:
@@ -757,7 +725,6 @@ def final_project_report() -> None:
           "",
           "---", ""]
 
-    # 1-4
     L += ["## 1. The problem", "",
           "Forecast daily unit sales for the next 28 days, for 30,490 store-item "
           "combinations (3,049 products x 10 Walmart stores across California, "
@@ -803,7 +770,6 @@ def final_project_report() -> None:
           "to missing, no stockout was inferred, no promotion label was invented, "
           "and missing prices were left missing.", ""]
 
-    # 6-8
     L += ["## 6. Feature engineering", "",
           "32 features in seven groups. The organising principle is that at a "
           "fixed forecast origin T, a feature is either built from history up to "
@@ -839,7 +805,6 @@ def final_project_report() -> None:
           "model learn from May while being tested on April. Time-series "
           "validation must cut on time.", ""]
 
-    # 9-14 results
     L += ["## 9-14. What each experiment measured", "",
           "| Step | What changed | RMSE | MAE | Verdict |", "|---|---|---|---|---|"]
     chain = [
@@ -890,7 +855,6 @@ def final_project_report() -> None:
               "the achievable error reduction, and everything else is a rounding "
               "error by comparison.", ""]
 
-    # 16 error analysis
     if ea:
         L += ["## 16. Error analysis", ""]
         if imp_chart:
@@ -943,7 +907,6 @@ def final_project_report() -> None:
                   "about day 2 than about day 28; what changes is only the calendar. "
                   "That is a deliberate consequence of the fixed-origin design.", ""]
 
-    # 17-18
     L += ["## 17. Final model selection", "",
           f"**{bname}** — chosen mechanically as the lowest RMSE on the primary "
           "validation window, not by preference.", "",
@@ -971,7 +934,6 @@ def final_project_report() -> None:
               f"estimate of its quality is the validation result above "
               f"(RMSE {ff['validation_rmse']:.4f}).", ""]
 
-    # 19-21
     L += ["## 19. Novelty — what actually survived", "",
           "The project's proposed novelty was *Listing-Aware + Recency-Aware "
           "Demand Forecasting*. **We tested it and it did not hold up.** Neither "
@@ -1012,7 +974,6 @@ def final_project_report() -> None:
           "under- and over-stocking is asymmetric.",
           "- Recursive forecasting, so lag_1 becomes usable beyond day 1.", ""]
 
-    # judges
     L += ["## 22. Questions judges may ask", ""]
     qa = [
         ("Why LightGBM?",

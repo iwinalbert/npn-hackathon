@@ -1,35 +1,3 @@
-"""
-CONTEXT BUILDER — the layer that keeps the backend the source of truth.
-
-The assistant never queries the data itself and never receives the dataset. This
-module decides what a question needs, fetches exactly that from the EXISTING
-services, computes every number deterministically in Python, and hands the model
-a small structured JSON document.
-
-WHY DETERMINISTIC RETRIEVAL RATHER THAN LLM TOOL-CALLING
---------------------------------------------------------
-Gemini supports function calling, which would let the model choose its own
-queries. That was considered and rejected for this application:
-
-  * every extra model round-trip adds latency and cost to a demo that must feel
-    instant;
-  * a model choosing its own arguments can choose wrong ones, and the failure is
-    silent — it answers confidently about the wrong series;
-  * deterministic routing is unit-testable, and the tests can assert exactly
-    which numbers were available to the model for a given question.
-
-The trade is flexibility: an unanticipated question falls back to a general
-context rather than fetching something clever. That is the right way round for a
-system whose whole claim is that its numbers are verifiable. The interface is
-kept narrow so tool-calling could replace `resolve()` later without touching the
-router or the provider.
-
-EVERY DERIVED NUMBER IS COMPUTED HERE, NOT BY THE MODEL
--------------------------------------------------------
-Trends, percentage changes, weekly aggregates and comparisons are calculated in
-Python and passed in as facts. The model's job is to translate them into
-English, never to do arithmetic.
-"""
 
 from __future__ import annotations
 
@@ -44,9 +12,6 @@ from . import insights as insights_svc
 from . import meta as meta_svc
 from . import series as series_svc
 
-# --- intent detection -------------------------------------------------------
-# Deliberately simple and readable. Order matters: the first match wins, and a
-# selected series outranks everything because the user is looking at it.
 
 _PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("accuracy", re.compile(
@@ -55,7 +20,6 @@ _PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("model", re.compile(
         r"\b(lightgbm|tweedie|model|ensemble|blend|direct|recursive|algorithm|"
         r"architecture|feature|train|leakage|horizon)\w*"
-        # "how does it/this/the system work", with anything reasonable between
         r"|how\s+(does|do)\b.{0,40}\bwork", re.I)),
     ("ranking", re.compile(
         r"\b(which|what|top|highest|lowest|most|least|biggest|largest|rank|"
@@ -67,11 +31,8 @@ _PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 
 
 def detect_intent(question: str, has_series: bool) -> str:
-    """Which family of data this question needs."""
     q = (question or "").strip()
     if has_series and not _PATTERNS[0][1].search(q) and not _PATTERNS[1][1].search(q):
-        # A series is on screen and the question is not about metrics or the
-        # model itself, so it is almost certainly about that series.
         return "series"
     for name, pattern in _PATTERNS:
         if pattern.search(q):
@@ -79,16 +40,7 @@ def detect_intent(question: str, has_series: bool) -> str:
     return "series" if has_series else "general"
 
 
-# --- deterministic descriptive statistics -----------------------------------
-
 def _trend(values: list[float]) -> dict[str, Any]:
-    """
-    Direction and slope of a series, computed by least squares.
-
-    Classified with a tolerance relative to the mean level, so a 0.01 unit/day
-    drift on a product selling 100/day is correctly called "stable" rather than
-    dressed up as a trend.
-    """
     n = len(values)
     if n < 2:
         return {"direction": "unknown", "slope_per_day": 0.0, "change_pct": 0.0}
@@ -102,7 +54,6 @@ def _trend(values: list[float]) -> dict[str, Any]:
     total_change = slope * (n - 1)
     change_pct = (total_change / mean_y * 100) if mean_y > 1e-9 else 0.0
 
-    # "material" = the fitted change across the window exceeds 10% of the level
     if abs(change_pct) < 10:
         direction = "stable"
     elif change_pct > 0:
@@ -121,7 +72,6 @@ def _trend(values: list[float]) -> dict[str, Any]:
 
 
 def _weekly(points: list[dict], key: str) -> list[dict]:
-    """Collapse daily values into weeks so the context stays small."""
     out = []
     for w in range(0, len(points), 7):
         chunk = points[w:w + 7]
@@ -138,10 +88,7 @@ def _weekly(points: list[dict], key: str) -> list[dict]:
     return out
 
 
-# --- context builders -------------------------------------------------------
-
 def _series_context(store_id: str, item_id: str) -> dict[str, Any]:
-    """Everything the assistant may say about one store-item series."""
     fc = series_svc.forecast(store_id, item_id, with_bands=True)
     hist = series_svc.history(store_id, item_id, days=91)
     plan = insights_svc.planning_summary(store_id, item_id)
@@ -151,7 +98,6 @@ def _series_context(store_id: str, item_id: str) -> dict[str, Any]:
     hist_daily = [p["sales"] for p in hist["history"]]
     recent28 = hist_daily[-28:] if len(hist_daily) >= 28 else hist_daily
 
-    # Backtest for this series, where truth exists. Absent for some series.
     backtest: dict[str, Any] | None = None
     try:
         bt = accuracy_svc.series_backtest(store_id, item_id, 1912)
@@ -207,11 +153,6 @@ def _series_context(store_id: str, item_id: str) -> dict[str, Any]:
         "comparison": {
             "forecast_total_vs_last_28_days": plan.get("change_vs_recent"),
             "recent_28d_actual": plan.get("recent_28d_actual"),
-            # `forecast_total_vs_last_28_days` is signed; spelling the direction
-            # out in words keeps the model from having to interpret the sign,
-            # which is the one part of this comparison it could get backwards
-            # without the grounding check noticing (that check reads numbers,
-            # not claims).
             "difference_direction": (
                 None if plan.get("recent_28d_actual") is None else
                 "higher" if fc["total_28d"] >= plan["recent_28d_actual"] else "lower"),
@@ -370,8 +311,6 @@ def _general_context() -> dict[str, Any]:
     }
 
 
-# --- entry point ------------------------------------------------------------
-
 def resolve(
     question: str,
     store_id: str | None = None,
@@ -379,12 +318,6 @@ def resolve(
     level: str = "total",
     node_id: str = "ALL",
 ) -> dict[str, Any]:
-    """
-    Build the smallest context that can answer this question.
-
-    Always includes a compact `system` block so the assistant can identify the
-    product and the frozen model without a second lookup.
-    """
     has_series = bool(store_id and item_id)
     intent = detect_intent(question, has_series)
 
@@ -419,12 +352,6 @@ def resolve(
 
 
 def collect_numbers(obj: Any, out: set[float] | None = None) -> set[float]:
-    """
-    Every numeric value anywhere in the context.
-
-    Used by the grounding check in `genai.py` to test whether a figure the model
-    quoted actually came from the data it was given.
-    """
     if out is None:
         out = set()
     if isinstance(obj, bool):

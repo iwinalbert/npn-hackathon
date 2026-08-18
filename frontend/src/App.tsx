@@ -5,11 +5,6 @@ import { AppShell } from './components/layout/AppShell'
 import { LoadingPanel } from './components/ui'
 import { Overview } from './pages/Overview'
 
-/**
- * Overview loads eagerly because it is the landing page and must paint fast.
- * Every other route is code-split: the chart library is the largest dependency
- * and no evaluator needs it before they navigate.
- */
 const Forecast = lazy(() => import('./pages/Forecast').then((m) => ({ default: m.Forecast })))
 const Hierarchy = lazy(() => import('./pages/Hierarchy').then((m) => ({ default: m.Hierarchy })))
 const Insights = lazy(() => import('./pages/Insights').then((m) => ({ default: m.Insights })))

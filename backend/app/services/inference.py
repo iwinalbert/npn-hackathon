@@ -1,50 +1,3 @@
-"""
-INFERENCE SERVICE — the boundary between the product and the frozen model.
-
-This is the only module in the API that touches the model. It is deliberately
-narrow, and everything it refuses to do is as important as what it does.
-
-WHAT IT DOES
-------------
-Loads the two frozen LightGBM boosters and re-runs them forward from the frozen
-origin (d_1941) to reproduce the shipped 28-day forecast, then compares the
-result against the shipped artefact. That proves, live:
-
-  1. the model files load and execute;
-  2. the feature pipeline is intact;
-  3. the shipped forecast is authentic and reproducible;
-  4. the system has a genuine model-serving path, not just a CSV reader.
-
-Measured on the development machine: direct member 4.1 s for all 853,720 rows,
-recursive rollout ~29 s, so a full blend re-forecast is ~33 s.
-
-WHAT IT REFUSES TO DO, AND WHY
-------------------------------
-* **No retraining, re-tuning or re-blending.** The model is frozen.
-* **No inference at an origin earlier than d_1941.** Both boosters were trained
-  with data up to d_1941. Running them at an earlier origin would let them see
-  the future of the window being predicted — textbook leakage. Historical
-  accuracy comes from the cached per-window artefacts instead, where each
-  window's members were retrained with a correct cutoff.
-* **No perturbed-covariate scenarios.** Measured response to simulated price
-  changes is non-monotone and sometimes economically backwards, so the model is
-  not exposed as a what-if engine. See PRODUCT_ARCHITECTURE_PLAN.md §14.3.
-
-DEPLOYMENT SHAPE
-----------------
-`lightgbm`, `numpy` and the research `pipeline` package are imported LAZILY,
-inside functions. A container built without them still serves every other
-endpoint; `/inference/status` reports the reason inference is unavailable and
-the inference endpoints return 503 instead of the process failing to start.
-
-MEMORY
-------
-The two boosters (~29 MB, ~1 s to load) are cached for the process lifetime, so
-no request ever reloads a model binary. The 800 MB `M5Data` panel needed to
-rebuild features is NOT cached: it is loaded per job (~14 s) and released, which
-keeps idle RSS near 200 MB. That trade is deliberate — a container that idles at
-1 GB to save 14 s on a rarely-used endpoint is the wrong shape.
-"""
 
 from __future__ import annotations
 
@@ -55,7 +8,6 @@ from typing import Any
 
 from ..config import settings
 
-#: The only origin the frozen boosters may be run at (zero-based: d_1941).
 FROZEN_ORIGIN_IDX = 1940
 
 _boosters_lock = threading.Lock()
@@ -63,12 +15,7 @@ _boosters: dict[str, Any] | None = None
 _availability_cache: dict | None = None
 
 
-# ---------------------------------------------------------------------------
-# Availability
-# ---------------------------------------------------------------------------
-
 def _probe_dependencies() -> tuple[bool, list[str]]:
-    """Which optional runtime pieces are present? Never raises."""
     problems: list[str] = []
     try:
         import lightgbm  # noqa: F401
@@ -94,11 +41,6 @@ def _probe_dependencies() -> tuple[bool, list[str]]:
 
 
 def availability(refresh: bool = False) -> dict:
-    """
-    Whether live inference can run here, and if not, precisely why.
-
-    Cached because the dependency probe imports lightgbm, which is not free.
-    """
     global _availability_cache
     if _availability_cache is not None and not refresh:
         return _availability_cache
@@ -140,17 +82,7 @@ def require_available() -> None:
             reasons=a["reasons"])
 
 
-# ---------------------------------------------------------------------------
-# Model loading — once per process
-# ---------------------------------------------------------------------------
-
 def get_boosters() -> dict[str, Any]:
-    """
-    The two frozen boosters, loaded once and reused for the process lifetime.
-
-    Double-checked locking: concurrent first requests must not each load 29 MB
-    of model.
-    """
     global _boosters
     if _boosters is None:
         with _boosters_lock:
@@ -179,7 +111,6 @@ def unload_boosters() -> None:
 
 
 def model_runtime_info() -> dict:
-    """Booster metadata without forcing a load."""
     if _boosters is None:
         return {"loaded": False}
     b = _boosters
@@ -192,20 +123,7 @@ def model_runtime_info() -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
-# The verification run
-# ---------------------------------------------------------------------------
-
 def run_verification(progress=None) -> dict:
-    """
-    Re-run the frozen blend at d_1941 and compare against the shipped artefact.
-
-    `progress(pct, message)` is called as the run advances so the API can report
-    status while a job is in flight.
-
-    Returns a result dict with `verdict` in {MATCH, MISMATCH}. A mismatch is
-    reported, never hidden — that is the entire point of the check.
-    """
     require_available()
 
     def emit(pct: int, msg: str) -> None:
@@ -236,13 +154,10 @@ def run_verification(progress=None) -> dict:
     origin = FROZEN_ORIGIN_IDX
     horizon = settings.horizon
     if data.sales_wide.shape[1] - 1 != origin:
-        # The panel must end exactly at the frozen origin, or the boosters would
-        # be run against a different information set than they were built for.
         raise RuntimeError(
             f"panel ends at day_idx {data.sales_wide.shape[1] - 1}, "
             f"expected {origin}; refusing to run the frozen model")
 
-    # --- member A: direct ------------------------------------------------
     emit(25, "running direct member (38 features)")
     t_direct = time.perf_counter()
     fb = FeatureBuilderV5(data)
@@ -253,7 +168,6 @@ def run_verification(progress=None) -> dict:
     direct_seconds = round(time.perf_counter() - t_direct, 2)
     del frame, fb
 
-    # --- member B: recursive rollout -------------------------------------
     emit(40, "running recursive member (28-step rollout, ~29 s)")
     t_rec = time.perf_counter()
     import copy as _copy                                        # noqa: PLC0415
@@ -279,7 +193,6 @@ def run_verification(progress=None) -> dict:
     p_recursive = preds.ravel()
     recursive_seconds = round(time.perf_counter() - t_rec, 2)
 
-    # --- structural leakage check ----------------------------------------
     real_future = data.sales_wide[:, origin + 1:origin + 1 + horizon]
     history_intact = bool(np.array_equal(
         data.sales_wide[:, :origin + 1].astype(np.float32), work[:, :origin + 1]))
@@ -290,12 +203,10 @@ def run_verification(progress=None) -> dict:
         "passed": history_intact,
     }
 
-    # --- blend ------------------------------------------------------------
     emit(85, "blending members at the frozen weight w=0.60")
     w = settings.blend_weight_direct
     blended = np.clip(w * p_direct + (1.0 - w) * p_recursive, 0, None)
 
-    # --- compare against the shipped artefact ----------------------------
     emit(92, "comparing against the shipped forecast artefact")
     import csv                                                  # noqa: PLC0415
     shipped = np.empty((horizon, n), dtype=np.float64)
@@ -317,9 +228,6 @@ def run_verification(progress=None) -> dict:
     diff = np.abs(blended - shipped.ravel())
     max_abs = float(diff.max())
     mean_abs = float(diff.mean())
-    # The pipeline is deterministic (deterministic=True, fixed seed), so this
-    # should be float-noise. The tolerance allows for the artefact's CSV
-    # round-tripping, nothing more.
     tolerance = 1e-4
     verdict = "MATCH" if max_abs <= tolerance else "MISMATCH"
 

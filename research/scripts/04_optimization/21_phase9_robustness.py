@@ -1,16 +1,3 @@
-"""
-PHASE 9 — robustness of the top candidates across multiple 28-day windows.
-
-A single window can flatter a model by luck. We already measured that adjacent
-windows disagree by around 0.013 RMSE, which is larger than most of the
-"improvements" found in this campaign — so consistency matters more than any
-single number.
-
-Each model is retrained from scratch per window, using only origins before that
-window.
-
-    python scripts/21_phase9_robustness.py
-"""
 
 from __future__ import annotations
 

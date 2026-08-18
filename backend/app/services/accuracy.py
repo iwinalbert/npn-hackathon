@@ -1,22 +1,3 @@
-"""
-Model performance, served from verified artefacts only.
-
-EVERY NUMBER HERE IS A MEASUREMENT, NOT AN ESTIMATE
----------------------------------------------------
-All accuracy comes from the 8 cached backtest windows, where the champion's
-members were retrained per window with a correct cutoff and scored against real
-observed sales. Nothing is recomputed, approximated or extrapolated.
-
-TWO RULES THIS MODULE EXISTS TO ENFORCE
----------------------------------------
-1. **No accuracy is ever reported for the delivered forecast window.** No ground
-   truth exists for d_1942-d_1969, so any figure claimed against it would be
-   fabricated. `windows()` returns only origins where actuals exist.
-
-2. **Accuracy is always qualified by aggregation level.** The same forecast is
-   ~28% accurate per store-item and ~97% chain-wide. `by_level()` returns the
-   whole ladder so a caller can never accidentally quote the wrong one.
-"""
 
 from __future__ import annotations
 
@@ -28,7 +9,6 @@ from . import calendar as cal
 
 @ttl_cache()
 def windows() -> list[dict]:
-    """The backtest windows available, newest first."""
     rows = query("SELECT * FROM window_metrics ORDER BY origin_idx DESC")
     out = []
     for r in rows:
@@ -69,13 +49,6 @@ def _require_window(origin_idx: int) -> dict:
 
 @ttl_cache()
 def by_level() -> list[dict]:
-    """
-    Measured accuracy at each aggregation level.
-
-    This is the single most important honesty control in the product: it makes
-    the ~28% -> ~97% spread explicit instead of letting one number stand in for
-    the whole system.
-    """
     rows = query("SELECT * FROM level_accuracy ORDER BY n_groups")
     out = []
     for r in rows:
@@ -98,7 +71,6 @@ def by_level() -> list[dict]:
 
 @ttl_cache()
 def by_horizon(origin_idx: int = 1912) -> list[dict]:
-    """How error grows across the 28-day horizon."""
     _require_window(origin_idx)
     rows = query(
         f"""
@@ -121,12 +93,6 @@ def by_horizon(origin_idx: int = 1912) -> list[dict]:
 
 @ttl_cache()
 def by_regime(origin_idx: int = 1912) -> list[dict]:
-    """
-    Accuracy per Syntetos-Boylan demand regime.
-
-    Directly evidences the intermittent-demand requirement: it shows the model's
-    behaviour on the regimes that make this dataset hard.
-    """
     _require_window(origin_idx)
     rows = query(
         f"""
@@ -160,14 +126,6 @@ def by_regime(origin_idx: int = 1912) -> list[dict]:
 
 @ttl_cache()
 def members(origin_idx: int = 1912) -> dict:
-    """
-    Direct vs recursive vs blend — why the ensemble exists.
-
-    The blend was accepted because its members are architecturally different,
-    not because averaging helps: a negative control attributed -0.0247 of the
-    -0.0291 gain to architecture. Exposing the member split lets a user see that
-    for themselves.
-    """
     w = _require_window(origin_idx)
     row = query_one(
         f"""
@@ -209,7 +167,6 @@ def members(origin_idx: int = 1912) -> dict:
 
 def series_backtest(store_id: str, item_id: str,
                     origin_idx: int = 1912) -> dict:
-    """Predicted vs actual for one series in one window, with the member split."""
     w = _require_window(origin_idx)
     meta = query_one(
         "SELECT series_idx, id, item_id, store_id, state_id, regime, "
@@ -266,8 +223,7 @@ def series_backtest(store_id: str, item_id: str,
 
 def aggregate_backtest(level: str, node_id: str,
                        origin_idx: int = 1912) -> dict:
-    """Predicted vs actual for a hierarchy node in one window."""
-    from .hierarchy import _series_filter          # local: avoids a cycle
+    from .hierarchy import _series_filter
     w = _require_window(origin_idx)
     where, params = _series_filter(level, node_id)
 
@@ -314,7 +270,6 @@ def aggregate_backtest(level: str, node_id: str,
 
 @ttl_cache()
 def error_bands(regime: str | None = None) -> list[dict]:
-    """The empirical error-band table, exposed for transparency."""
     if regime:
         valid = {r["regime"] for r in query(
             "SELECT DISTINCT regime FROM error_bands")}
@@ -333,28 +288,11 @@ def error_bands(regime: str | None = None) -> list[dict]:
              "normalised_sd": round(float(r["norm_sd"]), 4)} for r in rows]
 
 
-# ---------------------------------------------------------------------------
-# Demand-occurrence and volume-tier behaviour
-# ---------------------------------------------------------------------------
-
-#: The occurrence threshold used throughout the research: a point forecast that
-#: rounds to at least one unit counts as "demand predicted". It is the only
-#: non-arbitrary cut for a count target and was fixed once, never tuned.
 OCCURRENCE_THRESHOLD = 0.5
 
 
 @ttl_cache()
 def occurrence(origin_idx: int = 1912) -> dict:
-    """
-    Demand-occurrence diagnostics: did the model spot the days that sold?
-
-    THESE MODELS WERE NEVER TRAINED TO CLASSIFY. They minimise Tweedie deviance
-    on a zero-inflated count target, so these figures are a by-product of
-    thresholding a regression output at 0.5 units. They are reported because
-    they describe a real behaviour — the recursive member is notably
-    higher-recall than the direct one — but they are NOT the task metric and a
-    model can improve F1 while getting worse at forecasting quantity.
-    """
     w = _require_window(origin_idx)
     t = OCCURRENCE_THRESHOLD
     r = query_one(
@@ -405,16 +343,6 @@ def occurrence(origin_idx: int = 1912) -> dict:
 
 @ttl_cache()
 def by_volume_tier(origin_idx: int = 1912) -> dict:
-    """
-    Accuracy by demand volume, showing where the squared error actually lives.
-
-    NOTE ON TIER DEFINITION: tiers here are assigned from each series' mean
-    daily sales over its FULL history. The research reports used tiers assigned
-    from history up to each window's own origin, so the high-volume RMSE quoted
-    in FINAL_MODEL_PERFORMANCE_REPORT (5.8662) differs very slightly from the
-    figure computed here. Both are correct measurements of slightly different
-    groupings; the definition is stated rather than the difference hidden.
-    """
     w = _require_window(origin_idx)
     rows = query(
         f"""

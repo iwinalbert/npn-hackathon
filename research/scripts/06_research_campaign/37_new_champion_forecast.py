@@ -1,11 +1,3 @@
-"""
-Promote the shape+cycle model and generate its 28-day forecast.
-
-The previous champion's model file, validation predictions and forecast are all
-left untouched — every artefact here is written under a new name.
-
-    python scripts/06_research_campaign/37_new_champion_forecast.py
-"""
 
 from __future__ import annotations
 
@@ -47,9 +39,6 @@ def main():
     print(f"  features: {len(EXTENDED)} (32 champion + 4 shape + 2 cycle)")
 
     FO = config.FINAL_FORECAST_ORIGIN_IDX
-    # optimize.Setup cannot be used here: it builds a validation frame, and there
-    # is no ground truth after d_1941 — the assertion that guards that is doing
-    # its job. Assemble the pieces directly instead.
     from pipeline.data_loader import M5Data
 
     class _S:
@@ -69,7 +58,6 @@ def main():
     assert max(origins) + config.HORIZON <= config.LAST_KNOWN_DAY_IDX
     print(f"  training origins: {len(origins)} (d_{origins[0]+1} .. d_{origins[-1]+1})")
 
-    # leakage test at the forecast origin
     banner("LEAKAGE TEST AT THE FORECAST ORIGIN")
     clean = s.fb.build_origin_frame(FO, include_target=False)
     corrupt = s.data.sales_wide.copy()

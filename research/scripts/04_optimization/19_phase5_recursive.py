@@ -1,33 +1,3 @@
-"""
-PHASE 5 — recursive forecasting vs direct forecasting.
-
-THE IDEA
---------
-Our production pipeline is DIRECT: features are frozen at the forecast origin T
-and all 28 days are predicted in one shot. That is safe, but it means the model
-knows no more about day 28 than about day 2 — only the calendar changes.
-
-RECURSIVE instead predicts one day at a time and feeds its OWN prediction back
-in as if it were the observed sale:
-
-    day 1  -> predict from real history up to T
-    day 2  -> predict using history up to T PLUS our day-1 prediction
-    ...
-    day 28 -> predict using history plus our own days 1-27
-
-This is legitimate: nothing but our own output enters the horizon. The danger is
-error accumulation — a bad day-3 prediction corrupts every later day.
-
-HOW LEAKAGE IS MADE STRUCTURALLY IMPOSSIBLE HERE
-------------------------------------------------
-The working sales matrix is rebuilt from scratch as
-    work[:, :T+1] = real sales      (everything up to the origin)
-    work[:, T+1:] = 0, then overwritten by our predictions as we go
-The real sales for d_1914..d_1941 are never copied into it at all, so no code
-path can read them. That is verified by a corruption test as well as asserted.
-
-    python scripts/19_phase5_recursive.py
-"""
 
 from __future__ import annotations
 
@@ -49,14 +19,10 @@ from pipeline.experiment import Experiment
 from pipeline.features import FEATURE_GROUPS
 from pipeline.features_v2 import FeatureBuilderV2, categorical_for
 
-# Calendar + demand + price + hierarchy. `horizon` is dropped because it is
-# always 1 in a one-step-ahead model, and recency/listing are dropped because a
-# fractional prediction like 0.3 would be counted as "a sale happened", which
-# would corrupt days_since_last_sale during recursion.
 REC_COLS = (FEATURE_GROUPS["A_calendar"] + FEATURE_GROUPS["B_historical_demand"]
             + FEATURE_GROUPS["E_price"] + FEATURE_GROUPS["F_hierarchy"])
 
-N_TRAIN_ORIGINS = 420          # one row per series per origin, horizon = 1
+N_TRAIN_ORIGINS = 420
 VO = config.VALIDATION_ORIGIN_IDX
 
 
@@ -65,7 +31,6 @@ def banner(t):
 
 
 def build_one_step_training(s, origins):
-    """One row per (series, origin) with target = the very next day."""
     n = config.N_SERIES
     X = np.empty((n * len(origins), len(REC_COLS)), dtype=np.float32)
     Y = np.empty(n * len(origins), dtype=np.float32)
@@ -82,12 +47,9 @@ def build_one_step_training(s, origins):
 
 
 def recursive_forecast(data, booster, origin, horizon=config.HORIZON):
-    """Roll forward one day at a time, feeding predictions back in."""
     n = config.N_SERIES
     n_days = data.sales_wide.shape[1]
 
-    # Real history up to and including the origin; everything after is zero and
-    # will be filled only with our own predictions.
     work = np.zeros((n, n_days), dtype=np.float32)
     work[:, :origin + 1] = data.sales_wide[:, :origin + 1]
 
@@ -101,7 +63,7 @@ def recursive_forecast(data, booster, origin, horizon=config.HORIZON):
         frame = fb.build_origin_frame(pseudo, horizon=1, include_target=False)
         p = np.clip(booster.predict(frame[REC_COLS].to_numpy(np.float32)), 0, None)
         preds[h - 1] = p
-        work[:, pseudo + 1] = p.astype(np.float32)     # feed our own output back
+        work[:, pseudo + 1] = p.astype(np.float32)
         del fb, frame, d2
     return preds.ravel(), work
 
@@ -135,14 +97,11 @@ def main():
     print(f"  trained one-step model in {train_s:.0f}s")
     del X, Y, ds
 
-    # ---------------- recursive rollout ----------------
     print("\n  Rolling forward 28 days, feeding predictions back...")
     t = time.time()
     preds, work = recursive_forecast(s.data, booster, VO)
     print(f"  rollout in {time.time()-t:.0f}s")
 
-    # Structural leakage proof: the working matrix must never equal the real
-    # sales anywhere inside the horizon (except by coincidence of value).
     real_future = s.data.sales_wide[:, VO + 1:VO + 1 + config.HORIZON]
     used_future = work[:, VO + 1:VO + 1 + config.HORIZON]
     identical = np.array_equal(real_future.astype(np.float32), used_future)
@@ -151,7 +110,6 @@ def main():
     if identical:
         raise SystemExit("STOP: recursion appears to have used real future sales")
 
-    # Order the predictions to match our validation frame (horizon-major).
     y = s.y
     d = optimize.diagnostics(y, preds, s)
 
@@ -192,7 +150,6 @@ def main():
           f"MAE={d['MAE']:.4f} ({d['MAE']-optimize.BEST_MAE:+.4f})")
     print(f"  DIRECT    : RMSE={optimize.BEST_RMSE:.4f}  MAE={optimize.BEST_MAE:.4f}")
 
-    # ---------------- error by horizon: does it accumulate? ----------------
     banner("ERROR ACCUMULATION ACROSS THE 28 DAYS")
     direct = pd.read_csv(config.PREDICTIONS_DIR /
                          "model_04_tweedie_recency_listing_validation.csv")

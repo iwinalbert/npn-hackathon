@@ -1,13 +1,3 @@
-/**
- * Data hooks.
- *
- * One hook per backend endpoint. Every screen reads through these, so there is
- * exactly one place where a query key, a cache policy or a URL lives.
- *
- * Cache policy reflects what the data actually is: the model is frozen and the
- * forecast is a fixed quantity, so almost everything here is immutable for the
- * lifetime of the page. Long stale times are correct, not lazy.
- */
 import { useQueries, useQuery, type UseQueryResult } from '@tanstack/react-query'
 
 import { API_BASE, ApiError, apiFetch, post } from './client'
@@ -21,12 +11,9 @@ import type {
   TopMovers, VolumeTier,
 } from './types'
 
-/** Frozen data: never refetch within a session. */
 const FROZEN = { staleTime: Infinity, gcTime: Infinity } as const
-/** Live-ish data (readiness, jobs). */
 const LIVE = { staleTime: 5_000 } as const
 
-// --- meta -------------------------------------------------------------------
 
 export const useModelCard = (): UseQueryResult<ModelCard> =>
   useQuery({ queryKey: ['model'], queryFn: () => apiFetch<ModelCard>('/meta/model'), ...FROZEN })
@@ -40,7 +27,6 @@ export const useProvenance = (): UseQueryResult<Provenance> =>
 export const useReadiness = (): UseQueryResult<Readiness> =>
   useQuery({ queryKey: ['ready'], queryFn: () => apiFetch<Readiness>('/ready'), ...LIVE, retry: 1 })
 
-// --- hierarchy --------------------------------------------------------------
 
 export const useLevels = (): UseQueryResult<LevelInfo[]> =>
   useQuery({ queryKey: ['levels'], queryFn: () => apiFetch<LevelInfo[]>('/hierarchy/levels'), ...FROZEN })
@@ -73,15 +59,6 @@ export const useAggregate = (level: string, nodeId: string, historyDays = 90) =>
     ...FROZEN,
   })
 
-/**
- * 28-day forecast totals for several nodes at one level, fetched in parallel.
- *
- * The API answers one node per request, so the roll-up overview asks for exactly
- * the nodes it draws. Nothing is derived or interpolated here: a node that has
- * not answered yet reports `null` and the UI shows it as pending rather than
- * guessing a number. Keys and params match `useAggregate`, so a node opened in
- * the drill-down reuses the same cache entry.
- */
 export const useNodeTotals = (level: string, nodeIds: string[]) =>
   useQueries({
     queries: nodeIds.map((nodeId) => ({
@@ -102,7 +79,6 @@ export const useNodeTotals = (level: string, nodeIds: string[]) =>
     }),
   })
 
-// --- series -----------------------------------------------------------------
 
 export const useSeriesList = (filters: Record<string, string | undefined>, limit = 100) =>
   useQuery({
@@ -135,7 +111,6 @@ export const useSeriesForecast = (store?: string, item?: string) =>
     ...FROZEN,
   })
 
-// --- accuracy ---------------------------------------------------------------
 
 export const useWindows = (): UseQueryResult<BacktestWindow[]> =>
   useQuery({ queryKey: ['windows'], queryFn: () => apiFetch<BacktestWindow[]>('/accuracy/windows'), ...FROZEN })
@@ -210,7 +185,6 @@ export const useAggregateBacktest = (level: string, nodeId: string, origin = 191
     ...FROZEN,
   })
 
-// --- insights ---------------------------------------------------------------
 
 export const usePortfolio = (level = 'total', nodeId = 'ALL') =>
   useQuery({
@@ -234,7 +208,6 @@ export const usePlanning = (store?: string, item?: string) =>
     ...FROZEN,
   })
 
-// --- inference --------------------------------------------------------------
 
 export const useInferenceStatus = () =>
   useQuery({ queryKey: ['inference-status'], queryFn: () => apiFetch<InferenceStatus>('/inference/status'), ...LIVE })
@@ -246,14 +219,12 @@ export const useInferenceJob = (jobId: string | null) =>
     queryKey: ['inference-job', jobId],
     queryFn: () => apiFetch<InferenceJob>(`/inference/jobs/${jobId}`),
     enabled: Boolean(jobId),
-    // Poll while the job is in flight; stop as soon as it settles.
     refetchInterval: (q) => {
       const s = (q.state.data as InferenceJob | undefined)?.status
       return s === 'succeeded' || s === 'failed' ? false : 1500
     },
   })
 
-// --- AI assistant -----------------------------------------------------------
 
 export const useGenAIStatus = () =>
   useQuery({
@@ -272,12 +243,6 @@ export const useGenAISuggestions = (store?: string | null, item?: string | null)
     staleTime: Infinity,
   })
 
-/**
- * Ask the assistant.
- *
- * A plain async function rather than a mutation hook: the page owns the
- * conversation list, and TanStack's mutation state would duplicate it.
- */
 export async function askAssistant(body: AskRequest): Promise<AskResponse> {
   const res = await fetch(`${API_BASE}/genai/ask`, {
     method: 'POST',

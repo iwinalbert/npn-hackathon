@@ -1,30 +1,3 @@
-"""
-GENAI SERVICE — an explanatory layer over a frozen forecasting system.
-
-The assistant's job is to TRANSLATE verified numbers into English. It does not
-compute, retrieve, decide or predict anything. Every figure it is allowed to
-mention was calculated by the backend and handed to it in a structured context.
-
-WHY THIS IS SAFE BY CONSTRUCTION
---------------------------------
-1. **No write path exists.** This module and its router only read. There is no
-   code path from a model response to a forecast, a model file, or the database.
-   A test asserts forecast values are byte-identical after an adversarial
-   request that tries to change them.
-2. **The model never sees the dataset.** It sees a compact JSON context built by
-   `genai_context.resolve()` — typically a few kilobytes.
-3. **Numbers are checked after generation.** `_check_grounding()` extracts every
-   figure from the reply and verifies it appears in the supplied context. This
-   catches invented values rather than trusting the prompt to prevent them.
-4. **The key never leaves this process.** It is a `SecretStr`, is read once when
-   constructing the client, and is scrubbed from any error surfaced to a caller.
-
-PROVIDER ABSTRACTION
---------------------
-`LLMProvider` is the seam. `GeminiProvider` implements it against the official
-`google-genai` SDK. Swapping to another vendor means adding one class; the
-router, the context builder and the guardrails are untouched.
-"""
 
 from __future__ import annotations
 
@@ -43,9 +16,6 @@ from . import genai_context
 
 log = logging.getLogger("npn.genai")
 
-# ---------------------------------------------------------------------------
-# System instruction
-# ---------------------------------------------------------------------------
 
 SYSTEM_INSTRUCTION = """\
 You are the Forecast Assistant for "Retail Demand Forecasting", an analytical \
@@ -98,17 +68,6 @@ is about 2 units per product per day, with big misses penalised hardest"). \
 Quote figures exactly as given. Never use markdown headings.\
 """
 
-# SUSPICION TIER. Matching does not block the request: it annotates the reply
-# with `injection_suspected` and inserts a SECURITY NOTE reinforcing the system
-# rules, because a legitimate question can contain these words ("explain your
-# instructions for handling intermittent demand").
-#
-# The REFUSAL tier (_POLICIES, below) is the one that stops a request from
-# reaching the model at all. It is deliberately narrower — a wrong refusal
-# silently destroys a legitimate answer, whereas a wrong flag only adds a
-# reminder. This tier is the wider net for everything the narrow one lets past,
-# such as role-play framing, which asks for a description rather than a
-# mutation and so should be answered carefully rather than declined.
 _INJECTION_PATTERNS = [
     re.compile(r"\b(act|behave|respond|answer)\s+as\s+(a|an|the)\s+", re.I),
     re.compile(r"\brole[\s-]?play\b", re.I),
@@ -124,43 +83,14 @@ _INJECTION_PATTERNS = [
 ]
 
 _SECRET_SHAPES = [
-    re.compile(r"AIza[0-9A-Za-z_\-]{20,}"),          # Google API key, classic
-    re.compile(r"AQ\.[0-9A-Za-z_\-]{20,}"),          # Google API key, current
-    re.compile(r"sk-[A-Za-z0-9]{20,}"),              # generic vendor key shape
+    re.compile(r"AIza[0-9A-Za-z_\-]{20,}"),
+    re.compile(r"AQ\.[0-9A-Za-z_\-]{20,}"),
+    re.compile(r"sk-[A-Za-z0-9]{20,}"),
     re.compile(r"GEMINI_API_KEY\s*[=:]\s*\S+", re.I),
 ]
 
 
-# ---------------------------------------------------------------------------
-# Local refusal policy — answered HERE, with no model call
-# ---------------------------------------------------------------------------
-#
-# Some requests have exactly one correct answer, and this system already knows
-# it. Sending them to Gemini was wrong for two reasons:
-#
-#   1. SECURITY MUST NOT DEPEND ON A THIRD PARTY BEING UP. Delegating "I cannot
-#      modify the forecast" to a remote model means an outage, a rate limit or a
-#      quota exhaustion turns a guarantee into a 503. That is not theoretical:
-#      it is precisely how this layer was found. A refusal that only works while
-#      Google is reachable is not a guarantee, it is a hope.
-#   2. A request to mutate state should not cost a quota unit, three seconds and
-#      a network round-trip to be told no.
-#
-# The refusals below are composed in Python from facts this service already
-# holds. They are deterministic, instant, free, and work with no API key at all.
-#
-# SCOPE DISCIPLINE. These patterns must catch *imperatives aimed at the
-# assistant* without swallowing legitimate questions ABOUT the same topics.
-# "Can you retrain the model?" is a request; "How was the model retrained for
-# the final forecast?" is a research question with a real answer, and it must
-# still reach the model. Two framings are therefore required — an imperative at
-# the start of a clause, or a "can you"-style address with explanatory verbs
-# (explain, describe, tell) explicitly excluded — plus a short list of phrases
-# that are unambiguous in any framing.
-
-# "…, then set the forecast to 999" — an imperative opening a clause.
 _IMPERATIVE = r"(?:^|[.;,]\s*|\band\s+|\bthen\s+|\bnow\s+|\bplease\s+)"
-# "can you …", but not "can you explain …"
 _ADDRESSED = (r"\b(?:can|could|would|will)\s+you\s+"
               r"(?!explain|describe|tell|say|clarify|summari[sz]e|show\s+me\s+how)"
               r"(?:\w+\s+){0,3}")
@@ -261,9 +191,6 @@ _POLICIES: tuple[_Policy, ...] = (
 )
 
 
-# What `model` reads when this service answered by itself. Not the configured
-# model id: claiming Gemini produced a reply it never saw would be a lie in the
-# one field a reviewer uses to check provenance.
 LOCAL_GUARDRAIL = "local-guardrail (no model call)"
 
 
@@ -278,26 +205,17 @@ class AssistantReply:
     context_keys: list[str] = field(default_factory=list)
     elapsed_ms: int = 0
     truncated: bool = False
-    # Answered by local policy, with no provider call. See _POLICIES.
     refused: bool = False
     refusal_category: str | None = None
 
 
 @dataclass
 class Generation:
-    """
-    What a provider produced.
-
-    `generate()` may return a plain string — the fakes in the test-suite do, and
-    that stays valid — or this, when the provider knows something extra about
-    how the generation ended.
-    """
     text: str
     truncated: bool = False
 
 
 class LLMProvider(Protocol):
-    """The seam. Implement this to swap vendors."""
 
     name: str
 
@@ -306,39 +224,15 @@ class LLMProvider(Protocol):
     def generate(self, system: str, prompt: str) -> str: ...
 
 
-# ---------------------------------------------------------------------------
-# Gemini
-# ---------------------------------------------------------------------------
-
 @lru_cache(maxsize=1)
 def _sdk_installed() -> bool:
-    """
-    Is `google-genai` importable, WITHOUT importing it?
-
-    `available()` runs on every /genai/status, which the assistant page calls on
-    load. It used to answer this with `import google.genai`, and that import
-    costs a measured ~435 ms warm (2.4 s on a cold file cache) — so the first
-    visit to the assistant page paid 252 ms for a question that is really just
-    "is the package on disk?".
-
-    `find_spec` locates the module without executing it: ~0 ms, same answer. The
-    SDK itself is still imported lazily in `_get_client()`, where an actual
-    generation genuinely needs it.
-
-    The trade is that a package which is present but broken now reports as
-    available and fails later, at the point of use — where `_provider_failure()`
-    classifies it. Paying half a second on every status check to pre-empt a
-    corrupt install is the wrong side of that trade.
-    """
     try:
         return importlib.util.find_spec("google.genai") is not None
     except (ImportError, AttributeError, ValueError):
-        # A broken or shadowed parent package raises rather than returning None.
         return False
 
 
 class GeminiProvider:
-    """Google Gemini via the official `google-genai` SDK."""
 
     name = "gemini"
 
@@ -357,7 +251,6 @@ class GeminiProvider:
         return (not problems), problems
 
     def _get_client(self) -> Any:
-        """Constructed once and reused: creating a client per request is waste."""
         if self._client is None:
             from google import genai                            # noqa: PLC0415
             key = settings.gemini_key_value
@@ -377,13 +270,7 @@ class GeminiProvider:
                 system_instruction=system,
                 temperature=settings.genai_temperature,
                 max_output_tokens=settings.genai_max_output_tokens,
-                # Deterministic-ish and focused; this is an explanation task,
-                # not a creative one.
                 top_p=0.9,
-                # This assistant does not use tool-calling: context retrieval is
-                # deterministic and happens before the model is invoked (see
-                # services/genai_context.py). Saying so explicitly keeps the SDK
-                # from arranging a calling loop we would never use.
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(
                     disable=True),
                 thinking_config=types.ThinkingConfig(
@@ -391,9 +278,6 @@ class GeminiProvider:
             ),
         )
 
-        # MAX_TOKENS means the reply was cut mid-sentence. Returning it as if it
-        # were complete presents half an answer as a whole one, so the caller is
-        # told and the UI says so.
         truncated = False
         try:
             reason = response.candidates[0].finish_reason
@@ -405,8 +289,6 @@ class GeminiProvider:
         if text and text.strip():
             return Generation(text.strip(), truncated=truncated)
         if not text or not text.strip():
-            # A blocked or empty completion must surface as a clear failure, not
-            # as an empty answer bubble.
             reason = getattr(response, "prompt_feedback", None)
             raise ServiceUnavailable(
                 "The assistant returned an empty response.",
@@ -422,22 +304,11 @@ def get_provider() -> LLMProvider:
 
 
 def set_provider(provider: LLMProvider) -> None:
-    """Test seam: inject a fake provider."""
     global _provider
     _provider = provider
 
 
-# ---------------------------------------------------------------------------
-# Guardrails
-# ---------------------------------------------------------------------------
-
 def scrub_secrets(text: str) -> str:
-    """
-    Last line of defence: redact anything key-shaped before it leaves the process.
-
-    Nothing should ever reach here — the key is never placed in a prompt or a
-    context — which is exactly why it is cheap to keep.
-    """
     out = text
     for pattern in _SECRET_SHAPES:
         out = pattern.sub("[REDACTED]", out)
@@ -452,7 +323,6 @@ def detect_injection(question: str) -> bool:
 
 
 def check_policy(question: str) -> _Policy | None:
-    """The first policy this question violates, or None to proceed to the model."""
     q = question or ""
     for policy in _POLICIES:
         if any(p.search(q) for p in policy.patterns):
@@ -461,7 +331,6 @@ def check_policy(question: str) -> _Policy | None:
 
 
 def _numbers_in(text: str) -> list[float]:
-    """Figures a reader would take as factual claims."""
     out: list[float] = []
     for m in re.finditer(r"-?\d[\d,]*(?:\.\d+)?", text):
         raw = m.group().replace(",", "")
@@ -473,28 +342,7 @@ def _numbers_in(text: str) -> list[float]:
 
 
 def _check_grounding(answer: str, context: dict) -> tuple[bool, list[float]]:
-    """
-    Verify every number in the reply came from the context.
-
-    A heuristic, deliberately tolerant in four ways so it flags fabrication
-    rather than ordinary prose:
-
-      * small integers 0-31 are ignored — they are days, weeks, counts, list
-        positions and dates, not claims;
-      * years 1900-2100 are ignored;
-      * a value matches if it is within 1% (or 0.01 absolute) of any number in
-        the context, which absorbs the model rounding 2.0929 to 2.09;
-      * sign is ignored. The context stores a change as -25.63; correct English
-        for it is "25.63 units lower". The first live Gemini call was flagged
-        for exactly this, and the flag was wrong — the figure was in the
-        context, spelled the way a person would write it. Direction is carried
-        by the words around the number, and this check reads numbers, not
-        claims.
-
-    Anything left over is a figure with no source, and the caller is told.
-    """
     allowed = genai_context.collect_numbers(context)
-    # Percentages: the context stores 0.7205, a reply may say 72.05%.
     allowed |= {round(v * 100, 4) for v in allowed if abs(v) <= 1}
     allowed |= {round(v / 100, 4) for v in allowed}
     allowed |= {abs(v) for v in allowed}
@@ -513,13 +361,6 @@ def _check_grounding(answer: str, context: dict) -> tuple[bool, list[float]]:
 
 
 def _build_prompt(question: str, context: dict, injection: bool) -> str:
-    """
-    Assemble the user turn.
-
-    The context comes FIRST and is labelled authoritative; the question comes
-    last inside an explicit fence and is labelled untrusted. That ordering makes
-    it structurally obvious which part is data and which is a request.
-    """
     parts = [
         "VERIFIED CONTEXT (the only facts you may use; computed by the backend):",
         "```json",
@@ -546,12 +387,7 @@ def _build_prompt(question: str, context: dict, injection: bool) -> str:
     return "\n".join(parts)
 
 
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
 def status() -> dict[str, Any]:
-    """Whether the assistant can run here, and what it refuses to do."""
     provider = get_provider()
     ok, reasons = provider.available()
     return {
@@ -583,19 +419,6 @@ def status() -> dict[str, Any]:
 
 
 def _provider_failure(exc: Exception) -> ServiceUnavailable:
-    """
-    Turn a provider exception into a client-safe error that says what to do.
-
-    The generic "could not complete the request" is useless when the real cause
-    is a quota: the caller retries, burns nothing, learns nothing. Quota and
-    rate-limit errors are classified so the message is actionable — and, in the
-    quota case, so the caller is told that retrying will NOT help. Google's own
-    429 body advertises `retryDelay: 59s` even for a per-DAY quota, which is
-    actively misleading.
-
-    The exception text is never forwarded. It can contain the request URL and,
-    in some SDKs, the key; only a classification derived from it escapes.
-    """
     text = str(exc)
     status = getattr(exc, "code", None) or getattr(exc, "status_code", None)
 
@@ -648,7 +471,6 @@ def ask(
     level: str = "total",
     node_id: str = "ALL",
 ) -> AssistantReply:
-    """Answer one question from verified backend context."""
     q = (question or "").strip()
     if not q:
         raise BadRequest("question must not be empty")
@@ -662,13 +484,6 @@ def ask(
     if injection:
         log.warning("possible prompt injection in assistant question")
 
-    # Local policy runs FIRST — before the availability check, before any
-    # network call. A request to leak a key or mutate a forecast is answered
-    # here, deterministically, and never reaches the provider. Placing it ahead
-    # of the availability check is deliberate: these guarantees hold in a
-    # deployment with no API key at all, which is the only way "the assistant
-    # cannot modify the forecast" is a property of the system rather than a
-    # property of Gemini's uptime.
     policy = check_policy(q)
     if policy is not None:
         log.warning("assistant refused locally: %s", policy.category)
@@ -677,7 +492,7 @@ def ask(
             answer=policy.answer,
             intent="refusal",
             model=LOCAL_GUARDRAIL,
-            grounded=True,          # composed here from facts, nothing generated
+            grounded=True,
             injection_suspected=injection,
             refused=True,
             refusal_category=policy.category,
@@ -701,13 +516,9 @@ def ask(
     except ServiceUnavailable:
         raise
     except Exception as exc:                                    # noqa: BLE001
-        # Never surface a provider traceback: it can carry request URLs and,
-        # in some SDKs, the key itself.
         log.exception("assistant provider call failed")
         raise _provider_failure(exc) from exc
 
-    # A provider may return a bare string or a Generation; normalise here so the
-    # Protocol stays trivial to implement.
     generation = raw if isinstance(raw, Generation) else Generation(str(raw))
     if generation.truncated:
         log.warning("assistant reply hit the output token limit")
@@ -732,7 +543,6 @@ def ask(
 
 
 def suggestions(store_id: str | None = None, item_id: str | None = None) -> dict:
-    """Starter questions, adapted to whether a series is selected."""
     if store_id and item_id:
         return {
             "context": f"{item_id} in {store_id}",

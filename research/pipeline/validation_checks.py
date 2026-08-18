@@ -1,24 +1,3 @@
-"""
-Correctness and leakage checks for the forecasting pipeline.
-
-The headline check here is the FUTURE-SALES CORRUPTION TEST, which proves the
-leakage claim empirically instead of asserting it in a comment:
-
-    1. Build the feature frame normally at origin T.
-    2. Take a copy of the sales matrix and overwrite EVERY day after T with an
-       absurd value (9999 units).
-    3. Rebuild the exact same feature frame from the corrupted matrix.
-    4. If a single feature value changed, some feature was reading the future.
-
-Features are supposed to be bit-for-bit identical between steps 1 and 3. Only the
-target column may differ (it is, by definition, the future).
-
-The mirror-image test matters just as much: corrupting future PRICES *should*
-change the price features. Prices and the calendar are legitimately known ahead of
-time for the forecast window — that is a property of this dataset, not a mistake.
-If corrupting future prices changed nothing, it would mean we were failing to use
-information we are entitled to use.
-"""
 
 from __future__ import annotations
 
@@ -33,7 +12,6 @@ from .features import FeatureBuilder, all_feature_columns
 
 
 class CheckResult:
-    """A single named check with a pass/fail verdict and supporting detail."""
 
     def __init__(self, name: str, passed: bool, detail: str = "", data: dict | None = None):
         self.name = name
@@ -53,12 +31,7 @@ class CheckResult:
         }
 
 
-# ==========================================================================
-# 1. Source-data integrity
-# ==========================================================================
-
 def check_data_integrity(data: M5Data) -> list[CheckResult]:
-    """Confirm the loaded matrices reproduce the independently verified totals."""
     out = []
     sales = data.sales_wide
 
@@ -101,7 +74,6 @@ def check_data_integrity(data: M5Data) -> list[CheckResult]:
         f"min {int(sales.min())}",
     ))
 
-    # Zeros must survive untouched — this pipeline is forbidden from altering them.
     out.append(CheckResult(
         "zeros_preserved_not_nan",
         not np.isnan(sales.astype(np.float32)).any(),
@@ -112,7 +84,6 @@ def check_data_integrity(data: M5Data) -> list[CheckResult]:
 
 
 def check_calendar_alignment(data: M5Data) -> list[CheckResult]:
-    """The day-index <-> date mapping must be exact; every feature depends on it."""
     out = []
     expected = {
         0: ("d_1", "2011-01-29"),
@@ -144,10 +115,6 @@ def check_calendar_alignment(data: M5Data) -> list[CheckResult]:
     ))
     return out
 
-
-# ==========================================================================
-# 2. Frame structure
-# ==========================================================================
 
 def check_frame_structure(frame: pd.DataFrame, n_series: int, horizon: int) -> list[CheckResult]:
     out = []
@@ -190,12 +157,7 @@ def check_frame_structure(frame: pd.DataFrame, n_series: int, horizon: int) -> l
     return out
 
 
-# ==========================================================================
-# 3. Leakage: the corruption tests
-# ==========================================================================
-
 def _clone_with_sales(data: M5Data, new_sales: np.ndarray) -> M5Data:
-    """Shallow clone sharing calendar/price but with a different sales matrix."""
     clone = copy.copy(data)
     clone.sales_wide = new_sales
     return clone
@@ -205,15 +167,11 @@ def check_no_future_sales_leakage(
     data: M5Data, origin_idx: int, horizon: int = config.HORIZON,
     series_idx: np.ndarray | None = None,
 ) -> list[CheckResult]:
-    """
-    THE critical test. Corrupt every sales value after the origin and confirm not
-    one feature value moves.
-    """
     fb_clean = FeatureBuilder(data)
     clean = fb_clean.build_origin_frame(origin_idx, horizon, series_idx, include_target=True)
 
     corrupt_sales = data.sales_wide.copy()
-    corrupt_sales[:, origin_idx + 1:] = 9999          # absurd, unmissable value
+    corrupt_sales[:, origin_idx + 1:] = 9999
     fb_dirty = FeatureBuilder(_clone_with_sales(data, corrupt_sales))
     dirty = fb_dirty.build_origin_frame(origin_idx, horizon, series_idx, include_target=True)
 
@@ -235,8 +193,6 @@ def check_no_future_sales_leakage(
         data={"features_tested": len(feature_cols), "features_changed": changed},
     )]
 
-    # Sanity counter-check: the TARGET must change, otherwise the corruption never
-    # actually landed and the test above proves nothing.
     target_changed = not np.array_equal(
         clean["sales"].to_numpy(), dirty["sales"].to_numpy()
     )
@@ -253,11 +209,6 @@ def check_future_covariates_are_used(
     data: M5Data, origin_idx: int, horizon: int = config.HORIZON,
     series_idx: np.ndarray | None = None,
 ) -> list[CheckResult]:
-    """
-    Mirror-image test: future PRICES are allowed, so corrupting them SHOULD change
-    the price features. If nothing changed we would be throwing away legitimate
-    information.
-    """
     fb_clean = FeatureBuilder(data)
     clean = fb_clean.build_origin_frame(origin_idx, horizon, series_idx, include_target=False)
 
@@ -296,7 +247,6 @@ def check_future_covariates_are_used(
 def check_train_validation_separation(
     train: pd.DataFrame, validation_origin: int
 ) -> list[CheckResult]:
-    """No training row may target a day inside the validation window."""
     first_val_day = validation_origin + 1
     max_target = int(train["target_day_idx"].max())
     max_origin = int(train["origin_idx"].max())
@@ -319,14 +269,9 @@ def check_train_validation_separation(
     ]
 
 
-# ==========================================================================
-# 4. Feature sanity
-# ==========================================================================
-
 def check_feature_sanity(frame: pd.DataFrame, data: M5Data) -> list[CheckResult]:
     out = []
 
-    # Lags and rolling means are unit counts: never negative.
     for col in ["lag_1", "lag_7", "lag_14", "lag_28",
                 "rolling_mean_7", "rolling_mean_28", "rolling_std_7", "rolling_std_28"]:
         v = frame[col].to_numpy()
@@ -338,7 +283,6 @@ def check_feature_sanity(frame: pd.DataFrame, data: M5Data) -> list[CheckResult]
             f"min {finite.min():.3f}, max {finite.max():.3f}" if len(finite) else "all NaN",
         ))
 
-    # Recency features cannot exceed the length of history behind the origin.
     origin = int(frame["origin_idx"].iloc[0])
     dsl = frame["days_since_last_sale"].to_numpy()
     out.append(CheckResult(
@@ -347,20 +291,18 @@ def check_feature_sanity(frame: pd.DataFrame, data: M5Data) -> list[CheckResult]
         f"range [{dsl.min():.0f}, {dsl.max():.0f}], history length {origin + 1}",
     ))
 
-    # The redundancy the spec asks us to build — reported honestly rather than hidden.
     identical = bool(np.array_equal(
         frame["days_since_last_sale"].to_numpy(), frame["zero_streak_length"].to_numpy()
     ))
     out.append(CheckResult(
         "days_since_last_sale_vs_zero_streak_length",
-        True,  # informational, not a failure
+        True,
         ("IDENTICAL by construction at a fixed origin — one of the two is "
          "redundant and should be dropped before training"
          if identical else "the two features differ"),
         data={"identical": identical},
     ))
 
-    # SNAP must be binary and state-matched.
     snap_vals = set(np.unique(frame["snap"].to_numpy()).tolist())
     out.append(CheckResult(
         "snap_is_binary",
@@ -368,7 +310,6 @@ def check_feature_sanity(frame: pd.DataFrame, data: M5Data) -> list[CheckResult]
         f"distinct SNAP values: {sorted(snap_vals)}",
     ))
 
-    # Spot-check state matching on a single row against calendar.csv directly.
     row = frame.iloc[0]
     s_idx = int(row["series_idx"])
     t_idx = int(row["target_day_idx"])
@@ -381,7 +322,6 @@ def check_feature_sanity(frame: pd.DataFrame, data: M5Data) -> list[CheckResult]
         f"feature={int(row['snap'])}, calendar snap_{state}={expected_snap}",
     ))
 
-    # Price sanity.
     price = frame["sell_price"].to_numpy()
     priced = price[np.isfinite(price)]
     out.append(CheckResult(
@@ -394,12 +334,11 @@ def check_feature_sanity(frame: pd.DataFrame, data: M5Data) -> list[CheckResult]
     missing_pct = float(np.isnan(price).mean() * 100)
     out.append(CheckResult(
         "price_missingness_reported",
-        True,  # informational
+        True,
         f"{missing_pct:.2f}% of rows have no price (left as NaN, never imputed)",
         data={"missing_price_pct": round(missing_pct, 3)},
     ))
 
-    # Target must be untouched raw counts.
     if "sales" in frame.columns:
         y = frame["sales"].to_numpy()
         out.append(CheckResult(
@@ -415,21 +354,6 @@ def check_feature_sanity(frame: pd.DataFrame, data: M5Data) -> list[CheckResult]
 def check_listing_feature_behaviour(
     data: M5Data, origins: list[int], horizon: int = config.HORIZON
 ) -> tuple[list[CheckResult], list[dict]]:
-    """
-    Probe the listing-aware features across several origins.
-
-    Two things need establishing before we rely on these features:
-
-    1. Do they ever actually fire? At a 2016 origin essentially every product has
-       long since been listed, so `pre_listing` is constant zero and contributes
-       nothing. If we only ever trained on recent origins the feature would be
-       dead weight. This quantifies where it is and is not active.
-
-    2. Does the listing signal hold up against the sales record? `pre_listing` is
-       derived purely from sell_prices.csv; the sales come from
-       sales_train_evaluation.csv. If rows flagged pre-listing really do show no
-       sales, that is two independent files agreeing, not a circular argument.
-    """
     from .features import FeatureBuilder
 
     fb = FeatureBuilder(data)
@@ -479,7 +403,7 @@ def check_listing_feature_behaviour(
         ),
         CheckResult(
             "pre_listing_vs_price_is_missing_redundancy",
-            True,  # informational
+            True,
             ("IDENTICAL at every tested origin — one of the two is redundant"
              if all(r["pre_listing_equals_price_missing"] for r in rows)
              else "the two features differ at some origins"),
@@ -493,7 +417,6 @@ def check_listing_feature_behaviour(
 def check_target_matches_source(
     frame: pd.DataFrame, data: M5Data, n_spot: int = 200, seed: int = 42
 ) -> list[CheckResult]:
-    """Randomly spot-check that the attached target really is the raw source cell."""
     rng = np.random.default_rng(seed)
     idx = rng.choice(len(frame), size=min(n_spot, len(frame)), replace=False)
     sub = frame.iloc[idx]
@@ -511,10 +434,6 @@ def check_target_matches_source(
         f"{n_bad} mismatches",
     )]
 
-
-# ==========================================================================
-# Runner
-# ==========================================================================
 
 def summarize(results: list[CheckResult]) -> dict:
     passed = sum(1 for r in results if r.passed)

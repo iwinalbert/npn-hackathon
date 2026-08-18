@@ -1,15 +1,3 @@
-"""
-Phases 2-7: Model 0 (naive baselines) through Model 5 (two-stage hurdle).
-
-Every model is evaluated on the IDENTICAL validation window
-(origin d_1913 -> targets d_1914..d_1941, all 30,490 series x 28 days =
-853,720 predictions) using the identical metric code, so the comparison between
-them is fair by construction.
-
-    python scripts/03_run_models.py
-
-Writes experiments/*.json, models/*.txt, predictions/*.csv
-"""
 
 from __future__ import annotations
 
@@ -28,7 +16,7 @@ from pipeline.backtest import Backtester
 from pipeline.data_loader import M5Data
 from pipeline.experiment import Experiment
 
-N_TRAIN_ORIGINS = 15          # 15 x 28 = 420 contiguous days of training coverage
+N_TRAIN_ORIGINS = 15
 N_ESTIMATORS = 400
 
 
@@ -37,7 +25,6 @@ def banner(t: str) -> None:
 
 
 def save_predictions(name: str, valid: pd.DataFrame, preds: np.ndarray) -> str:
-    """One row per (series, horizon day) with the prediction and the truth."""
     out = pd.DataFrame({
         "series_idx": valid["series_idx"].to_numpy(),
         "target_day_idx": valid["target_day_idx"].to_numpy(),
@@ -104,9 +91,7 @@ def main() -> None:
         "validation_rows": int(len(valid)),
     }
 
-    # ==================================================================
     banner("PHASE 2 — MODEL 0: NAIVE BASELINES (no model fitting)")
-    # ==================================================================
     print("  Four rules, none of which fit any parameters. Their purpose is to say")
     print("  how hard this problem is before any learning happens.\n")
 
@@ -145,9 +130,6 @@ def main() -> None:
     print(f"\n  Best baseline by RMSE: {best_base} "
           f"(RMSE {baseline_results[best_base]['RMSE']:.4f})")
 
-    # ==================================================================
-    # Helper for the LightGBM experiments
-    # ==================================================================
     def run_lgbm(exp_name: str, feature_set: str, objective_params: dict,
                  objective_label: str, note: str) -> dict:
         cols = feature_sets.get(feature_set)
@@ -194,9 +176,7 @@ def main() -> None:
         exp.save()
         return {"metrics": m, "booster": booster, "cols": cols, "preds": preds}
 
-    # ==================================================================
     banner("PHASE 3 — MODEL 1: GLOBAL LIGHTGBM (L2 objective)")
-    # ==================================================================
     print("  One model across all 30,490 series. No hyperparameter tuning, no early")
     print("  stopping — a fixed 400 rounds. Early stopping on the validation window")
     print("  would use validation to make a training decision and inflate its score.\n")
@@ -208,9 +188,7 @@ def main() -> None:
         "Models 3 and 4 can measure what those groups add.",
     )
 
-    # ==================================================================
     banner("PHASE 4 — MODEL 2: LIGHTGBM + TWEEDIE")
-    # ==================================================================
     print("  Identical features to Model 1; ONLY the objective changes, so any")
     print("  difference is attributable to the loss function alone.\n")
     m2 = run_lgbm(
@@ -222,9 +200,7 @@ def main() -> None:
         "it actually helps here is measured, not assumed.",
     )
 
-    # ==================================================================
     banner("PHASE 5 — MODEL 3: + RECENCY FEATURES")
-    # ==================================================================
     print("  Model 2 + group C (days_since_last_sale, zero_streak_length,")
     print("  days_since_first_sale). Isolates the value of recency state.\n")
     m3 = run_lgbm(
@@ -235,9 +211,7 @@ def main() -> None:
         "dry spell grows, the cleanest relationship in the dataset.",
     )
 
-    # ==================================================================
     banner("PHASE 6 — MODEL 4: + LISTING-AWARE FEATURES")
-    # ==================================================================
     print("  Model 3 + group D (days_since_first_listing, pre_listing).")
     print("  The foundation stage found pre_listing is 0% at this origin, so a")
     print("  measurable gain here is NOT expected. Testing it anyway is the point.\n")
@@ -250,14 +224,11 @@ def main() -> None:
         "the proposed novelty feature earns its place rather than an assumption.",
     )
 
-    # ==================================================================
     banner("PHASE 7 — MODEL 5: TWO-STAGE HURDLE")
-    # ==================================================================
     print("  Stage 1: P(sales > 0)          — binary classifier")
     print("  Stage 2: E[units | sales > 0]   — Poisson regressor on positive rows only")
     print("  Final  : Stage1 x Stage2\n")
 
-    # Use whichever feature set performed best among Models 2-4, chosen by RMSE.
     contenders = {
         "base": m2["metrics"]["RMSE"],
         "base_recency": m3["metrics"]["RMSE"],
@@ -332,9 +303,7 @@ def main() -> None:
     m5 = evaluate_and_record(exp5, valid, preds5, "model_05_hurdle")
     exp5.save()
 
-    # ==================================================================
     banner("PHASE 2-7 SUMMARY (measured, identical validation window)")
-    # ==================================================================
     rows = [
         ("Model 0  seasonal naive", "none", baseline_results["seasonal_naive"]),
         ("Model 0  rolling_mean_28", "none", baseline_results["rolling_mean_28"]),

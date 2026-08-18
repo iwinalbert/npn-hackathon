@@ -1,4 +1,3 @@
-"""Planning summaries. Every number must trace to the frozen forecast."""
 import pytest
 
 from .conftest import API
@@ -11,12 +10,11 @@ def test_portfolio_summary_totals_are_consistent(client):
     assert d["forecast_total_28d"] > 0
     assert d["forecast_daily_avg"] == pytest.approx(
         d["forecast_total_28d"] / 28, rel=1e-3)
-    assert d["expected_accuracy"]["accuracy_pct"] > 90   # store level
+    assert d["expected_accuracy"]["accuracy_pct"] > 90
     assert sum(r["n_series"] for r in d["regime_mix"]) == d["n_series"]
 
 
 def test_summary_forecast_total_matches_the_aggregate_endpoint(client):
-    """Two endpoints, one frozen forecast — they must not disagree."""
     a = client.get(f"{API}/hierarchy/aggregate",
                    params={"level": "store", "node_id": "CA_2"}).json()
     b = client.get(f"{API}/insights/summary",
@@ -70,7 +68,6 @@ def test_planning_summary_states_its_caveats(client):
 def test_planning_matches_the_series_forecast_total(client):
     f = client.get(f"{API}/series/CA_1/HOBBIES_1_001/forecast").json()
     p = client.get(f"{API}/insights/planning/CA_1/HOBBIES_1_001").json()
-    # planning rounds to 2dp for display; forecast keeps 4
     assert p["expected_total"] == pytest.approx(f["total_28d"], abs=0.01)
 
 

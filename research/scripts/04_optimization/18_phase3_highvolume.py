@@ -1,15 +1,3 @@
-"""
-PHASE 3 — high-volume error attack.
-
-Part 1 is pure diagnosis (no training): where does the RMSE actually come from?
-Part 2 tests legitimate fixes: sample weighting, target transformation and
-post-hoc calibration.
-
-Guard-rail from the brief: do not optimise RMSE at the cost of catastrophic MAE
-degradation. Every experiment reports both, and the summary flags any trade.
-
-    python scripts/18_phase3_highvolume.py
-"""
 
 from __future__ import annotations
 
@@ -51,9 +39,7 @@ def main():
     s = optimize.Setup()
     cols = V2_SETS["v2_base"]
 
-    # ==================================================================
     banner("PHASE 3A — DIAGNOSIS (no training)")
-    # ==================================================================
     P = pd.read_csv(config.PREDICTIONS_DIR /
                     "model_04_tweedie_recency_listing_validation.csv")
     P = P.sort_values(["target_day_idx", "series_idx"]).reset_index(drop=True)
@@ -90,7 +76,6 @@ def main():
         print(t.head(6).to_string(index=False,
               float_format=lambda v: f"{v:8.3f}"))
 
-    # per-item concentration
     item_sq = pd.DataFrame({"item": meta["item_id"].to_numpy()[si],
                             "sq": (y - p) ** 2})
     top_items = item_sq.groupby("item")["sq"].sum().sort_values(ascending=False)
@@ -98,7 +83,6 @@ def main():
     print(f"\n  top 50 items (of 3,049) carry {share_top50:.1f}% of all squared error")
     diagnostics["top50_items_sq_error_share_pct"] = round(float(share_top50), 2)
 
-    # actual vs predicted by volume bucket
     print("\n--- actual vs predicted, by volume tier ---")
     vt = residual_table(df, "volume_tier", y, p)
     print(vt.to_string(index=False, float_format=lambda v: f"{v:8.3f}"))
@@ -106,14 +90,9 @@ def main():
     (config.ARTIFACTS_DIR / "phase3_diagnostics.json").write_text(
         json.dumps(diagnostics, indent=2, default=str), encoding="utf-8")
 
-    # ==================================================================
     banner("PHASE 3B — LEGITIMATE FIXES")
-    # ==================================================================
     results = []
 
-    # --- 1. sample weighting by historical volume -------------------
-    # Weight training rows by the series' own historical mean, so busy series
-    # matter more to the loss. Capped so a handful of giants cannot dominate.
     print("  Building volume weights (capped at 5x)...")
     hist_mean_all = s.data.sales_wide[:, :s.origin_idx + 1].mean(axis=1)
 
@@ -152,9 +131,6 @@ def main():
         results.append({"experiment": f"volume weight cap {cap}x", **d})
         del booster
 
-    # --- 2. post-hoc calibration on the high tier -------------------
-    # No retraining: scale predictions for high-volume rows only, choosing the
-    # factor on the INNER window so the primary window stays unbiased.
     print("\n  Post-hoc high-volume calibration (factor chosen on inner window)...")
     inner = optimize.Setup(origin_idx=config.VALIDATION_ORIGIN_IDX - config.HORIZON)
     Xi, Yi = optimize.build_matrix(inner, cols)
@@ -192,7 +168,6 @@ def main():
           f"({dcal['MAE']-optimize.BEST_MAE:+.4f})")
     results.append({"experiment": f"high-vol calibration x{best_f:.2f}", **dcal})
 
-    # ==================================================================
     banner("PHASE 3 SUMMARY")
     out = pd.DataFrame([{
         "experiment": r["experiment"], "RMSE": r["RMSE"], "MAE": r["MAE"],

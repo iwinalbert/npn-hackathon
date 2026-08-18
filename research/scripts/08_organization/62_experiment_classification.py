@@ -1,30 +1,3 @@
-"""
-EXPERIMENT CLASSIFICATION INDEX — generated, not hand-typed.
-
-READ-ONLY over experiments/registry/. Writes one markdown index to
-docs/10_RESEARCH_REPORT/EXPERIMENT_CLASSIFICATION.md.
-
-WHY AN INDEX INSTEAD OF MOVING FILES INTO accepted/ rejected/ archive/
-----------------------------------------------------------------------
-The task asked for accepted / rejected / archive organisation "ONLY if this can
-be done safely without changing experiment references or registry integrity".
-It cannot:
-
-  * pipeline/experiment.py resolves records as
-        config.EXPERIMENTS_DIR / f"{name}.json"
-    and load_all() globs EXPERIMENTS_DIR/*.json. Both break if records move into
-    subfolders.
-  * MY_RESEARCH_PAPER/build_paper.py and make_figures.py read specific records by
-    absolute-from-root path, e.g. REG / "exp_76_architectural_diversity_blend.json".
-  * experiments/EXPERIMENT_LEDGER.md and every stage report reference records by
-    flat name.
-
-So the classification is delivered as an INDEX over the flat registry, which
-achieves the navigational goal with zero risk to reproducibility. The registry
-itself is left exactly as it is.
-
-    python scripts/08_organization/62_experiment_classification.py
-"""
 
 from __future__ import annotations
 
@@ -38,8 +11,6 @@ REG = ROOT / "experiments" / "registry"
 OUT = (ROOT.parent / "docs" / "10_RESEARCH_REPORT"
        / "EXPERIMENT_CLASSIFICATION.md")
 
-# --- Classification, taken from experiments/EXPERIMENT_LEDGER.md and the stage
-# --- reports. Every name here is checked against the registry at run time.
 
 SHIPPED_LINEAGE = {
     "model_02_tweedie": "established the Tweedie objective over plain L2",

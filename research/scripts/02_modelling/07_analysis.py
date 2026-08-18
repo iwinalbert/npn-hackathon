@@ -1,11 +1,3 @@
-"""
-Phase 10: feature importance and error analysis for the best measured model.
-
-The "best" model is chosen mechanically — lowest RMSE among every completed
-experiment evaluated on the primary validation window — not by preference.
-
-    python scripts/07_analysis.py
-"""
 
 from __future__ import annotations
 
@@ -27,7 +19,6 @@ from pipeline.data_loader import M5Data
 
 PRIMARY_DAYS = "d_1914 .. d_1941"
 
-# Plain-English glosses used in the reports.
 FEATURE_GLOSSARY = {
     "lag_1": "sales on the forecast origin day (the last day we know about)",
     "lag_7": "sales 7 days before the first forecast day",
@@ -65,19 +56,11 @@ FEATURE_GLOSSARY = {
 
 
 def pick_best() -> dict:
-    """
-    Lowest primary-window RMSE among deployable experiments.
-
-    Ablation rungs are excluded: they exist to measure the contribution of a
-    feature group, not to produce a shippable model, and they deliberately save
-    neither a model file nor predictions. A saved model and prediction file are
-    required so importance and error analysis have something to read.
-    """
     best, best_rmse = None, float("inf")
     for r in experiment.load_all():
         if r.get("status") != "completed":
             continue
-        if r.get("tuning_window") == "INNER":       # inner-window runs are not comparable
+        if r.get("tuning_window") == "INNER":
             continue
         if r["experiment_name"].startswith("ablation_"):
             continue
@@ -113,9 +96,6 @@ def main() -> None:
         "validation_dates": best.get("validation_dates"),
     }
 
-    # ------------------------------------------------------------------
-    # Feature importance
-    # ------------------------------------------------------------------
     model_path = best.get("model_path")
     if model_path and "+" not in str(model_path):
         booster = lgb.Booster(model_file=str(config.PROJECT_ROOT / model_path))
@@ -143,9 +123,6 @@ def main() -> None:
         print("\n  (best model is multi-part; skipping single-booster importance)")
         out["feature_importance"] = None
 
-    # ------------------------------------------------------------------
-    # Error analysis
-    # ------------------------------------------------------------------
     pred_path = config.PROJECT_ROOT / best["prediction_path"]
     P = pd.read_csv(pred_path)
     data = M5Data(load_prices=False)
@@ -164,8 +141,6 @@ def main() -> None:
     P["snap"] = snapm[P["target_day_idx"].to_numpy(),
                       data.snap_col_of_series[P["series_idx"].to_numpy()]]
 
-    # Series behaviour measured on TRAINING history only (up to the origin), so
-    # the segmentation itself cannot use validation-period information.
     hist = data.sales_wide[:, :config.VALIDATION_ORIGIN_IDX + 1]
     series_mean = hist.mean(axis=1)
     series_zero = (hist == 0).mean(axis=1)
@@ -216,7 +191,6 @@ def main() -> None:
 
     out["error_breakdowns"] = breakdowns
 
-    # Where does total squared error actually live?
     top1 = P.nlargest(int(len(P) * 0.01), "sq_err")["sq_err"].sum() / P["sq_err"].sum() * 100
     out["error_concentration"] = {
         "pct_of_squared_error_from_worst_1pct_of_rows": round(float(top1), 2),

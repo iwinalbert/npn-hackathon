@@ -1,9 +1,3 @@
-"""
-Render MY_RESEARCH_PAPER.md to .docx with the same substantive content as
-the PDF, and emit AUDIT_SUMMARY.md.
-
-    python MY_RESEARCH_PAPER/build_docx.py
-"""
 
 from __future__ import annotations
 
@@ -38,7 +32,6 @@ IMG = re.compile(r"^!\[(.*?)\]\((.+?)\)\s*$")
 
 
 def add_rich(par, text):
-    """Emit a paragraph honouring **bold**, *italic* and `code`."""
     tokens = re.split(r"(\*\*.+?\*\*|(?<!\*)\*[^*]+?\*(?!\*)|`[^`]+?`)", text)
     for t in tokens:
         if not t:
@@ -166,7 +159,6 @@ def main():
     doc.save(DOCX)
     print(f"  wrote {DOCX.name}")
 
-    # ---------------- AUDIT_SUMMARY.md ----------------
     AV = json.loads((OUT / "audit_verification.json").read_text(encoding="utf-8"))
     E76 = json.loads((config.EXPERIMENTS_DIR /
                       "exp_76_architectural_diversity_blend.json").read_text(encoding="utf-8"))

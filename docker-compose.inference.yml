@@ -1,25 +1,3 @@
-# OPT-IN OVERLAY — live model verification
-#
-#   docker compose -f docker-compose.yml -f docker-compose.inference.yml up --build
-#
-# The base stack deliberately needs nothing from research. This overlay adds
-# the one feature that does: POST /api/v1/inference/verify reloads the two frozen
-# LightGBM boosters, rebuilds features from the panel, re-runs the blend at
-# w=0.60/0.40 and checks the result against the shipped forecast. It is the
-# product's proof that the model is real and unchanged — measured
-# max_abs_diff = 0.000e+00 across all 853,720 predictions.
-#
-# It is separated out because it turns a self-contained deployment into one with
-# host dependencies. Everything here is a cost the default stack should not pay:
-#
-#   * the `full` image adds LightGBM + NumPy/Pandas/PyArrow (~104 MB of wheels)
-#   * it needs the frozen boosters and the shipped forecast mounted from the host
-#   * it needs ~1 GB more memory, because rebuilding features loads the
-#     59.2M-row panel
-#
-# Nothing here is writable. The two research mounts are read-only; the scratch
-# volumes exist only because pipeline/config.py calls mkdir() at import time —
-# see docs/08_DEPLOYMENT/DOCKER_IMPLEMENTATION_REPORT.md §4.
 
 services:
   api:
@@ -29,26 +7,16 @@ services:
       NPN_PROJECT_ROOT: /research
       NPN_ENABLE_INFERENCE: "true"
     volumes:
-      # Restated deliberately. The Compose Spec merges service volumes by TARGET
-      # path, so this is a no-op re-declaration of the same mount rather than a
-      # requirement — but it makes the effective mount set readable in one place
-      # instead of only after mentally merging two files.
       - ./backend/data:/data/product:ro
-      # Frozen model artefacts — read-only, so they cannot be modified even by
-      # accident by a process running inside the container.
       - ./research/models/champion:/research/models/champion:ro
       - ./research/predictions/final_forecast:/research/predictions/final_forecast:ro
-      # Writable scratch for the import-time mkdirs. Named volumes, so they are
-      # seeded from the image (owned by app) rather than created root-owned.
       - npn-scratch:/research/experiments
       - npn-scratch-preds:/research/predictions/validation
     healthcheck:
-      # Longer start period: the full image imports a heavier dependency stack.
       start_period: 25s
     deploy:
       resources:
         limits:
-          # A verification run peaks near 1 GB loading the panel.
           memory: 2G
 
 volumes:

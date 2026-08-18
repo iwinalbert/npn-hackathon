@@ -1,50 +1,3 @@
-"""
-BUILD THE PRODUCT DATA LAYER.
-
-Reads the protected research artefacts READ-ONLY and materialises everything the
-API needs into backend/data/.
-
-    python tasks.py build-db
-
-PROTECTION CONTRACT
--------------------
-Every research artefact is opened read-only. The only directory written is
-backend/data/. This script never imports `pipeline` — importing
-pipeline.config calls mkdir() at import time, which is a filesystem side effect
-on the protected tree — so the day-index and tier constants it needs are
-restated here and asserted against the artefacts.
-
-WHAT IS PRODUCED
-----------------
-  data/product.duckdb    small relational tables (~5 MB)
-  data/history.parquet   59.2M rows of actuals, sorted    (~32 MB)
-  data/backtest.parquet  6.8M rows of backtest results    (~78 MB)
-
-WHY PARQUET SIDECARS RATHER THAN QUERYING THE RESEARCH PARQUET IN PLACE
------------------------------------------------------------------------
-The architecture plan originally proposed querying
-data/processed/sales_long_full.parquet directly, reasoning that duplicating
-287 MB of history would be waste. Measurement during Phase 2 showed that is both
-slower and not deployable:
-
-  * DuckDB bakes an ABSOLUTE path into any view over an external file. The
-    generated view contained a Windows path, which is a hard failure in a Linux
-    container. That alone rules the approach out.
-  * The research parquet is denormalised: item_id, store_id, event names and
-    SNAP flags are repeated on every one of 59.2M rows. Keeping only
-    (series_idx, day_idx, sales, sell_price) and sorting by series gives 31.7 MB
-    instead of 287 MB.
-  * Sorted + row-grouped, a single series' full history reads in 8-13 ms against
-    the sidecar versus ~320 ms against the research parquet, because zone maps
-    prune almost everything.
-
-So the sidecar is smaller, ~25x faster, and portable. A DuckDB table with an
-index was also measured and rejected: 1,066 MB and 21 s to build.
-
-The API therefore needs NO access to the research tree at runtime. That is what
-makes the container deployable with the research artefacts mounted read-only —
-or not mounted at all.
-"""
 
 from __future__ import annotations
 
@@ -58,12 +11,8 @@ import duckdb
 import numpy as np
 import pandas as pd
 
-# scripts/ -> backend -> repository root
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BACKEND = Path(__file__).resolve().parents[1]
-# Every input below is a PROTECTED research artefact, opened read-only. They live
-# under research/ as one unit because the research pipeline derives its own
-# root from `pipeline/`'s parent and needs these as siblings.
 ROOT = REPO_ROOT / "research"
 DOCS = REPO_ROOT / "docs"
 OUT_DIR = BACKEND / "data"
@@ -71,7 +20,6 @@ DB_PATH = OUT_DIR / "product.duckdb"
 HISTORY_PARQUET = OUT_DIR / "history.parquet"
 BACKTEST_PARQUET = OUT_DIR / "backtest.parquet"
 
-# --- protected inputs, all opened read-only --------------------------------
 SALES_EVAL = ROOT / "data" / "raw" / "sales_train_evaluation.csv"
 CALENDAR = ROOT / "data" / "raw" / "calendar.csv"
 PANEL_PARQUET = ROOT / "data" / "processed" / "sales_long_full.parquet"
@@ -84,26 +32,17 @@ CHAMPION_MANIFEST = (DOCS / "02_MODEL" / "FROZEN_CHAMPION"
 MODEL_DIRECT = ROOT / "models" / "champion" / "model_11_blend_direct_final_forecast.txt"
 MODEL_RECURSIVE = ROOT / "models" / "champion" / "model_12_blend_recursive_shape_final.txt"
 
-# Day-index convention, identical to pipeline/config.py.
-#     idx 0    == "d_1"    == 2011-01-29
-#     idx 1940 == "d_1941" == 2016-05-22   (forecast origin, last known sales)
-#     idx 1941 == "d_1942" == 2016-05-23   (first forecast day)
-# The research backtest artefacts use this convention for `target_day_idx`, so
-# the forecast table must match it or the two cannot share a time axis.
 N_HISTORY_DAYS = 1941
 FORECAST_ORIGIN_IDX = 1940
 HORIZON = 28
 N_SERIES = 30_490
 
-# Syntetos-Boylan cuts, matching scripts/07_usecase11/58_intermittency_audit.py
 ADI_CUT, CV2_CUT = 1.32, 0.49
 REGIME_HISTORY_DAYS = 728
 
-# Volume tiers, matching pipeline/optimize.py Setup.tier
 TIER_EDGES = [-0.001, 0.2, 1.0, 3.0, np.inf]
 TIER_LABELS = ["very low", "low", "medium", "high"]
 
-#: Residuals are normalised by sqrt(max(yhat, FLOOR)) before quantiles.
 BAND_SCALE_FLOOR = 1.0
 
 ROW_GROUP = 122_880
@@ -125,9 +64,7 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-# ---------------------------------------------------------------------------
 def build_series_table() -> pd.DataFrame:
-    """Hierarchy + volume tier + intermittency regime, one row per series."""
     log("  reading sales matrix (read-only)...")
     df = pd.read_csv(SALES_EVAL)
     id_cols = ["id", "item_id", "dept_id", "cat_id", "store_id", "state_id"]
@@ -170,7 +107,6 @@ def build_series_table() -> pd.DataFrame:
     meta["regime"] = regime
     meta["zero_pct"] = ((1 - nz.mean(axis=1)) * 100).astype(np.float32)
 
-    # Recent demand level, used by the planning endpoints as a reference point.
     meta["mean_daily_28d"] = sales[:, -28:].mean(axis=1).astype(np.float32)
     meta["mean_daily_91d"] = sales[:, -91:].mean(axis=1).astype(np.float32)
 
@@ -179,12 +115,6 @@ def build_series_table() -> pd.DataFrame:
 
 
 def build_calendar_table() -> pd.DataFrame:
-    """
-    Calendar for all 1,969 days, so the API needs no access to data/raw/.
-
-    calendar.csv runs 28 days past the sales history, which is exactly why the
-    forecast window has known covariates.
-    """
     cal = pd.read_csv(CALENDAR)
     cal["day_idx"] = cal["d"].str.slice(2).astype(np.int32) - 1
     out = cal[["day_idx", "date", "wday", "month", "year", "event_name_1",
@@ -198,10 +128,6 @@ def build_calendar_table() -> pd.DataFrame:
 
 
 def build_history_parquet(meta: pd.DataFrame) -> int:
-    """
-    Sorted, minimal history sidecar. See the module docstring for why this is a
-    product-owned file rather than a view over the research parquet.
-    """
     log(f"  materialising history sidecar from {PANEL_PARQUET.name}...")
     con = duckdb.connect()
     con.register("series_meta", meta[["series_idx", "item_id", "store_id"]])
@@ -230,7 +156,6 @@ def build_history_parquet(meta: pd.DataFrame) -> int:
 
 
 def build_forecast_table(meta: pd.DataFrame) -> pd.DataFrame:
-    """The frozen forecast, unpivoted from wide (id, F1..F28) to long."""
     log("  reading frozen forecast (read-only)...")
     wide = pd.read_csv(FORECAST_CSV)
     if len(wide) != N_SERIES:
@@ -258,7 +183,6 @@ def build_forecast_table(meta: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_backtest_parquet() -> tuple[int, list[int]]:
-    """The 8 cached champion reproductions, concatenated and sorted."""
     frames = []
     for p in sorted(BACKTEST_DIR.glob("champion_blend_origin*_seed42.csv")):
         origin = int(p.stem.split("origin")[1].split("_")[0])
@@ -288,31 +212,6 @@ def build_backtest_parquet() -> tuple[int, list[int]]:
 
 
 def build_error_bands(meta: pd.DataFrame) -> pd.DataFrame:
-    """
-    Empirical residual quantiles by (demand regime x horizon), on a
-    variance-stabilised scale.
-
-    NOT A MODEL-PRODUCED PREDICTION INTERVAL. The frozen model emits a point
-    forecast and nothing else. This is the observed distribution of
-    (actual - predicted) on held-out backtest windows, and the API labels it so.
-
-    WHY NORMALISE BY sqrt(yhat)
-    ---------------------------
-    Pooling raw residuals by volume tier was measured to be invalid: inside the
-    single "high" tier the residual standard deviation ranges from 3.3 (series
-    predicting <2 units/day) to 21.6 (40+ units/day), a 6.5x spread, so a band
-    built that way is far too narrow for large series. Dividing by
-    sqrt(max(yhat, 1)) collapses that to ~1.4x. The exponent is not arbitrary:
-    the model was fitted with Tweedie variance power 1.1, implying sd proportional
-    to mu^0.55; 0.50 measured marginally better and is the classic count
-    variance-stabilising transform.
-
-    Grouping is by regime (measured normalised sd: erratic 2.28, lumpy 1.71,
-    smooth 1.64, intermittent 0.89) and horizon (~8% growth h1 to h28). Volume
-    tier adds nothing once normalised.
-
-    Reconstruction:  lower = max(0, yhat + q05 * sqrt(max(yhat, 1)))
-    """
     log("  computing empirical error bands (sqrt-normalised, regime x horizon)...")
     con = duckdb.connect()
     con.register("series_meta", meta[["series_idx", "regime"]])
@@ -345,7 +244,6 @@ def build_error_bands(meta: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_window_metrics() -> pd.DataFrame:
-    """Headline metrics per backtest window, precomputed for the accuracy views."""
     con = duckdb.connect()
     df = con.execute(f"""
         SELECT origin_idx,
@@ -394,7 +292,6 @@ def build_meta_table(counts: dict) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["key", "value"])
 
 
-# ---------------------------------------------------------------------------
 def main() -> int:
     t0 = time.time()
     banner("BUILDING PRODUCT DATA LAYER")
@@ -414,7 +311,7 @@ def main() -> int:
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     for p in (DB_PATH, HISTORY_PARQUET, BACKTEST_PARQUET):
         if p.exists():
-            p.unlink()          # product-owned files only; always rebuildable
+            p.unlink()
 
     banner("1/7  series metadata")
     meta = build_series_table()
@@ -465,9 +362,6 @@ def main() -> int:
     con.execute("CREATE INDEX idx_fc_series ON forecast(series_idx)")
     con.execute("CREATE INDEX idx_series_store ON series(store_id)")
     con.execute("CREATE INDEX idx_series_item ON series(item_id)")
-    # NO views over external files: DuckDB bakes absolute paths into view SQL,
-    # which breaks the moment the database is opened on another machine or
-    # inside a container. Sidecar paths are resolved at runtime from settings.
     con.close()
 
     total = sum(p.stat().st_size for p in

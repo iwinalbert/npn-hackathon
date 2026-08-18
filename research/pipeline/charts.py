@@ -1,10 +1,3 @@
-"""
-Charts for the model reports.
-
-Deliberately plain: horizontal/vertical bars and a line, no dual axes, no pie
-charts, direct value labels so the reader never has to measure a bar against an
-axis. Colours follow the project's existing EDA palette conventions.
-"""
 
 from __future__ import annotations
 
@@ -48,7 +41,6 @@ def _save(fig, name: str) -> str:
 
 
 def model_comparison(labels, rmse, mae, benchmark_rmse=None, name="model_comparison.png"):
-    """Horizontal bars, best model highlighted, optional benchmark reference line."""
     fig, axes = plt.subplots(1, 2, figsize=(9.6, 0.42 * len(labels) + 1.6))
     order = np.argsort(rmse)[::-1]
     lab = [labels[i] for i in order]
@@ -76,7 +68,6 @@ def model_comparison(labels, rmse, mae, benchmark_rmse=None, name="model_compari
 
 
 def ablation_ladder(labels, rmse, deltas, name="ablation_ladder.png"):
-    """RMSE at each rung, with the change contributed by each added group."""
     fig, (a1, a2) = plt.subplots(2, 1, figsize=(9.2, 5.4),
                                  gridspec_kw={"height_ratios": [1.35, 1]})
     x = np.arange(len(labels))

@@ -1,0 +1,46 @@
+{
+  "checks": [
+    {
+      "check": "config.py path constants all resolve",
+      "passed": true,
+      "detail": "16 constants"
+    },
+    {
+      "check": "PROJECT_ROOT is the real project root",
+      "passed": true,
+      "detail": "C:\\Users\\Rishi\\OneDrive\\Desktop\\NPN_HACKATHON\\03_RESEARCH"
+    },
+    {
+      "check": "all pipeline modules import",
+      "passed": true,
+      "detail": "21 modules"
+    },
+    {
+      "check": "walk-up root resolution works from every script folder",
+      "passed": true,
+      "detail": "8 folders"
+    },
+    {
+      "check": "MY_RESEARCH_PAPER parent.parent lands on project root",
+      "passed": true,
+      "detail": "C:\\Users\\Rishi\\OneDrive\\Desktop\\NPN_HACKATHON\\03_RESEARCH"
+    },
+    {
+      "check": "scripts/07_usecase11 sibling imports still co-located",
+      "passed": true,
+      "detail": "5/5 present"
+    },
+    {
+      "check": "frozen copies byte-identical to canonical sources",
+      "passed": true,
+      "detail": "3 pairs"
+    },
+    {
+      "check": "experiment registry loads through pipeline API",
+      "passed": true,
+      "detail": "86 records; exp_78 found"
+    }
+  ],
+  "passed": 8,
+  "failed": 0
+}

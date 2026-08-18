@@ -1,27 +1,3 @@
-"""
-DIAGNOSTIC PROBE — what would an accidental leak have scored?
-
-WHY THIS EXISTS
----------------
-We have ruled out the ordinary explanations for the team's RMSE 2.0324:
-
-  * it is not calibration — no rescaling of our predictions reaches below 2.1195
-  * it is not the validation window — ours already has the highest mean demand of
-    any 28-day window in the last two years
-  * it is not per-target-day feature construction — that scored WORSE (2.1835)
-
-The most common remaining explanation for a score that cannot be reproduced by
-legitimate means is feature leakage: computing lag_1 / rolling_mean_7 relative to
-each TARGET day rather than to the forecast origin. On day 20 of the horizon,
-"yesterday's sales" is a real sales value from inside the validation window — a
-number nobody would have on the day the forecast was actually made.
-
-This script builds exactly that leaky feature set and measures it. The result is
-a reference point for interpreting an unreproducible score. It is NOT a model, it
-is NEVER used to forecast, and it is written to a clearly-labelled experiment id.
-
-    python scripts/11_leakage_probe.py
-"""
 
 from __future__ import annotations
 
@@ -69,7 +45,6 @@ def main():
     lb = team_style.TeamStyleBuilder(data, min_lookback=1, lags=[1, 7, 14, 28])
     cols = lb.feature_columns
 
-    # Confirm the probe really is leaky — the mirror image of our usual check.
     Xc, _, _ = lb.build(VALID_DAYS, with_target=False)
     corrupt = data.sales_wide.copy()
     corrupt[:, VO + 1:] = 9999

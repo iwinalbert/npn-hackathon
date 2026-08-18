@@ -1,12 +1,3 @@
-/**
- * Typed API responses.
- *
- * These mirror the FastAPI OpenAPI contract at backend/openapi.json. They are
- * hand-written rather than generated so the fields the UI actually depends on
- * are explicit and reviewable — several of them (`band_basis`, `expected_accuracy`,
- * `caveat`) exist specifically to carry an honesty statement from the backend to
- * the screen, and they must never be silently dropped.
- */
 
 export interface ModelCard {
   model_name: string
@@ -129,7 +120,6 @@ export interface ForecastPoint {
   day_idx: number
   horizon: number
   yhat: number
-  /** Empirical backtest error band. NOT a model-produced interval. */
   lower: number | null
   upper: number | null
 }
@@ -140,7 +130,6 @@ export interface SeriesForecast {
   origin_date: string
   forecast: ForecastPoint[]
   total_28d: number
-  /** The backend's own statement of what the band is. Always render it. */
   band_basis: string | null
   band_regime: string | null
 }
@@ -417,14 +406,6 @@ export interface ErrorBand {
   normalised_sd: number
 }
 
-// --------------------------------------------------------------------------
-// AI Forecast Assistant
-//
-// The assistant is an explanatory layer. `grounded` and `ungrounded_numbers`
-// are the anti-hallucination signal: the backend checks every figure in the
-// answer against the context it supplied, and the UI must surface a failure
-// rather than hide it.
-// --------------------------------------------------------------------------
 
 export interface GenAIStatus {
   available: boolean
@@ -461,10 +442,7 @@ export interface AskResponse {
   context_keys: string[]
   elapsed_ms: number
   disclaimer: string
-  /** True when the reply hit the output token limit and was cut short. */
   truncated?: boolean
-  /** True when local policy answered and no AI provider was called at all. */
   refused?: boolean
-  /** secret_extraction | instruction_override | forecast_mutation | model_mutation */
   refusal_category?: string | null
 }

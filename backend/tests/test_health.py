@@ -1,4 +1,3 @@
-"""Liveness, readiness and the error contract."""
 from .conftest import API
 
 
@@ -18,7 +17,6 @@ def test_ready_reports_all_tables(client):
     assert tables["forecast"] == 30_490 * 28
     assert tables["calendar"] == 1_969
     assert tables["window_metrics"] == 8
-    # sidecars are separate files, reported separately
     assert body["detail"]["history_queryable"] is True
     assert body["detail"]["backtest_queryable"] is True
     assert not body["detail"]["errors"]

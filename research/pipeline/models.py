@@ -1,21 +1,3 @@
-"""
-Model training and the memory-efficient assembly of training matrices.
-
-MEMORY NOTE
------------
-Each forecast origin contributes 30,490 series x 28 days = 853,720 rows. Building
-many origins as pandas DataFrames and concatenating them peaks at roughly twice
-the final size. With ~5.7 GB free that is wasteful, so build_training_matrix
-pre-allocates one float32 array and fills it origin by origin, freeing each
-intermediate frame immediately.
-
-WHY ORIGINS ARE SPACED 28 DAYS APART
-------------------------------------
-Origin T covers target days T+1..T+28, origin T-28 covers T-27..T, and so on.
-At a stride of 28 the coverage is contiguous and non-overlapping: every historical
-day appears exactly once in the training set. A shorter stride would repeat the
-same (series, day) target under several origins, silently overweighting those days.
-"""
 
 from __future__ import annotations
 
@@ -33,10 +15,6 @@ except ImportError:  # pragma: no cover
     lgb = None
 
 
-# ==========================================================================
-# Training-matrix assembly
-# ==========================================================================
-
 def build_training_matrix(
     bt: Backtester,
     origins: list[int],
@@ -46,11 +24,6 @@ def build_training_matrix(
     validation_origin: int | None = None,
     verbose: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, dict]:
-    """
-    Assemble (X, y) for a list of forecast origins without a concat spike.
-
-    Returns X (float32, n_rows x n_features), y (float32), and an info dict.
-    """
     n_series = len(series_idx) if series_idx is not None else config.N_SERIES
     rows_per_origin = n_series * horizon
     total_rows = rows_per_origin * len(origins)
@@ -96,30 +69,13 @@ def build_training_matrix(
 
 
 def categorical_indices(feature_cols: list[str]) -> list[int]:
-    """Positions of categorical columns within a feature list, for LightGBM."""
     return [i for i, c in enumerate(feature_cols) if c in CATEGORICAL_FEATURES]
 
-
-# ==========================================================================
-# Model 0 — naive baselines (no fitting of any kind)
-# ==========================================================================
 
 def seasonal_naive_predict(
     data, origin_idx: int, horizon: int = config.HORIZON,
     series_idx: np.ndarray | None = None,
 ) -> np.ndarray:
-    """
-    Seasonal naive: predict each target day using the most recent day at or
-    before the origin that falls on the SAME weekday.
-
-    For target day T+h, that day is T + h - 7*ceil(h/7):
-        h=1..7   -> T+h-7   (last week, same weekday)
-        h=8..14  -> T+h-14  (two weeks back)
-        ...
-    Never reaches past the origin, so it is safe for all 28 horizon days.
-
-    Returned in horizon-major order to match the feature frames.
-    """
     if series_idx is None:
         series_idx = np.arange(config.N_SERIES)
 
@@ -135,7 +91,6 @@ def naive_last_value_predict(
     data, origin_idx: int, horizon: int = config.HORIZON,
     series_idx: np.ndarray | None = None,
 ) -> np.ndarray:
-    """Repeat the origin day's sales for all 28 days."""
     if series_idx is None:
         series_idx = np.arange(config.N_SERIES)
     v = data.sales_wide[series_idx, origin_idx].astype(np.float32)
@@ -146,7 +101,6 @@ def rolling_mean_predict(
     data, origin_idx: int, window: int, horizon: int = config.HORIZON,
     series_idx: np.ndarray | None = None,
 ) -> np.ndarray:
-    """Repeat each series' own trailing mean over `window` days ending at origin."""
     if series_idx is None:
         series_idx = np.arange(config.N_SERIES)
     start = max(0, origin_idx - window + 1)
@@ -154,16 +108,8 @@ def rolling_mean_predict(
     return np.tile(m.astype(np.float32), horizon)
 
 
-# ==========================================================================
-# LightGBM
-# ==========================================================================
-
-# Conservative, untuned defaults. Deliberately NOT hyperparameter-searched at
-# this stage — and deliberately trained for a fixed number of rounds with no
-# early stopping, because early stopping on the validation window would use the
-# validation set to make a training decision and quietly inflate its own score.
 DEFAULT_PARAMS: dict = {
-    "objective": "regression",       # L2
+    "objective": "regression",
     "metric": "rmse",
     "learning_rate": 0.05,
     "num_leaves": 128,
@@ -192,7 +138,6 @@ def train_lightgbm(
     n_estimators: int = N_ESTIMATORS,
     verbose: bool = True,
 ) -> tuple["lgb.Booster", dict]:
-    """Train a LightGBM model. Returns (booster, info)."""
     if lgb is None:
         raise ImportError("lightgbm is not installed")
 
@@ -231,13 +176,5 @@ def train_lightgbm(
 
 
 def predict_nonneg(booster, X: np.ndarray) -> np.ndarray:
-    """
-    Predict and clip negatives to zero.
-
-    Unit sales cannot be negative. An L2-objective model can emit small negative
-    values near zero; clipping is the standard, defensible fix and is applied
-    identically to every model so comparisons stay fair. Tweedie and the hurdle
-    model are non-negative by construction, so clipping is a no-op for them.
-    """
     p = booster.predict(X, num_iteration=booster.best_iteration or None)
     return np.clip(p, 0.0, None).astype(np.float64)

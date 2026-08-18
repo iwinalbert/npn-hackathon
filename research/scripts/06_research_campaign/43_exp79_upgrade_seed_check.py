@@ -1,49 +1,3 @@
-"""
-EXPERIMENT #79 — is the Experiment #77 member upgrade seed-stable?
-
-WHY THIS RUNS AT ALL
---------------------
-#77 was accepted on four windows at a single seed, and it changed the shipped
-forecast. #76's blend had a 3-seed leg; #77's upgrade does not. That is the one
-gap in the validation of the current champion, and closing it is worth more than
-any remaining modelling idea - every one of those is now shut with a measured
-number (cross-series oracle -0.0055, pre-launch rows 0.48%, ghost stockouts
-0.20%, category oracle -0.0025, horizon oracle -0.0081).
-
-WHERE THE EFFECT ACTUALLY LIVES
--------------------------------
-#77's mean blend gain of -0.0042 is carried by two windows:
-
-    autumn_2015     member -0.0284, blend -0.0105
-    christmas_2015  member -0.0108, blend -0.0053
-    primary         member -0.0001, blend -0.0005   (noise)
-    summer_2015     member +0.0011, blend -0.0004   (noise, member got WORSE)
-
-So this tests the two windows that carry the result. Testing the noise windows
-harder would answer nothing.
-
-DESIGN
-------
-Member A is held fixed at seed 42 within each window. The comparison is
-blend(A,B) vs blend(A,B'), so varying only the recursive members' seeds isolates
-exactly the quantity in question - whether B' beats B for reasons that survive
-reseeding - without spending compute re-establishing A's seed behaviour, which
-#73 and #76 already measured.
-
-    seeds 7 and 202 for B and B', added to #77's seed 42.
-
-PRE-REGISTERED (fixed before this script was first run)
--------------------------------------------------------
-The #77 upgrade is confirmed seed-stable if BOTH hold:
-  E1  member B' beats B in at least 5 of the 6 (window, seed) cells
-  E2  the blend A+B' beats A+B in at least 5 of the 6 cells
-
-If it fails, the correct response is to roll the champion back to #76's member B
-and regenerate the forecast from that. This script does not modify anything; it
-only measures and records.
-
-    python scripts/06_research_campaign/43_exp79_upgrade_seed_check.py
-"""
 
 from __future__ import annotations
 
@@ -69,7 +23,7 @@ from pipeline.features_v5 import FeatureBuilderV5, CHAMPION_FEATURES, V5_FEATURE
 
 REC_COLS_V5 = list(recursive.REC_COLS) + list(V4_FEATURES) + list(V5_FEATURES)
 EXTRA_SEEDS = [7, 202]
-W = 0.60          # the shipped operating point, from #77's inner window
+W = 0.60
 
 
 def log(*a):
@@ -179,7 +133,6 @@ def main():
         del s, pa
         gc.collect()
 
-    # #77's seed-42 cells, for the full 6-cell picture
     seed42 = [
         {"window": "autumn_2015", "seed": 42, "dRMSE_member": -0.0284,
          "dRMSE_blend": -0.0105, "source": "exp_77"},

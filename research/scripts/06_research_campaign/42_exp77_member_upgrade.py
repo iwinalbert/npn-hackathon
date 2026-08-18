@@ -1,70 +1,3 @@
-"""
-EXPERIMENT #77 — does a BETTER member B improve the blend, or does it just make
-the two members more alike?
-
-THE QUESTION THIS ANSWERS
--------------------------
-Experiment #76 established that architectural diversity is the strongest lever
-we have found: blending the direct champion with a one-step recursive model
-gained -0.0291 on the primary window, of which a negative control attributed
--0.0247 to architecture and only -0.0044 to averaging.
-
-Member B is obviously under-built. It carries 26 features and none of the six
-shape/cycle features that Experiments #72-#74 validated across 4 windows, and it
-loses to member A on 3 of the 4 windows (by 0.016 to 0.048 RMSE).
-
-The obvious move is to give member B the champion's information. The obvious
-move may be wrong, and the arithmetic says exactly how wrong it could be.
-
-For an equal-weight blend of two members,
-
-    MSE_blend = ( MSE_A + MSE_B + 2 rho sqrt(MSE_A MSE_B) ) / 4
-
-#76 measured MSE_A = 4.4988, MSE_B = 4.4885, rho = 0.9496, giving 4.3804
-(RMSE 2.0930 against 2.0920 actually observed - the identity holds).
-
-Now suppose the shape features improve member B to RMSE 2.1130 (MSE 4.4648).
-Solving for the correlation at which the blend is no better than before gives
-rho = 0.9548. So a 0.005 rise in residual correlation cancels the entire gain.
-
-The shape features are the champion's own features. Handing them to member B
-must pull the two models together to some degree. Whether the quality gain or
-the diversity loss wins is not something the evidence can settle in advance -
-which is precisely why it is worth measuring. The answer governs every future
-ensemble decision: invest in BETTER members, or in MORE DIFFERENT ones.
-
-WHAT IS HELD FIXED
-------------------
-One change is tested at a time. Member A is untouched. The blend weight stays at
-the pre-registered w = 0.5 for the acceptance test, so the only difference
-between the two blends is member B's feature set.
-
-The weight question is answered SEPARATELY and transparently below, because #76
-showed w = 0.5 is provably suboptimal (per-window optima were 0.5 / 0.65 / 0.6 /
-0.65). Choosing w from those four windows would be selection on the evaluation
-data, so w is instead selected on an INNER window - origin d_1885, targets
-d_1886..d_1913 - which lies strictly before the primary window's targets and
-before the final forecast origin. It is reported as a recommended operating
-point with its provenance stated, never as part of the acceptance test.
-
-PRE-REGISTERED ACCEPTANCE CRITERIA  (fixed before this script was first run)
----------------------------------------------------------------------------
-Member B' replaces member B in the champion blend only if ALL THREE hold:
-  D1  blend(A,B') beats blend(A,B) on RMSE in at least 3 of 4 windows
-  D2  mean window dRMSE of blend(A,B') vs blend(A,B) <= -0.002
-  D3  MECHANISM: member B' individually beats member B on RMSE in at least
-      3 of 4 windows. If the features do not help the member, any blend gain
-      is not coming from the stated cause and should not be trusted.
-
-REPORTED, NOT GATES
-  - rho(A,B) vs rho(A,B'): the diversity cost of the upgrade. This is the
-    number the whole experiment exists to measure.
-  - the 3-way blend A + B + B', free once all three are trained.
-  - RMSE and MAE for every member and every blend, on every window.
-  - high-volume behaviour, separately, on every window.
-
-    python scripts/06_research_campaign/42_exp77_member_upgrade.py
-"""
 
 from __future__ import annotations
 
@@ -88,9 +21,6 @@ from pipeline.features_v4 import V4_FEATURES
 from pipeline.features_v5 import (FeatureBuilderV5, CHAMPION_FEATURES,
                                   V5_FEATURES, CHAMPION_RMSE, CHAMPION_MAE)
 
-# Member B' = the Phase-5 recursive architecture, given the champion's six
-# per-series shape/cycle features. Recency and listing features stay out for the
-# reason Phase 5 gave: a fractional prediction fed back in would corrupt them.
 REC_COLS_V5 = list(recursive.REC_COLS) + list(V4_FEATURES) + list(V5_FEATURES)
 
 W_FIXED = 0.5
@@ -106,7 +36,6 @@ def banner(t):
 
 
 class SharedSetup(optimize.Setup):
-    """optimize.Setup reusing one already-loaded M5Data."""
 
     def __init__(self, data, origin_idx, n_origins=optimize.N_ORIGINS):
         self.data = data
@@ -163,7 +92,6 @@ def rho(pa, pb, y):
 
 
 def evaluate_window(s, name):
-    """Train A, B, B' on one window and return every number we need."""
     log(f"\n  [{name}]  origin d_{s.origin_idx+1}  ({s.window['validation_dates']})")
     y = s.y
 
@@ -235,9 +163,7 @@ def main():
     dates = pd.to_datetime(cal["date"])
     idx = lambda ds: int(cal.index[dates == pd.Timestamp(ds)][0])
 
-    # ==================================================================
     banner("STEP 1 — INNER WINDOW (weight selection only, never an eval window)")
-    # ==================================================================
     log("  origin d_1885, targets d_1886..d_1913 — strictly before the primary")
     log("  window's targets and before the final forecast origin.\n")
     inner_origin = config.VALIDATION_ORIGIN_IDX - config.HORIZON
@@ -253,9 +179,7 @@ def main():
     del s_in
     gc.collect()
 
-    # ==================================================================
     banner("STEP 2 — FOUR EVALUATION WINDOWS")
-    # ==================================================================
     WINDOWS = {
         "primary_spring_2016": config.VALIDATION_ORIGIN_IDX,
         "christmas_2015": idx("2015-12-25") - 14,
@@ -272,9 +196,7 @@ def main():
     W = pd.DataFrame([{k: v for k, v in r.items()
                        if k not in ("frontier", "leak_B", "leak_B2")} for r in rows])
 
-    # ==================================================================
     banner("RESULTS")
-    # ==================================================================
     log(f"  {'window':<22}{'A':>9}{'B':>9}{'B2':>9}{'A+B':>10}{'A+B2':>10}"
         f"{'dRMSE':>9}{'rhoAB':>8}{'rhoAB2':>8}")
     for _, r in W.iterrows():
@@ -297,7 +219,6 @@ def main():
         f"A+B {W.blend_AB_highvol.mean():.4f}  A+B' {W.blend_AB2_highvol.mean():.4f}  "
         f"3-way {W.blend3_highvol.mean():.4f}")
 
-    # inner-selected weight applied as a fixed constant
     banner("OPERATING POINT — inner-selected weight, applied unchanged")
     op = []
     for r in rows:
@@ -320,9 +241,7 @@ def main():
         log(f"  {tag}: mean dRMSE {sub.dRMSE_vs_A.mean():+.4f}   "
             f"mean dMAE {sub.dMAE_vs_A.mean():+.4f}   (w={w_star[tag]:.2f})")
 
-    # ==================================================================
     banner("DECISION")
-    # ==================================================================
     crit = {
         "D1_blend_wins_at_least_3_of_4": wins >= 3,
         "D2_mean_blend_dRMSE_at_most_-0.002": mean_d <= -0.002,

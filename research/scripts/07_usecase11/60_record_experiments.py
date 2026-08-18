@@ -1,22 +1,3 @@
-"""
-Register this research branch in experiments/registry/, in the project's own
-format, from the artefact JSONs the runs produced.
-
-BOOKKEEPING ONLY. Trains nothing, evaluates nothing, and never rewrites an
-existing record — Experiment.save() appends a __runN suffix rather than
-overwriting, so the historical record can only grow.
-
-Records written:
-    exp_80_item_level_reconciliation_probe   inner-window go/no-go
-    exp_80b_hierarchy_level_sweep            level, objective and alpha selection
-    exp_80c_level_vs_crossstore              the negative control that fired
-    exp_81_reconciliation_fixed_alpha        four-window validation, fixed alpha
-    exp_82_reconciliation_adaptive_alpha     four-window validation, per-origin alpha
-    exp_83_covariate_audit                   requirement-6 audit (no training)
-    exp_84_intermittency_audit               requirement-7 audit (no training)
-
-    python scripts/07_usecase11/60_record_experiments.py
-"""
 
 from __future__ import annotations
 
@@ -46,7 +27,6 @@ def main():
     log("Registering the Use Case 11 research branch\n")
     written = []
 
-    # ------------------------------------------------------------------
     probe = load("uc11_exp80_probe.json")
     if probe:
         e = Experiment(
@@ -73,7 +53,6 @@ def main():
               decision="PROCEED" if probe["proceed"] else "STOP")
         written.append(e.save())
 
-    # ------------------------------------------------------------------
     sweep = load("uc11_exp80b_level_sweep.json")
     if sweep:
         e = Experiment(
@@ -96,7 +75,6 @@ def main():
               decision="SELECTION ONLY — no promotion from this run")
         written.append(e.save())
 
-    # ------------------------------------------------------------------
     ortho = load("uc11_exp80c_orthogonality.json")
     if ortho:
         e = Experiment(
@@ -120,7 +98,6 @@ def main():
                        "carried forward to four-window validation")
         written.append(e.save())
 
-    # ------------------------------------------------------------------
     for tag, fname, label in [
             ("exp_81_reconciliation_fixed_alpha", "uc11_exp81_four_window.json",
              "alpha fixed at the inner-window optimum"),
@@ -155,7 +132,6 @@ def main():
                               high_volume_RMSE=v["highvol_RMSE"])
         written.append(e.save())
 
-    # ------------------------------------------------------------------
     cov = load("uc11_covariate_audit.json")
     if cov:
         e = Experiment("exp_83_covariate_audit", model_type="audit",

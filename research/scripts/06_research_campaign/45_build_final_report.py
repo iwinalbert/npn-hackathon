@@ -1,11 +1,3 @@
-"""
-Build the FINAL MODEL PERFORMANCE REPORT (markdown + PDF) from the audited
-comparison table produced by 44_final_performance_report.py.
-
-REPORTING ONLY. Trains nothing. Reads only artifacts already on disk.
-
-    python scripts/06_research_campaign/45_build_final_report.py
-"""
 
 from __future__ import annotations
 
@@ -61,7 +53,6 @@ def main():
       "trained, changed or re-selected to produce it.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 1. Validation setup")
     A("")
     A("| Item | Value |")
@@ -81,7 +72,6 @@ def main():
       "or blend weight.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 2. Comparison table")
     A("")
     A("Regression metrics (RMSE, MAE) are the task metrics. Accuracy / Precision "
@@ -123,7 +113,6 @@ def main():
       "reported above.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 3. The demand-occurrence rule")
     A("")
     A("A single rule, applied identically to every model with saved predictions:")
@@ -149,7 +138,6 @@ def main():
       "F1 while getting materially worse at the actual task.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 4. Why RMSE and MAE are the primary metrics")
     A("")
     A("The task is **how many units will sell**, not *whether any will*. "
@@ -187,7 +175,6 @@ def main():
       "ranking metric.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 5. Evidence behind the shipped champion")
     A("")
     A("The headline 2.0929 is one window. The model was accepted on four "
@@ -240,7 +227,6 @@ def main():
       "matrix provably never contains post-origin actuals.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 6. Data-integrity finding")
     A("")
     A("The audit that produced this report re-derived every RMSE and MAE from "
@@ -272,7 +258,6 @@ def main():
       "performed for this report.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 7. Non-comparable reference — the other team's reported result")
     A("")
     A("**The other team's reported RMSE ≈ 2.0324 is not comparable to any "
@@ -302,7 +287,6 @@ def main():
       "**2.1835** on the table above.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 8. Known limitations of the shipped model")
     A("")
     A("1. **MAE regresses.** +0.0186 mean across four windows against the direct "
@@ -324,7 +308,6 @@ def main():
       "are the honest ones, and this report quotes them that way in section 5.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 9. Sources")
     A("")
     A("Every figure traces to an artifact under version control:")

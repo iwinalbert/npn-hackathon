@@ -1,4 +1,3 @@
-"""Per store-item series: detail, history and forecast."""
 from __future__ import annotations
 
 from fastapi import APIRouter, Query

@@ -1,21 +1,3 @@
-"""
-Phases 8-9: apply the inner-window-selected configuration to the PRIMARY
-validation window, then stress-test it on additional historical windows.
-
-Two separate things happen here, and it matters that they are separate:
-
-  1. The configuration chosen in script 05 (using only d_1886..d_1913) is run
-     ONCE against d_1914..d_1941. Because the primary window played no part in
-     choosing that configuration, this is an honest held-out estimate.
-
-  2. That same configuration is retrained and evaluated on other 28-day windows
-     from different parts of the calendar — including one containing Christmas,
-     which the EDA showed is the single most extreme day in the dataset
-     (-99.95% vs local baseline). A model that only looks good on one lucky
-     spring window would be exposed here.
-
-    python scripts/06_final_candidate.py
-"""
 
 from __future__ import annotations
 
@@ -40,7 +22,6 @@ TUNING_CSV = config.ARTIFACTS_DIR / "inner_window_tuning.csv"
 
 
 def train_and_eval(bt, data, origin_idx, cfg, cols, tag, exp_name, extra_note=""):
-    """Train with `cfg` on origins before `origin_idx`, evaluate on its 28 days."""
     wd = bt.make_window(origin_idx).describe()
     valid = bt.build_validation_frame(origin_idx)
     y = valid["sales"].to_numpy()
@@ -141,11 +122,10 @@ def main() -> None:
     print(f"\n   PRIMARY  RMSE={m['RMSE']:.4f}  MAE={m['MAE']:.4f}  "
           f"WAPE={m['WAPE']:.4f}  bias={m['bias']:+.4f}")
 
-    prev_best = 2.1210  # model_04, measured earlier in this project
+    prev_best = 2.1210
     print(f"   previous best (Model 4, untuned): RMSE 2.1210")
     print(f"   change: {m['RMSE'] - prev_best:+.4f} RMSE")
 
-    # ==================================================================
     print()
     print("=" * 78)
     print("PHASE 9 — ADDITIONAL VALIDATION WINDOWS")
@@ -159,11 +139,8 @@ def main() -> None:
         hit = data.calendar.index[dates == pd.Timestamp(datestr)]
         return int(hit[0])
 
-    # A window centred on Christmas 2015 — the most extreme calendar effect in
-    # the dataset, and the hardest test of whether event handling works.
     xmas = idx_of("2015-12-25")
     xmas_origin = xmas - 14
-    # An ordinary summer window with no major holidays.
     summer_origin = idx_of("2015-07-15")
 
     windows = [

@@ -1,29 +1,3 @@
-"""
-NPN Demand Forecasting API.
-
-Serves the frozen M5 forecasting model's output to the product frontend.
-
-WHAT THIS PROCESS DELIBERATELY DOES NOT IMPORT
-----------------------------------------------
-The research pipeline. `pipeline/config.py` calls `mkdir()` at import time,
-which is a filesystem side effect on the protected research tree and can raise
-under a read-only mount. Keeping that import out of the API's startup path means:
-
-  * the research tree can be mounted strictly read-only, or not at all;
-  * the API starts in well under a second instead of waiting ~14 s for the
-    59M-row panel to load;
-  * a missing or broken model cannot stop the API from serving.
-
-The pipeline is imported lazily, inside the inference service, only when a
-verification job actually runs.
-
-STARTUP CONTRACT
-----------------
-Startup NEVER fails because an artefact is missing. It logs the problem and
-starts anyway, so `/ready` can report precisely what is wrong. A container that
-refuses to boot tells an operator far less than one that boots and explains
-itself.
-"""
 
 from __future__ import annotations
 
@@ -103,14 +77,12 @@ app = FastAPI(
     ),
 )
 
-# Explicit allow-list. `cors_allow_all` is a development-only escape hatch and
-# is ignored when environment=production.
 _origins = settings.cors_origins
 _allow_all = settings.cors_allow_all and not settings.is_production
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if _allow_all else _origins,
-    allow_credentials=False,          # no cookies; nothing to protect via CORS
+    allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["X-Request-ID", "X-Response-Time-ms"],
@@ -120,7 +92,6 @@ app.add_middleware(
 
 @app.middleware("http")
 async def request_context(request: Request, call_next):
-    """Attach a request id and duration to every response."""
     rid = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:12]
     start = time.perf_counter()
     request.state.request_id = rid
@@ -147,7 +118,6 @@ def _problem(request: Request, status: int, error: str, message: str,
 
 @app.exception_handler(ApiError)
 async def api_error_handler(request: Request, exc: ApiError):
-    """Every deliberate failure returns the same shape. Covers all subclasses."""
     payload = exc.to_payload()
     payload["request_id"] = getattr(request.state, "request_id", None)
     if exc.status_code >= 500:
@@ -166,16 +136,11 @@ async def validation_error_handler(request: Request,
 
 @app.exception_handler(ValueError)
 async def value_error_handler(request: Request, exc: ValueError):
-    """Service-layer guards (e.g. unknown hierarchy level) raise ValueError."""
     return _problem(request, 400, "bad_request", str(exc))
 
 
 @app.exception_handler(Exception)
 async def unhandled_handler(request: Request, exc: Exception):
-    """
-    Last resort. Never leaks a traceback to the client; the request id ties the
-    response to the full traceback in the logs.
-    """
     log.exception("unhandled rid=%s path=%s",
                   getattr(request.state, "request_id", None), request.url.path)
     return _problem(request, 500, "internal_error",

@@ -1,50 +1,3 @@
-"""
-EXPERIMENT #71 — Year-over-year features (the last new-information lever).
-
-HYPOTHESIS
-----------
-Experiment #70 established that six architecturally different models produce
-residuals correlated at 0.9897. Their mistakes are the same mistakes. That rules
-out model variance as the target and means any further gain must come from
-information the models do not currently have.
-
-The champion's longest lookback is 28 days. It has no way to know what this
-specific product sold in this specific store at this time LAST year. `month` and
-`week_of_year` give it only a chain-wide seasonal average, which cannot express
-that one item peaks in May while another peaks in November.
-
-WHY THIS IS NOT A REPEAT OF THE FAILED PHASE 2 FEATURE TESTS
-------------------------------------------------------------
-Every Phase 2 feature was a re-encoding of information already present
-(rolling_mean_14 between the existing 7 and 28; rolling_zero_count_7 restating
-recency; calendar interactions built from existing columns). These four features
-introduce a genuinely new observation: demand 364 days earlier, per series.
-That is a materially different justification, as Rule 4 requires.
-
-MECHANISM
----------
-If a series has a repeating annual shape, last year's value at the same point
-carries level information that no 28-day window contains. It should help most on
-seasonal FOODS items, which is also where 74% of our error sits.
-
-LEAKAGE RISK
-------------
-Low but must be proved. For target day t = T+h (h <= 28), a 364-day lookback
-reads t-364 <= T-336. Every window ends well before the origin. Verified by the
-corruption test below, not assumed.
-
-VALIDATION
-----------
-Primary window d_1914..d_1941, 853,720 predictions, everything else held
-identical to the champion (same origins, objective, hyperparameters, seed).
-
-SUCCESS CRITERION (fixed before running)
-----------------------------------------
-    PROMOTE to robustness testing if dRMSE <= -0.010
-    REJECT otherwise
-
-    python scripts/30_exp71_yoy.py
-"""
 
 from __future__ import annotations
 
@@ -81,7 +34,6 @@ def main():
     print(f"  champion 32 features + {len(V3_FEATURES)} new = {len(cols)}")
     print(f"  new: {V3_FEATURES}\n")
 
-    # Setup with the v3 builder; everything else identical to the champion.
     s = optimize.Setup()
     s.fb = FeatureBuilderV3(s.data)
     s.bt = Backtester(s.data, feature_builder=s.fb)
@@ -89,7 +41,6 @@ def main():
     s.y = s.valid["sales"].to_numpy()
     y = s.y
 
-    # ---- leakage corruption test on the new builder ----
     banner("LEAKAGE TEST")
     clean = s.fb.build_origin_frame(s.origin_idx, include_target=False)
     corrupt = s.data.sales_wide.copy()
@@ -105,7 +56,6 @@ def main():
         raise SystemExit(f"STOP: leakage in {changed}")
     del clean, dirty, corrupt, d2
 
-    # ---- sanity on the new columns ----
     f = s.valid
     print("\n  new feature sanity (validation frame):")
     for c in V3_FEATURES:
@@ -114,7 +64,6 @@ def main():
         print(f"    {c:<26} missing {np.isnan(v).mean()*100:5.2f}%  "
               f"range [{fin.min():.3f}, {fin.max():.3f}]  mean {fin.mean():.3f}")
 
-    # ---- train ----
     banner("TRAIN (identical config to champion, only the feature set differs)")
     X, Y = optimize.build_matrix(s, cols, verbose=True)
     booster, info = optimize.train(X, Y, cols)
@@ -128,7 +77,6 @@ def main():
     print(f"  change   : dRMSE {dr:+.4f}   dMAE {dm:+.4f}")
     print(f"  high-volume RMSE {d['high_volume_RMSE']:.4f} (champion 5.9756)")
 
-    # ---- did the model actually use them? ----
     banner("DID THE MODEL USE THE NEW FEATURES?")
     gain = booster.feature_importance("gain")
     names = booster.feature_name()

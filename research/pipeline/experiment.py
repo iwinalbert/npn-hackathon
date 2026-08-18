@@ -1,12 +1,3 @@
-"""
-Experiment tracking.
-
-Each run writes one self-contained JSON file to experiments/. Files are never
-overwritten — a run whose id already exists gets a numeric suffix — so the record
-of what was actually executed can only grow.
-
-Every metric stored here comes from an executed run. Nothing is filled in by hand.
-"""
 
 from __future__ import annotations
 
@@ -21,15 +12,6 @@ from . import config
 
 
 class Experiment:
-    """
-    Usage:
-        exp = Experiment("model_01_lightgbm", model_type="LightGBM",
-                         objective="regression")
-        exp.set(feature_set="base", feature_groups=["A", "B"])
-        ... run ...
-        exp.set_metrics(rmse=..., mae=...)
-        exp.save()
-    """
 
     def __init__(self, name: str, **fields):
         self.name = name
@@ -49,7 +31,6 @@ class Experiment:
         self.record.update(fields)
         self._t0 = time.time()
 
-    # ------------------------------------------------------------------
 
     def set(self, **fields) -> "Experiment":
         self.record.update(fields)
@@ -74,7 +55,6 @@ class Experiment:
         self.record.setdefault("metrics", {}).update(metrics)
         return self
 
-    # ------------------------------------------------------------------
 
     def save(self, status: str = "completed") -> Path:
         if self.record["status"] != "failed":
@@ -94,7 +74,6 @@ class Experiment:
 
 
 def load_all() -> list[dict]:
-    """Every experiment record on disk, newest last."""
     out = []
     for p in sorted(config.EXPERIMENTS_DIR.glob("*.json")):
         try:

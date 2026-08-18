@@ -1,14 +1,3 @@
-"""
-Builds reports/ERROR_AUTOPSY_REPORT.md and .pdf from the autopsy results.
-
-Also runs the supplementary stability diagnostics (split-half learnability of
-per-series bias, store anomaly, spike predictability) and folds them into
-artifacts/error_autopsy.json.
-
-READ-ONLY with respect to models and existing reports.
-
-    python scripts/26_autopsy_report.py
-"""
 
 from __future__ import annotations
 
@@ -61,7 +50,6 @@ def supplementary():
             "second_half_corrected": metrics.rmse(y[h2], pc[h2])}
     demo["gain"] = round(demo["second_half_corrected"] - demo["second_half_uncorrected"], 4)
 
-    # store anomaly
     df = pd.DataFrame({"y": y, "p": p, "sq": sq, "store": meta.store_id.to_numpy()[si]})
     g = df.groupby("store").agg(n=("y", "size"), actual=("y", "mean"),
                                 pred=("p", "mean"), sqsum=("sq", "sum"))
@@ -70,7 +58,6 @@ def supplementary():
     g["rmse_per_unit_demand"] = g.RMSE / g.actual
     stores = g.sort_values("rmse_per_unit_demand", ascending=False).reset_index()
 
-    # spike predictability
     hist = d.sales_wide[:, :config.VALIDATION_ORIGIN_IDX + 1].mean(axis=1)
     spike = y > 2 * np.maximum(hist[si], 0.05)
     cal = d.calendar
@@ -83,7 +70,6 @@ def supplementary():
         "event": float(spike[ev].mean()), "ordinary": float(spike[~ev].mean()),
     }
 
-    # error concentration curve
     ser = pd.DataFrame({"s": si, "sq": sq}).groupby("s")["sq"].sum().sort_values(ascending=False)
     cum = (ser.cumsum() / ser.sum()).to_numpy()
 
@@ -96,7 +82,6 @@ def supplementary():
     }, cum, j[m], stores
 
 
-# ==========================================================================
 def chart_concentration(cum):
     fig, ax = plt.subplots(figsize=(8.4, 3.2))
     x = np.arange(1, len(cum) + 1) / len(cum) * 100
@@ -161,7 +146,6 @@ def chart_stability(j):
     return "charts/autopsy_bias_stability.png"
 
 
-# ==========================================================================
 def main():
     R = json.loads(AUTOPSY.read_text(encoding="utf-8"))
     sup, cum, jm, stores = supplementary()
@@ -197,7 +181,6 @@ def main():
     A("---")
     A("")
 
-    # ---------------- headline ----------------
     A("## The four findings that matter")
     A("")
     A("1. **The error is almost pure variance, not bias.** "
@@ -218,7 +201,6 @@ def main():
       "most actionable thing in this report. See Hypothesis 1.")
     A("")
 
-    # ---------------- volume ----------------
     A("## Where the error lives: demand volume")
     A("")
     A("Rows split into ten equal groups by the series' own historical daily mean.")
@@ -240,7 +222,6 @@ def main():
     A(f"![Concentration]({c_conc})")
     A("")
 
-    # ---------------- underprediction ----------------
     dr = R["direction"]
     A("## Systematic under-prediction")
     A("")
@@ -258,7 +239,6 @@ def main():
       "very busy.")
     A("")
 
-    # ---------------- worst rows ----------------
     A("## The worst individual observations")
     A("")
     A(f"The worst **1,000 rows — 0.12% of the data — carry "
@@ -286,7 +266,6 @@ def main():
       "the squared error**. Spikes are the problem.")
     A("")
 
-    # ---------------- hierarchy ----------------
     A("## Hierarchy")
     A("")
     A("| Store | Rows | Actual mean | RMSE | Share of squared error | RMSE per unit of demand |")
@@ -305,7 +284,6 @@ def main():
       "FOODS_1 stands out for bias: −0.335, the largest of any department.")
     A("")
 
-    # ---------------- oracles ----------------
     A("## How much error is even removable?")
     A("")
     A("This is the part that should change what we do next. Each row below is a "
@@ -344,7 +322,6 @@ def main():
       "the entire gap to a model that already knows each series' correct scaling.")
     A("")
 
-    # ---------------- ranked hypotheses ----------------
     A("## Ranked hypotheses for reducing RMSE")
     A("")
     A("### 1. Per-series bias correction — HIGH confidence, largest measured upside")
@@ -438,7 +415,6 @@ def main():
       "should not be attempted again.")
     A("")
 
-    # ---------------- summary table ----------------
     A("## Summary of recommendations")
     A("")
     A("| Rank | Hypothesis | Evidence strength | Measured/bounded upside | Verdict |")

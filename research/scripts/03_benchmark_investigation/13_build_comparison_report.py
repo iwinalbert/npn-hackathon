@@ -1,12 +1,3 @@
-"""
-Builds reports/TEAM_FAIR_COMPARISON_REPORT.md and .pdf.
-
-Every figure is read from experiments/*.json and artifacts/*. Nothing is typed
-in by hand except the three numbers the team supplied, which are labelled as
-reported-by-them throughout.
-
-    python scripts/13_build_comparison_report.py
-"""
 
 from __future__ import annotations
 
@@ -43,7 +34,6 @@ def M(name, key):
 
 
 def scatter_chart() -> str:
-    """RMSE vs MAE for every measured point plus the team's reported points."""
     fig, ax = plt.subplots(figsize=(8.6, 5.2))
 
     ours = [
@@ -118,7 +108,6 @@ def main():
           "future. **Tweedie** is a loss function for non-negative data with many "
           "zeros.", "", "---", ""]
 
-    # ------------------------------------------------------------------
     L += ["## 1. What the team did — what we could actually find", "",
           "**We searched for it properly before assuming anything.** A full-text "
           "search across every file in the project for their reported numbers "
@@ -150,7 +139,6 @@ def main():
           "| How RMSE and MAE were computed (pooled? per-series? aggregated?) | **UNKNOWN** |",
           ""]
 
-    # ------------------------------------------------------------------
     L += ["## 2. Feature comparison", "",
           "Step 1 of the brief asked for a feature-by-feature table. We can fill "
           "in our column honestly and must leave theirs unknown — writing anything "
@@ -185,7 +173,6 @@ def main():
           "included because the brief asked for it, not because it tells us "
           "anything about them.", ""]
 
-    # ------------------------------------------------------------------
     L += ["## 3. Is the validation identical?", "",
           "**Unknown, and this matters more than anything else in this report.** "
           "Our setup is fully specified and was held constant across every "
@@ -204,7 +191,6 @@ def main():
           "measuring the same thing and no arithmetic comparison between them is "
           "meaningful.", ""]
 
-    # ------------------------------------------------------------------
     L += ["## 4. What we actually ran", "",
           "Four configurations, all scored on our validation window, all on the "
           "same 853,720 predictions, all with the same metric code.", "",
@@ -217,7 +203,6 @@ def main():
           "The team's other two models sit at RMSE 2.0770 / MAE 1.1187 (Random "
           "Forest, MSE) and RMSE 2.1434 / MAE 1.1275 (XGBoost, Poisson).", ""]
 
-    # ------------------------------------------------------------------
     L += ["## 5. Diagnosing the difference — what we ruled out", "",
           "Rather than guess, we tested the plausible explanations one at a time.",
           "",
@@ -286,7 +271,6 @@ def main():
           "single sign that their numbers were produced under a different "
           "evaluation setup rather than simply by a better model.", ""]
 
-    # ------------------------------------------------------------------
     L += ["## 6. Comparison table, with the honest labels", "",
           "| Approach | RMSE | MAE | Features | Validation window | Notes |",
           "|---|---|---|---|---|---|",
@@ -307,7 +291,6 @@ def main():
           "They may not. The arithmetic is shown here so nobody has to wonder what "
           "it would have been, and it should not be quoted as a result.", ""]
 
-    # ------------------------------------------------------------------
     if powdf is not None:
         cur = powdf[powdf.power == 1.1].iloc[0]
         best = powdf.sort_values("inner_RMSE").iloc[0]
@@ -371,7 +354,6 @@ def main():
                   "swing between adjacent 28-day windows is ordinary noise here, "
                   "and the gap being discussed is only about 0.09.", ""]
 
-    # ------------------------------------------------------------------
     L += ["## 8. What we should change, and what we should not", "",
           "### Should NOT change", "",
           "- **Our validation setup.** It is fully specified, leakage-verified, "
@@ -401,7 +383,6 @@ def main():
           "fraction of that headroom. That is the single most promising legitimate "
           "direction this investigation has produced.", ""]
 
-    # ------------------------------------------------------------------
     L += ["## 9. Is the comparison genuinely fair?", "",
           "**No, and it cannot be made fair from our side alone.** We reproduced "
           "everything reproducible: same dataset, same window, same metric code, "

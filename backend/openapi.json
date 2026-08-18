@@ -35,7 +35,6 @@
           "health"
         ],
         "summary": "Readiness \u2014 are the data artefacts usable?",
-        "description": "Readiness reports DEGRADED rather than failing outright when a sidecar is\nmissing: the frozen forecast still serves without history or backtest data,\nand a partially-useful API beats a dead one. Orchestrators should treat\nready=false as unhealthy and degraded=true as a warning.",
         "operationId": "ready_api_v1_ready_get",
         "responses": {
           "200": {
@@ -721,7 +720,6 @@
           "accuracy"
         ],
         "summary": "Backtest windows where ground truth exists",
-        "description": "Only windows with real observed sales are listed. The delivered forecast\nwindow (d_1942-d_1969) is deliberately absent: it has no ground truth, so no\naccuracy figure can honestly be quoted against it.",
         "operationId": "windows_api_v1_accuracy_windows_get",
         "responses": {
           "200": {
@@ -1088,7 +1086,6 @@
           "accuracy"
         ],
         "summary": "Demand-occurrence diagnostics (did it spot the selling days?)",
-        "description": "Classification-style diagnostics from thresholding the point forecast at\n0.5 units. The model was never trained to classify \u2014 these describe a\nbehaviour, they are not the task metric.",
         "operationId": "occurrence_api_v1_accuracy_occurrence_get",
         "parameters": [
           {
@@ -1388,7 +1385,6 @@
           "inference"
         ],
         "summary": "Start a forecast verification run (~35 s)",
-        "description": "Re-runs the frozen model and compares it against the shipped artefact.\n\nReturns immediately with a job id; poll `/inference/jobs/{job_id}`.\nReturns 503 if inference is unavailable, 409 if one is already running.",
         "operationId": "verify_api_v1_inference_verify_post",
         "responses": {
           "200": {
@@ -1506,7 +1502,6 @@
           "assistant"
         ],
         "summary": "Is the AI assistant configured here?",
-        "description": "Reports availability and the assistant's own refusals.\n\nReturns `available: false` with reasons rather than failing when no API key\nis configured, so the rest of the application is unaffected.",
         "operationId": "status_api_v1_genai_status_get",
         "responses": {
           "200": {
@@ -1597,7 +1592,6 @@
           "assistant"
         ],
         "summary": "Ask a question about the forecasts",
-        "description": "Answer a question using only data retrieved from this backend.\n\nReturns 503 when the assistant is not configured, 400 for an empty or\nover-long question.",
         "operationId": "ask_api_v1_genai_ask_post",
         "requestBody": {
           "content": {
@@ -1639,7 +1633,6 @@
           "assistant"
         ],
         "summary": "Show the context a question would use",
-        "description": "Return the exact structured context the assistant would receive, without\ncalling the model.\n\nThis exists for transparency and for debugging: an evaluator can see that\nthe assistant is handed a few kilobytes of verified numbers rather than the\ndataset, and can check any figure in an answer against its source. It works\nwith no API key configured.",
         "operationId": "context_preview_api_v1_genai_context_preview_post",
         "requestBody": {
           "content": {

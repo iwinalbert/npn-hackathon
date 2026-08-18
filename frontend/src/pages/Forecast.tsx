@@ -12,11 +12,6 @@ import {
   REGIME_COLORS, buildDemandSeries, compact, humanise, longDate, nf, pct, signed,
 } from '../lib/format'
 
-/**
- * History shown before the compared window. 28 days is the default because it
- * matches the held-out window exactly, which is the view the chart is designed
- * around: 28 days of actual-vs-predicted, then 28 days of forecast.
- */
 const HISTORY_OPTIONS = [
   { days: 28, label: '28d' },
   { days: 90, label: '90d' },
@@ -24,7 +19,6 @@ const HISTORY_OPTIONS = [
   { days: 365, label: '1y' },
 ]
 
-/** Sensible default so the page is never empty on first load. */
 const DEFAULT = { store: 'CA_3', item: 'FOODS_3_090' }
 
 function SeriesSearch({
@@ -114,11 +108,6 @@ export function Forecast() {
 
   const pick = (s: string, i: string) => setParams({ store: s, item: i })
 
-  /**
-   * Three real sources, one series: observed history, the held-out window where
-   * the prediction can be scored against the actual, and the delivered forecast.
-   * A source that has not loaded simply contributes nothing.
-   */
   const series = useMemo(() => buildDemandSeries({
     history: history.data?.history.map((h) => ({ date: h.date, sales: h.sales })),
     backtest: backtest.data?.points.map((p) => ({

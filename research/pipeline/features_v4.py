@@ -1,44 +1,3 @@
-"""
-Per-series RESPONSE-SHAPE features.
-
-WHY THESE ARE A DIFFERENT FAMILY FROM EVERYTHING ALREADY REJECTED
------------------------------------------------------------------
-Phase 2 tested fourteen features and none helped, but every one of them
-described a series' LEVEL: rolling means over new windows, zero counts,
-momentum ratios, price movements. Experiment #71's year-over-year features were
-also level (last year's level).
-
-These describe a series' SHAPE — how its demand is distributed across the week,
-and how strongly it responds to SNAP and to weekends, relative to its own
-average. The champion has `wday`, `is_weekend`, `snap` and `item_id`, so in
-principle it could learn a 3,049 x 7 interaction from categorical splits, but
-that is precisely the kind of high-cardinality interaction gradient-boosted
-trees represent poorly.
-
-EVIDENCE
---------
-A read-only diagnostic (scripts/06_research_campaign/33_segmentation_diagnostic.py)
-showed that a purely arithmetic predictor
-
-    level(origin) x weekday_ratio(52 weeks of history)
-
-beats a level-only predictor by 0.0578 RMSE out of sample. The signal is real.
-The same diagnostic showed only ~10% of the per-series-x-weekday oracle gap is
-recoverable from history, so expectations are modest.
-
-LEAKAGE
--------
-Every ratio is computed from sales strictly at or before the forecast origin.
-The only target-day input is the calendar (which weekday it is, whether SNAP is
-active), which is published years ahead. Verified by corruption test in the
-experiment script rather than asserted.
-
-SHRINKAGE
----------
-A ratio measured on a series with almost no sales is noise. Each ratio is pulled
-toward 1.0 with weight n/(n+k), where n is the series' observed unit volume in
-the window - the same guard used in Experiment #69.
-"""
 
 from __future__ import annotations
 
@@ -51,7 +10,6 @@ SHRINK_K = 20.0
 
 
 def _shrink(ratio: np.ndarray, volume: np.ndarray, k: float = SHRINK_K) -> np.ndarray:
-    """Pull a ratio toward 1.0 when the series has little volume behind it."""
     w = volume / (volume + k)
     if ratio.ndim == 2:
         w = w[:, None]
@@ -60,7 +18,6 @@ def _shrink(ratio: np.ndarray, volume: np.ndarray, k: float = SHRINK_K) -> np.nd
 
 
 class FeatureBuilderV4(FeatureBuilderV2):
-    """FeatureBuilderV2 + four per-series response-shape features."""
 
     def _shape_profiles(self, origin: int) -> dict:
         s = self.d.sales_wide
@@ -88,7 +45,6 @@ class FeatureBuilderV4(FeatureBuilderV2):
                                               blk[:, m].mean(axis=1) / overall, 1.0)
             out[f"wday_profile_{tag}"] = _shrink(prof, vol)
 
-        # SNAP and weekend lift, 52 weeks, per series
         days = 52 * 7
         a = max(0, origin + 1 - days)
         blk = s[:, a:origin + 1].astype(np.float64)
@@ -100,9 +56,8 @@ class FeatureBuilderV4(FeatureBuilderV2):
             wk = blk[:, ~wknd_blk].mean(axis=1)
             out["weekend_lift"] = _shrink(np.where(wk > 0, we / wk, 1.0), vol)
 
-            # SNAP flag differs per state, so this must be done per state group
             snap_lift = np.ones(config.N_SERIES, dtype=np.float64)
-            snap_blk = snap_m[a:origin + 1]              # (days, 3)
+            snap_blk = snap_m[a:origin + 1]
             for st in range(3):
                 rows = snap_col == st
                 if not rows.any():
@@ -130,7 +85,6 @@ class FeatureBuilderV4(FeatureBuilderV2):
 
         prof = self._shape_profiles(origin_idx)
 
-        # weekday ratio for each target day's own weekday (varies across horizon)
         for tag in ["52w", "13w"]:
             p = prof[f"wday_profile_{tag}"]
             vals = np.empty((horizon, n_s), dtype=np.float32)
@@ -138,8 +92,6 @@ class FeatureBuilderV4(FeatureBuilderV2):
                 vals[i] = p[series_idx, int(w)]
             frame[f"wday_ratio_{tag}"] = vals.ravel()
 
-        # per-series lifts (constant across the horizon; combine with the
-        # existing target-day `snap` / `is_weekend` columns)
         frame["snap_lift"] = np.tile(prof["snap_lift"][series_idx].astype(np.float32), horizon)
         frame["weekend_lift"] = np.tile(prof["weekend_lift"][series_idx].astype(np.float32), horizon)
         return frame

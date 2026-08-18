@@ -1,10 +1,3 @@
-/**
- * Floating AI Assistant shortcut.
- *
- * The assertions that matter are the ones that keep it a *shortcut*: the
- * sidebar entry must survive, navigation must stay client-side, and the button
- * must be reachable and labelled without a mouse.
- */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -64,12 +57,9 @@ describe('FloatingAIAssistant', () => {
   it('has an accessible label that says what it opens', () => {
     mockApi()
     wrap()
-    // the visible "AI" alone would not tell a screen-reader user anything
     expect(floating()).toHaveAccessibleName('Open AI Assistant')
   })
 
-  // The sidebar entry also reads "AI Assistant", which is the point of keeping
-  // both — so the tooltip has to be found relative to the floating button.
   const tooltip = () =>
     within(floating().closest('.group') as HTMLElement).getByText('AI Assistant')
 
@@ -78,14 +68,10 @@ describe('FloatingAIAssistant', () => {
     mockApi()
     wrap()
 
-    // hidden until hovered, and it must not swallow clicks while invisible
     expect(tooltip().className).toMatch(/opacity-0/)
     expect(tooltip().className).toMatch(/pointer-events-none/)
 
     await user.hover(floating())
-    // the reveal is CSS-driven, so assert the mechanism rather than a computed
-    // style jsdom does not evaluate: the label sits inside the button's group
-    // and carries the group-hover rule.
     expect(tooltip().className).toMatch(/group-hover:opacity-100/)
   })
 
@@ -114,7 +100,6 @@ describe('FloatingAIAssistant', () => {
     await user.click(floating())
 
     await waitFor(() => expect(screen.getByText('ASSISTANT PAGE')).toBeInTheDocument())
-    // an anchor that would leave the SPA is the failure mode this guards
     expect(floating()).toHaveAttribute('href', '/assistant')
     expect(floating()).not.toHaveAttribute('target')
   })
@@ -146,7 +131,6 @@ describe('FloatingAIAssistant', () => {
       .filter((el) => (el.getAttribute('href') ?? '') === '/assistant')
     expect(assistantLinks.length).toBe(2)
 
-    // the sidebar one keeps its full label and description
     const sidebar = screen.getByRole('navigation', { name: /main/i })
     expect(within(sidebar).getByText('AI Assistant')).toBeInTheDocument()
     expect(within(sidebar).getByText(/ask about forecasts in plain language/i))

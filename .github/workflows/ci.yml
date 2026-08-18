@@ -1,30 +1,3 @@
-# Retail Demand Forecasting -- CI
-#
-# Source of truth for what this pipeline is and why each gate exists:
-#   infra/docs/ci-cd.md
-#
-# THE CONSTRAINT THAT SHAPES THIS WHOLE FILE
-# ------------------------------------------
-# The 130 MB product data layer is NOT in git, and neither are the frozen model
-# binaries it is generated from. A CI runner therefore cannot build it, and the
-# API cannot reach /ready there.
-#
-# Pretending otherwise would produce a pipeline that is either permanently red
-# or quietly meaningless. So this pipeline is explicit about the split:
-#
-#   VERIFIED HERE          config correctness, build-context hygiene, secret
-#                          hygiene, frontend tests/typecheck/build, images
-#                          build, containers boot as non-root, no secret in a
-#                          layer, and the API degrades CORRECTLY without data
-#                          (200 on /health, ready=false with a reason).
-#
-#   VERIFIED ON A HOST     everything that needs the data layer: the backend
-#                          suite's data-dependent tests and the full smoke test
-#                          including the frozen-forecast canary.
-#                          -> infra/docs/runbook.md "Release checklist"
-#
-# The `deploy-gate` job at the bottom states that split in the run summary, so
-# nobody reads a green tick as more assurance than it is.
 
 name: CI
 
@@ -34,7 +7,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-# A new push to the same branch makes the in-flight run obsolete.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -47,10 +19,6 @@ env:
   NODE_VERSION: "22"
 
 jobs:
-  # -------------------------------------------------------------------------
-  # 1. Configuration and hygiene. Fast, and catches the failures that a
-  #    successful `docker build` does NOT catch.
-  # -------------------------------------------------------------------------
   preflight:
     name: Preflight (config, context, secrets)
     runs-on: ubuntu-latest
@@ -58,8 +26,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # preflight scans tracked files for committed keys; a shallow clone
-          # is enough for that, but full history makes the check meaningful.
           fetch-depth: 0
 
       - uses: actions/setup-python@v5
@@ -70,8 +36,6 @@ jobs:
         run: pip install --quiet pyyaml
 
       - name: Run preflight
-        # --skip-data: the data layer cannot exist on a runner. Every other
-        # section still runs and still gates the build.
         run: python infra/scripts/preflight.py --skip-data
 
       - name: Publish preflight report
@@ -84,12 +48,6 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # -------------------------------------------------------------------------
-  # 2. Backend. Data-dependent tests SKIP here by design (conftest.py skips
-  #    when product.duckdb is absent) -- so this job asserts the app imports,
-  #    the schema is generatable, and nothing errors. Skips are counted and
-  #    surfaced rather than hidden behind a green tick.
-  # -------------------------------------------------------------------------
   backend:
     name: Backend (import, schema, non-data tests)
     runs-on: ubuntu-latest
@@ -108,15 +66,10 @@ jobs:
         run: pip install --quiet -r requirements-dev.txt
 
       - name: Import the app
-        # Cheap, and it fails loudly on the class of error that would otherwise
-        # only appear when a container starts: a bad import, a missing package,
-        # a settings field that will not validate.
         working-directory: backend
         run: python -c "from app.main import app; print(f'{len(app.routes)} routes')"
 
       - name: Check the committed OpenAPI schema is current
-        # openapi.json is committed and consumed by the frontend. If it drifts
-        # from the code, the drift should be a review comment, not a surprise.
         run: |
           python tasks.py openapi
           if ! git diff --quiet -- backend/openapi.json; then
@@ -145,9 +98,6 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-  # -------------------------------------------------------------------------
-  # 3. Frontend. This one IS fully meaningful on CI -- no data layer needed.
-  # -------------------------------------------------------------------------
   frontend:
     name: Frontend (typecheck, tests, build)
     runs-on: ubuntu-latest
@@ -165,24 +115,18 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install
-        # `ci`, not `install`: it honours the lockfile exactly and fails if
-        # package.json and the lockfile disagree.
         run: npm ci
 
       - name: Typecheck
         run: npm run typecheck
 
       - name: Test
-        # package.json already defines this as `vitest run` -- non-watching.
         run: npm run test
 
       - name: Build
         run: npm run build
 
       - name: Assert no secret reached the bundle
-        # The Gemini key lives only in the API. Vite inlines any VITE_-prefixed
-        # variable at build time, so this is the check that a mis-named env var
-        # did not put a key in front of every user.
         run: |
           if grep -rEl 'AIza[0-9A-Za-z_-]{35}' dist/ 2>/dev/null; then
             echo "::error::An API key shape was found in the built bundle"
@@ -196,10 +140,6 @@ jobs:
           path: frontend/dist
           retention-days: 7
 
-  # -------------------------------------------------------------------------
-  # 4. Images. Builds for real, boots for real, and asserts the security
-  #    properties that were previously only checked statically.
-  # -------------------------------------------------------------------------
   images:
     name: Images (build, boot, harden)
     runs-on: ubuntu-latest
@@ -257,22 +197,11 @@ jobs:
             exit 1
           fi
           echo "no GEMINI_API_KEY in the image environment"
-          # A key could also be present in a layer's filesystem rather than its
-          # env. Scan the flattened filesystem for the key shape.
           docker run --rm --entrypoint sh npn-forecast-api:ci -c \
             'grep -rEl "AIza[0-9A-Za-z_-]{35}" /app 2>/dev/null && exit 1 || exit 0'
 
       - name: API degrades correctly with NO data layer
-        # This is the honest version of "does it work on CI". The data layer is
-        # absent, so /ready MUST be false -- and it must say so in a structured
-        # way rather than crashing or hanging. A regression here is what turns
-        # a missing mount into an unexplained hang in production.
         run: |
-          # A user-defined network, so the frontend can resolve `api-ci` by
-          # name in the next step. nginx resolves proxy_pass upstreams at
-          # STARTUP when the host is a literal -- and envsubst has already made
-          # it one -- so on the default bridge nginx would refuse to boot with
-          # "host not found in upstream". This mirrors the compose topology.
           docker network create ci-net
           docker run -d --name api-ci --network ci-net -p 8000:8000 \
             npn-forecast-api:ci
@@ -303,7 +232,6 @@ jobs:
             sleep 2
           done
           curl -sf localhost:8080/healthz
-          # SPA deep-link fallback: the single most common nginx SPA bug.
           code=$(curl -s -o /dev/null -w '%{http_code}' localhost:8080/forecast)
           [ "$code" = "200" ] || { echo "::error::SPA deep link returned $code"; exit 1; }
           echo "SPA fallback OK"
@@ -332,9 +260,6 @@ jobs:
           docker rm -f api-ci web-ci 2>/dev/null || true
           docker network rm ci-net 2>/dev/null || true
 
-  # -------------------------------------------------------------------------
-  # 5. One place to read the verdict, including what CI did NOT prove.
-  # -------------------------------------------------------------------------
   deploy-gate:
     name: Deploy gate
     runs-on: ubuntu-latest
@@ -383,9 +308,6 @@ jobs:
           echo "::error::One or more CI gates failed -- see the job summary"
           exit 1
 
-  # -------------------------------------------------------------------------
-  # 6. Publish images to ECR, tagged with the commit sha.
-  # -------------------------------------------------------------------------
   publish:
     name: Publish images
     runs-on: ubuntu-latest
@@ -424,9 +346,6 @@ jobs:
           aws s3 cp infra/scripts/remote_deploy.sh \
             "s3://${{ vars.DATA_BUCKET }}/compose/remote_deploy.sh"
 
-  # -------------------------------------------------------------------------
-  # 7. Deploy — tell the EC2 host to pull and restart, via SSM.
-  # -------------------------------------------------------------------------
   deploy:
     name: Deploy to EC2
     runs-on: ubuntu-latest

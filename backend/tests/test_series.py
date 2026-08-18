@@ -1,4 +1,3 @@
-"""Per store-item detail, history and the frozen forecast."""
 from .conftest import API
 
 
@@ -44,10 +43,6 @@ def test_bands_bracket_the_point_forecast(client, sample_series):
 
 
 def test_band_basis_denies_being_a_model_interval(client, sample_series):
-    """
-    Non-negotiable. The frozen model emits point forecasts only; the UI must
-    never be able to present these bands as model output.
-    """
     s = sample_series
     d = client.get(f"{API}/series/{s['store_id']}/{s['item_id']}/forecast").json()
     basis = d["band_basis"].lower()
@@ -65,11 +60,6 @@ def test_bands_can_be_disabled(client, sample_series):
 
 
 def test_bands_scale_with_series_magnitude(client):
-    """
-    A regression guard for a real bug found during Phase 1: bands were pooled by
-    volume tier, which made them far too narrow for high-volume series. Bands
-    must now widen with the size of the forecast.
-    """
     big = client.get(f"{API}/series/CA_3/FOODS_3_090/forecast").json()
     small = client.get(f"{API}/series/CA_1/HOBBIES_1_001/forecast").json()
     bw = big["forecast"][0]["upper"] - big["forecast"][0]["lower"]

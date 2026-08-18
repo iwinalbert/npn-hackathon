@@ -1,13 +1,3 @@
-"""
-AI Forecast Assistant.
-
-A read-only explanatory layer. Every endpoint here reads verified backend data,
-sends a compact context to the language model, and returns prose. None of them
-can write to a forecast, a model or the database — no such code path exists.
-
-The API key is server-side only: it is never included in any response schema,
-and a test asserts it never appears in any response body.
-"""
 
 from __future__ import annotations
 
@@ -77,12 +67,6 @@ REFUSAL_DISCLAIMER = (
 
 @router.get("/status", summary="Is the AI assistant configured here?")
 def status() -> dict:
-    """
-    Reports availability and the assistant's own refusals.
-
-    Returns `available: false` with reasons rather than failing when no API key
-    is configured, so the rest of the application is unaffected.
-    """
     return svc.status()
 
 
@@ -94,12 +78,6 @@ def suggestions(store_id: str | None = None, item_id: str | None = None) -> dict
 @router.post("/ask", response_model=AskResponse,
              summary="Ask a question about the forecasts")
 def ask(body: AskRequest) -> AskResponse:
-    """
-    Answer a question using only data retrieved from this backend.
-
-    Returns 503 when the assistant is not configured, 400 for an empty or
-    over-long question.
-    """
     reply = svc.ask(
         question=body.question,
         store_id=body.store_id,
@@ -125,15 +103,6 @@ def ask(body: AskRequest) -> AskResponse:
 
 @router.post("/context-preview", summary="Show the context a question would use")
 def context_preview(body: AskRequest) -> dict:
-    """
-    Return the exact structured context the assistant would receive, without
-    calling the model.
-
-    This exists for transparency and for debugging: an evaluator can see that
-    the assistant is handed a few kilobytes of verified numbers rather than the
-    dataset, and can check any figure in an answer against its source. It works
-    with no API key configured.
-    """
     from ..services import genai_context
 
     ctx = genai_context.resolve(

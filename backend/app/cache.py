@@ -1,12 +1,3 @@
-"""
-A small in-process TTL cache.
-
-Deliberately not Redis. Every cacheable query in this API already returns in
-~100-250 ms from DuckDB; adding a network hop and a container to shave that is
-cost without benefit at this scale. This gives the hot paths (hierarchy
-roll-ups, level accuracy, the model card) sub-millisecond repeats with no
-operational surface.
-"""
 
 from __future__ import annotations
 
@@ -24,7 +15,6 @@ _lock = threading.Lock()
 
 
 def ttl_cache(ttl: int | None = None) -> Callable[[F], F]:
-    """Memoise on args for `ttl` seconds. Values must be immutable-by-contract."""
     seconds = ttl if ttl is not None else settings.cache_ttl_seconds
 
     def decorator(fn: F) -> F:

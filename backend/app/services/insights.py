@@ -1,23 +1,3 @@
-"""
-Planning summaries derived from the frozen forecast.
-
-Everything here is arithmetic over the frozen forecast and measured backtest
-error. No new modelling, no new prediction logic, no heuristics presented as
-model output.
-
-WHAT A PLANNER ACTUALLY NEEDS
------------------------------
-"What will series X sell?" is answered by the forecast endpoint. These endpoints
-answer the questions that follow it:
-
-  * which series are about to move materially versus their recent run-rate,
-    so attention goes where it matters (top_movers);
-  * how much to expect over the next 28 days, and how wrong that has been
-    historically, so a stocking decision can carry a margin (planning_summary).
-
-The margin is the empirical p05-p95 backtest error for that series' demand
-regime — a measurement, never a model-produced interval.
-"""
 
 from __future__ import annotations
 
@@ -30,14 +10,6 @@ from .series import BAND_SCALE_FLOOR, _bands_for_regime, _series_row
 @ttl_cache()
 def top_movers(level: str = "total", node_id: str = "ALL", limit: int = 20,
                direction: str = "both") -> dict:
-    """
-    Series whose forecast 28-day run-rate differs most from their recent one.
-
-    Compares mean daily forecast over the horizon against mean daily actuals
-    over the trailing 28 days, which is the comparison a planner makes by eye.
-    Ranked by ABSOLUTE unit change, not percentage: a 300% jump on a series
-    selling 0.02/day is noise, while a 15% rise on a 90/day series is a pallet.
-    """
     from .hierarchy import _series_filter
     where, params = _series_filter(level, node_id)
 
@@ -97,10 +69,6 @@ def top_movers(level: str = "total", node_id: str = "ALL", limit: int = 20,
 
 
 def planning_summary(store_id: str, item_id: str) -> dict:
-    """
-    A 28-day planning view for one series: expected demand plus the margin the
-    model has historically needed.
-    """
     meta = _series_row(store_id, item_id)
     rows = query(
         "SELECT horizon, yhat FROM forecast WHERE series_idx = ? "
@@ -167,7 +135,6 @@ def planning_summary(store_id: str, item_id: str) -> dict:
 
 @ttl_cache()
 def portfolio_summary(level: str = "total", node_id: str = "ALL") -> dict:
-    """Headline planning numbers for a hierarchy node."""
     from .hierarchy import _series_filter, measured_accuracy
     where, params = _series_filter(level, node_id)
 

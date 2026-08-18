@@ -1,4 +1,3 @@
-"""Shared test fixtures."""
 from __future__ import annotations
 
 import logging
@@ -27,7 +26,6 @@ def client() -> TestClient:
 
 @pytest.fixture(scope="session")
 def sample_series(client) -> dict:
-    """A real, high-volume series that exists in every environment."""
     r = client.get(f"{API}/series", params={"limit": 1})
     assert r.status_code == 200
     rows = r.json()

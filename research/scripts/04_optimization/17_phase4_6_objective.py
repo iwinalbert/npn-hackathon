@@ -1,14 +1,3 @@
-"""
-PHASE 4 — Tweedie variance-power search (chosen on the INNER window)
-PHASE 6 — objective comparison (L2 / Tweedie / Poisson / Gamma-style)
-
-Discipline: the power is chosen using ONLY the inner window (d_1886..d_1913) and
-then evaluated ONCE on the primary window. The objective comparison runs directly
-on the primary window because it is a comparison, not a selection — no objective
-is being picked by peeking.
-
-    python scripts/17_phase4_6_objective.py
-"""
 
 from __future__ import annotations
 
@@ -36,11 +25,9 @@ def banner(t):
 
 def main():
     t0 = time.time()
-    cols = V2_SETS["v2_base"]           # hold features fixed at our current best
+    cols = V2_SETS["v2_base"]
 
-    # ==================================================================
     banner("PHASE 4 — TWEEDIE POWER SEARCH (inner window only)")
-    # ==================================================================
     inner = optimize.Setup(origin_idx=INNER_ORIGIN)
     print(f"  inner window  : {inner.window['validation_days']} "
           f"({inner.window['validation_dates']})")
@@ -71,9 +58,7 @@ def main():
           f"(inner RMSE {pw.iloc[0]['inner_RMSE']:.4f})")
     del inner
 
-    # ==================================================================
     banner("PHASE 4b — APPLY THE SELECTED POWER ONCE TO THE PRIMARY WINDOW")
-    # ==================================================================
     s = optimize.Setup()
     applied = optimize.run(
         f"opt_04b_power_{str(best_power).replace('.', '_')}_primary", s, cols,
@@ -85,9 +70,7 @@ def main():
         extra={"tweedie_power": best_power,
                "selection_basis": "inner window d_1886..d_1913"})
 
-    # ==================================================================
     banner("PHASE 6 — OBJECTIVE COMPARISON (same features, same window)")
-    # ==================================================================
     print("  Gamma is deliberately excluded: it requires a strictly positive")
     print("  target, and 54% of our validation rows are exactly zero. Fitting it")
     print("  would require dropping or shifting zeros, which changes the problem.\n")

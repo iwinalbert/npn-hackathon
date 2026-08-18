@@ -1,42 +1,3 @@
-"""
-EXPERIMENT #73 — is Experiment #72's small gain real, or is it noise?
-
-THE SITUATION
-  #72 added four per-series shape features and moved RMSE -0.0047, MAE -0.0021,
-  and high-volume RMSE -0.0191. All three moved the right way. But -0.0047 is
-  far inside the +/-0.022-0.033 window-to-window noise floor, so the
-  pre-registered criterion (-0.010) was NOT met and #72 stands REJECTED as a
-  champion candidate on the primary window.
-
-  That is the correct verdict for a MAGNITUDE test. It is the wrong instrument
-  for detecting a small but consistent effect. This experiment applies the right
-  instrument.
-
-WHY THIS IS NOT MOVING THE GOALPOSTS
-  The noise floor describes how much a single window's score wanders. It does
-  not describe how often a genuinely useless feature would win on FOUR
-  independent windows and across THREE random seeds. Those are different null
-  hypotheses with much smaller p-values, and the direction of the test was fixed
-  before it ran.
-
-TWO TESTS
-  A. CROSS-WINDOW CONSISTENCY. Retrain champion and shape from scratch on four
-     28-day windows. Under the null (shape is useless) each window is a coin
-     flip, so 4/4 has probability 1/16.
-  B. SEED SENSITIVITY. On the primary window, train both with three seeds. If
-     the gap survives seed variation, it is not one lucky fit.
-
-ACCEPTANCE (fixed before running)
-  NEW CHAMPION requires ALL of:
-    - shape wins on at least 3 of 4 windows
-    - mean dRMSE across windows <= -0.003
-    - shape wins on at least 2 of 3 seeds on the primary window
-    - MAE does not degrade on average
-  Otherwise the champion stands and #72 is recorded as a real-but-immaterial
-  effect.
-
-    python scripts/06_research_campaign/35_exp73_shape_validation.py
-"""
 
 from __future__ import annotations
 
@@ -102,9 +63,7 @@ def main():
     }
     del probe
 
-    # ==================================================================
     banner("TEST A — CROSS-WINDOW CONSISTENCY (both models retrained per window)")
-    # ==================================================================
     rows = []
     for wname, o in WINDOWS.items():
         s = setup(o)
@@ -126,9 +85,7 @@ def main():
     print(f"  probability of {wins}/4 by chance if the feature were useless: "
           f"{[1,4,6,4,1][wins]/16:.3f}")
 
-    # ==================================================================
     banner("TEST B — SEED SENSITIVITY (primary window, 3 seeds each)")
-    # ==================================================================
     s = setup(config.VALIDATION_ORIGIN_IDX)
     srows = []
     for seed in SEEDS:
@@ -145,9 +102,7 @@ def main():
     print(f"  champion RMSE across seeds: {S.champion_RMSE.min():.4f} - "
           f"{S.champion_RMSE.max():.4f} (spread {S.champion_RMSE.max()-S.champion_RMSE.min():.4f})")
 
-    # ==================================================================
     banner("DECISION")
-    # ==================================================================
     crit = {
         "wins_at_least_3_of_4_windows": wins >= 3,
         "mean_window_dRMSE_at_most_-0.003": mean_d <= -0.003,

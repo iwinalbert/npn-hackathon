@@ -1,19 +1,3 @@
-"""
-Additive extension of the verified feature builder.
-
-This module does NOT modify pipeline/features.py. It subclasses FeatureBuilder,
-calls it, and appends extra candidate columns on top. The 32 features that our
-current best model uses are produced by exactly the same verified code path, so
-any change in score is attributable to the added columns alone.
-
-Every added feature obeys the same rule as the originals: it is either
-ORIGIN-RELATIVE (built from history up to and including the forecast origin T,
-then held constant across all 28 horizon days) or TARGET-DAY (genuinely published
-in advance — calendar, or a price for a week the price file already covers).
-
-The leakage corruption test in scripts/16_phase1_baseline.py is re-run against
-this builder rather than inherited on trust.
-"""
 
 from __future__ import annotations
 
@@ -27,27 +11,19 @@ from .features import FeatureBuilder, FEATURE_GROUPS
 
 
 class FeatureBuilderV2(FeatureBuilder):
-    """FeatureBuilder + extra candidate features from the project documents."""
 
-    # ------------------------------------------------------------------
     def _extra_demand(self, origin: int) -> dict[str, np.ndarray]:
-        """Origin-relative demand features not in the base set."""
         s = self.d.sales_wide
         out: dict[str, np.ndarray] = {}
 
-        # 14-day window, sitting between the existing 7 and 28.
         start = max(0, origin - 13)
         w14 = s[:, start:origin + 1].astype(np.float64)
         out["rolling_mean_14"] = w14.mean(axis=1).astype(np.float32)
         out["rolling_std_14"] = w14.std(axis=1).astype(np.float32)
 
-        # How many of the last 7 days had no sale at all. The team's document
-        # lists this as its intermittency measure; ours encodes the same idea as
-        # days_since_last_sale, so this tests a different encoding.
         w7 = s[:, max(0, origin - 6):origin + 1]
         out["rolling_zero_count_7"] = (w7 == 0).sum(axis=1).astype(np.float32)
 
-        # Momentum: is the recent week running above or below the recent month?
         m7 = s[:, max(0, origin - 6):origin + 1].astype(np.float64).mean(axis=1)
         m28 = s[:, max(0, origin - 27):origin + 1].astype(np.float64).mean(axis=1)
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -55,9 +31,7 @@ class FeatureBuilderV2(FeatureBuilder):
                 m28 > 0, m7 / m28, np.nan).astype(np.float32)
         return out
 
-    # ------------------------------------------------------------------
     def _extra_price(self, origin: int, target_days: np.ndarray) -> dict:
-        """Price dynamics. Origin-relative changes plus a forward-known one."""
         p = self.d.price_wide
         w_o = int(self.d.day_to_week[origin])
 
@@ -72,9 +46,6 @@ class FeatureBuilderV2(FeatureBuilder):
             "price_pct_change_4w": pct_change(4),
         }
 
-        # Forward-known: how the price on each TARGET day compares with the price
-        # at the origin. sell_prices.csv genuinely covers the forecast weeks, so
-        # this is legitimate future information, not leakage.
         base = p[:, w_o]
         weeks = self.d.day_to_week[target_days]
         with np.errstate(divide="ignore", invalid="ignore"):
@@ -83,7 +54,6 @@ class FeatureBuilderV2(FeatureBuilder):
                                np.nan).astype(np.float32)
         return per_series, per_day
 
-    # ------------------------------------------------------------------
     def build_origin_frame(self, origin_idx, horizon=config.HORIZON,
                            series_idx=None, include_target=True):
         frame = super().build_origin_frame(
@@ -95,7 +65,6 @@ class FeatureBuilderV2(FeatureBuilder):
         n_s = len(series_idx)
         target_days = origin_idx + 1 + np.arange(horizon)
 
-        # ---- calendar expansion (target-day, known in advance) ----
         cal = self.d.calendar
         dts = pd.to_datetime(cal["date"]).dt
         dom = dts.day.to_numpy(np.int16)[target_days]
@@ -103,20 +72,14 @@ class FeatureBuilderV2(FeatureBuilder):
         frame["day_of_month"] = np.repeat(dom, n_s)
         frame["week_of_year"] = np.repeat(woy, n_s)
 
-        # ---- extra demand (origin-relative) ----
         for name, arr in self._extra_demand(origin_idx).items():
             frame[name] = np.tile(arr[series_idx], horizon)
 
-        # ---- extra price ----
         per_series, per_day = self._extra_price(origin_idx, target_days)
         for name, arr in per_series.items():
             frame[name] = np.tile(arr[series_idx], horizon)
         frame["price_vs_origin_pct"] = per_day[:, series_idx].ravel()
 
-        # ---- interactions ----
-        # Encoded as small categorical codes so LightGBM can split on the exact
-        # combination rather than having to discover it through two splits.
-        # Only combinations with a plausible demand story are included.
         cat = frame["cat_id"].to_numpy()
         store = frame["store_id"].to_numpy()
         snap = frame["snap"].to_numpy()
@@ -132,10 +95,6 @@ class FeatureBuilderV2(FeatureBuilder):
 
         return frame
 
-
-# --------------------------------------------------------------------------
-# Feature groups and named sets
-# --------------------------------------------------------------------------
 
 V2_GROUPS = {
     "A2_demand": ["rolling_mean_14", "rolling_std_14", "rolling_zero_count_7",
@@ -153,7 +112,6 @@ BASE32 = [c for cols in FEATURE_GROUPS.values() for c in cols]
 
 
 def feature_set(*groups: str) -> list[str]:
-    """BASE32 plus the named v2 groups."""
     out = list(BASE32)
     for g in groups:
         out.extend(V2_GROUPS[g])
@@ -180,7 +138,6 @@ V2_LABELS = {
 
 
 def categorical_for(cols: list[str]) -> list[int]:
-    """Indices of categorical columns, base + v2, for LightGBM."""
     from .features import CATEGORICAL_FEATURES
     cats = set(CATEGORICAL_FEATURES) | set(V2_CATEGORICAL)
     return [i for i, c in enumerate(cols) if c in cats]

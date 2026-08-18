@@ -50,7 +50,6 @@ describe('buildDemandSeries', () => {
     { date: '2016-05-21', sales: 12 },
     { date: '2016-05-22', sales: 8 },
   ]
-  // The held-out window overlaps the tail of history: both values are real.
   const backtest = [
     { date: '2016-05-20', actual: 10, predicted: 9.2 },
     { date: '2016-05-21', actual: 12, predicted: 10.4 },

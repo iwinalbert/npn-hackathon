@@ -1,37 +1,3 @@
-"""
-INTEGRITY MANIFEST — a hash fingerprint of every protected artefact.
-
-READ-ONLY. Trains nothing, moves nothing, deletes nothing. It only reads files
-and writes a manifest JSON.
-
-WHY THIS EXISTS
----------------
-The project reorganisation must be provably non-destructive. Asserting "nothing
-was touched" is worth very little; a SHA-256 of every protected file taken
-before and after, and compared, is worth a great deal.
-
-Run it twice:
-
-    python scripts/08_organization/61_integrity_manifest.py before
-    ... reorganise ...
-    python scripts/08_organization/61_integrity_manifest.py after
-    python scripts/08_organization/61_integrity_manifest.py compare
-
-WHAT COUNTS AS PROTECTED
-------------------------
-  data/raw/                 the five immutable competition CSVs
-  data/processed/           build output, not regenerated
-  models/champion/          the shipped model artefacts
-  models/experiments/       every experimental model
-  predictions/final_forecast/  the deliverable
-  predictions/validation/   every backtest prediction file
-  experiments/registry/     the experiment ledger records
-  experiments/artifacts/    result tables and diagnostics
-
-Anything the reorganisation is ALLOWED to add (the numbered folders, new
-documentation) is deliberately excluded, so a clean comparison means "no
-protected artefact changed", not "nothing happened".
-"""
 
 from __future__ import annotations
 

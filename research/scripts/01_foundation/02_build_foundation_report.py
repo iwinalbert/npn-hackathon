@@ -1,13 +1,3 @@
-"""
-Generates ML_PIPELINE_FOUNDATION_REPORT.md and .pdf.
-
-Every number in the report is read out of artifacts/foundation_checks.json, which
-is written by scripts/01_foundation_check.py from an actual pipeline run. Nothing
-is typed in by hand, so the report cannot drift away from what the code really did.
-
-    python scripts/01_foundation_check.py     # must be run first
-    python scripts/02_build_foundation_report.py
-"""
 
 from __future__ import annotations
 
@@ -64,7 +54,6 @@ def build_markdown(R: dict) -> str:
     A("---")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 1. What we built, in one paragraph")
     A("")
     A("We built the scaffolding for forecasting 28 days of daily unit sales for "
@@ -98,7 +87,6 @@ def build_markdown(R: dict) -> str:
     A("```")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 2. The data we are working from")
     A("")
     A("The pipeline reads the original files in `raw_dataset/` directly, "
@@ -136,7 +124,6 @@ def build_markdown(R: dict) -> str:
     A("| Negative sales values | 0 | matched |")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 3. What leakage means, and why this stage is mostly about preventing it")
     A("")
     A("> **Feature leakage** is when information from the future accidentally ends "
@@ -191,7 +178,6 @@ def build_markdown(R: dict) -> str:
       "within FOODS.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 4. How the 28-day backtest works")
     A("")
     A("We cannot score anything on the real forecast window, because nobody has "
@@ -239,7 +225,6 @@ def build_markdown(R: dict) -> str:
       "is ever violated.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 5. The features")
     A("")
     A(f"**{feats['n_features']} features across {feats['n_groups']} groups.** Every "
@@ -332,7 +317,6 @@ def build_markdown(R: dict) -> str:
     A("The model will learn from the original observations exactly as recorded.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 6. Validation checks")
     A("")
     A(f"**{checks['passed']} of {checks['total_checks']} checks pass.** The full "
@@ -382,7 +366,6 @@ def build_markdown(R: dict) -> str:
     A(f"| Training (6 origins, 2,000-series sample) | {fmt(R['training_frame_sample']['rows'])} | 2,000 x {config.HORIZON} x 6 |")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 7. A finding that came out of building this")
     A("")
     A("The listing-aware features were probed across four origins to check they "
@@ -420,7 +403,6 @@ def build_markdown(R: dict) -> str:
       "building a novelty story around it.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 8. Problems encountered")
     A("")
     A("### The leakage test failed on first run — and was right to")
@@ -475,7 +457,6 @@ def build_markdown(R: dict) -> str:
       "feature importances.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 9. Metric pipeline smoke test")
     A("")
     A("> **These are not model results.** They are two trivial arithmetic rules "
@@ -498,7 +479,6 @@ def build_markdown(R: dict) -> str:
       "are reported throughout this project, alongside WAPE, for that reason.")
     A("")
 
-    # ------------------------------------------------------------------
     A("## 10. Where this leaves us")
     A("")
     A("### Ready")

@@ -1,12 +1,3 @@
-"""
-MODEL_COMPARISON.csv — the verified metric table for the paper.
-
-Every row is recomputed from the model's own saved prediction file. Rows without
-a prediction file carry the registry's RMSE/MAE and N/A elsewhere; nothing is
-estimated or carried across from a different model.
-
-    python MY_RESEARCH_PAPER/build_comparison.py
-"""
 
 from __future__ import annotations
 
@@ -28,7 +19,6 @@ REG = config.EXPERIMENTS_DIR
 THRESHOLD = 0.5
 NA = "N/A"
 
-# label, registry, prediction path (absolute or in predictions/validation), objective, features, class
 ROWS = [
     ("Naive — last value", "model_00_baseline_last_value", None, "none (arithmetic)", "—", "baseline"),
     ("Naive — rolling mean 7", "model_00_baseline_rolling_mean_7", None, "none (arithmetic)", "—", "baseline"),
@@ -72,16 +62,6 @@ def occ(y, p, thr=THRESHOLD):
 
 
 def reg(name):
-    """
-    Reference RMSE/MAE for a model.
-
-    Special case for exp_77: its `metrics` field records the w=0.50 blend used
-    for the ACCEPTANCE TEST, not the w=0.60 configuration that was shipped. The
-    shipped figures live in `operating_point`. Comparing the shipped model
-    against `metrics` would compare two different models — that is a
-    documentation inconsistency in the project, recorded in the paper, not a
-    discrepancy in the numbers.
-    """
     p = REG / f"{name}.json"
     if not p.exists():
         return {}

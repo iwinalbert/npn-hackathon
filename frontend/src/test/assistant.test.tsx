@@ -1,10 +1,3 @@
-/**
- * AI Forecast Assistant — frontend behaviour.
- *
- * The important assertions are the trust ones: the UI must surface an
- * unverified figure rather than hide it, must degrade cleanly when the
- * assistant is not configured, and must never contain an API key.
- */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -107,7 +100,6 @@ describe('Assistant — availability', () => {
     await waitFor(() =>
       expect(screen.getByText(/not configured in this deployment/i)).toBeInTheDocument())
     expect(screen.getByText(/GEMINI_API_KEY is not set/i)).toBeInTheDocument()
-    // and no way to type a question
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
 
@@ -119,10 +111,6 @@ describe('Assistant — availability', () => {
   })
 
   it('NEVER renders a blank page when the status probe fails', async () => {
-    // The regression this exists for: an API process older than the assistant
-    // answers /health 200 and /genai/status 404. `data` is undefined,
-    // `isLoading` is false and `available` is false, so every section that was
-    // gated on one of those rendered nothing — heading, then empty page.
     vi.stubGlobal('fetch', vi.fn(async (url: string) => {
       if (String(url).includes('/genai/status')) {
         return {
@@ -138,20 +126,14 @@ describe('Assistant — availability', () => {
     }))
     const { container } = wrap(<Assistant />)
 
-    // useGenAIStatus sets `retry: 1` on the query itself, which overrides the
-    // test client's `retry: false`, so the error state lands after the retry
-    // delay rather than immediately.
     await waitFor(
       () => expect(screen.getByText(/cannot reach the assistant service/i)).toBeInTheDocument(),
       { timeout: 5000 },
     )
-    // it says what to do about it
     expect(screen.getByText(/python tasks\.py api/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument()
-    // and the static explanation panels still render rather than vanishing
     expect(screen.getByText(/How this assistant works/i)).toBeInTheDocument()
     expect(screen.getByText(/What it will not do/i)).toBeInTheDocument()
-    // the page has real content, not just the heading
     expect(container.textContent!.length).toBeGreaterThan(400)
   })
 
@@ -222,8 +204,6 @@ describe('Assistant — asking', () => {
 
     await waitFor(() =>
       expect(screen.getByText(/could not be traced/i)).toBeInTheDocument())
-    // the offending number is named so a user can check it — it appears both in
-    // the answer itself and in the warning, which is the intended behaviour
     expect(screen.getAllByText(/87654\.31/).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText(/unverified/i)).toBeInTheDocument()
   })
@@ -240,7 +220,6 @@ describe('Assistant — asking', () => {
       expect(screen.getByText(/answered locally — no AI call/i)).toBeInTheDocument())
     expect(screen.getByText('forecast_mutation')).toBeInTheDocument()
     expect(screen.getByText(/input flagged/i)).toBeInTheDocument()
-    // a deterministic refusal is not an "untraceable figure" situation
     expect(screen.queryByText(/could not be traced/i)).not.toBeInTheDocument()
   })
 
@@ -258,7 +237,6 @@ describe('Assistant — asking', () => {
 
     await waitFor(() => expect(screen.getByText('Planning Range:')).toBeInTheDocument())
     expect(screen.getAllByRole('listitem').length).toBeGreaterThanOrEqual(2)
-    // the raw markers must not be on screen
     expect(screen.queryByText(/\*\*Planning Range/)).not.toBeInTheDocument()
   })
 

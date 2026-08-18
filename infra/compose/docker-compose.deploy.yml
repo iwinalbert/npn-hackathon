@@ -1,27 +1,3 @@
-# DEPLOY COMPOSE — the file that actually runs on the EC2 host.
-#
-# Unlike docker-compose.yml (which BUILDS images locally for dev/single-host
-# use), this file only ever PULLS pre-built images from ECR. The host never
-# needs backend/, frontend/, research/, or a Dockerfile — only this file, a
-# .env, and the 130 MB data layer at /opt/npn/backend/data. That's
-# deliberate: it keeps the deploy target minimal and makes "what's running"
-# unambiguous — always exactly what CI built and pushed for a given commit.
-#
-# Self-contained: it does NOT layer on top of docker-compose.yml or
-# infra/compose/docker-compose.prod.yml (both of which use `build:` and are
-# meant for the local/single-host path — see infra/docs/deployment-guide.md
-# §3a). This file folds the same production hardening directly, since the
-# host has no local source tree to build against in the first place.
-#
-# Usage (see .github/workflows/ci.yml's `deploy` job):
-#   ECR_REGISTRY=<account>.dkr.ecr.<region>.amazonaws.com \
-#   IMAGE_TAG=<git-sha> \
-#   GEMINI_API_KEY=<from SSM Parameter Store> \
-#   docker compose -f docker-compose.deploy.yml up -d
-#
-# Rollback is the same command with a previous IMAGE_TAG — nothing to
-# rebuild, no migration, no state to preserve (see infra/docs/runbook.md).
-
 services:
   api:
     image: ${ECR_REGISTRY}/npn-api:${IMAGE_TAG:-latest}
@@ -33,22 +9,14 @@ services:
       - /tmp:size=64m,mode=1777
     cap_drop:
       - ALL
-    # Off the host network — reachable from the frontend container only, over
-    # the internal network. Same reasoning as docker-compose.prod.yml §1.
     expose:
       - "8000"
     environment:
       NPN_ENVIRONMENT: production
       NPN_DATA_DIR: /data/product
       NPN_LOG_LEVEL: INFO
-      # Same-origin through the nginx proxy means CORS is never exercised.
-      # Empty on purpose: a cross-origin request should fail loudly here,
-      # not silently match a leftover dev origin.
       NPN_CORS_ORIGINS: ""
       NPN_CORS_ALLOW_ALL: "false"
-      # From SSM Parameter Store via the deploy step — never in this file,
-      # never in an image layer, never sent to the browser. Leave unset and
-      # every other feature still works.
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - /opt/npn/backend/data:/data/product:ro
@@ -82,9 +50,6 @@ services:
     container_name: npn-frontend
     restart: always
     security_opt: ["no-new-privileges:true"]
-    # Bound to all interfaces: nothing else fronts this box yet. Add a
-    # reverse proxy/ALB with TLS in front and change this to
-    # 127.0.0.1:8080:8080 — see infra/docs/deployment-guide.md §6.
     ports:
       - "8080:8080"
     read_only: true
@@ -95,9 +60,6 @@ services:
     cap_drop:
       - ALL
     cap_add:
-      # nginx's own entrypoint renders templates and spawns workers as root
-      # before dropping to the nginx user — these three are what that drop
-      # itself requires. Removing them stops the container booting.
       - CHOWN
       - SETGID
       - SETUID

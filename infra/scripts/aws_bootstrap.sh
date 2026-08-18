@@ -1,31 +1,4 @@
 #!/usr/bin/env bash
-#
-# One-time AWS bootstrap for the EC2 + Docker Compose + GitHub Actions
-# deployment path. Plain AWS CLI, no Terraform — matches this project's
-# existing style (tasks.py, preflight.py): a script you can read top to
-# bottom, not a state file you have to trust.
-#
-# Idempotent: safe to re-run. Each resource is looked up before being
-# created, so a partial prior run does not produce duplicates.
-#
-# What this creates (all free or near-free — the ONE billable resource is
-# the EC2 instance, launched by a separate step, not this script):
-#   - two ECR repositories: npn-api, npn-frontend
-#   - an IAM OIDC identity provider for GitHub Actions (if none exists)
-#   - an IAM role GitHub Actions assumes via OIDC, scoped to ONE repo and
-#     ONE branch — never a static AWS key stored in GitHub
-#   - an IAM role + instance profile for the EC2 host itself (SSM + ECR
-#     pull only — no S3, no admin, nothing broader than it needs)
-#   - a security group with a single inbound rule: tcp/8080 from anywhere
-#     (the app's public port under --prod). No inbound 22 — the deploy
-#     path uses SSM Session Manager, never SSH.
-#
-# What this does NOT do: launch the EC2 instance, or touch anything in
-# your GitHub repo. Both are separate, deliberately reviewable steps.
-#
-# Usage:
-#   GITHUB_REPO=org/name ./aws_bootstrap.sh
-#
 set -euo pipefail
 
 : "${GITHUB_REPO:?Set GITHUB_REPO=owner/repo before running this script}"
@@ -39,9 +12,6 @@ echo
 
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
-# ---------------------------------------------------------------------------
-# 1. ECR repositories
-# ---------------------------------------------------------------------------
 for repo in npn-api npn-frontend; do
     if aws ecr describe-repositories --repository-names "$repo" >/dev/null 2>&1; then
         echo "[ ok ] ECR repo already exists: $repo"
@@ -55,12 +25,6 @@ for repo in npn-api npn-frontend; do
 done
 ECR_REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
 
-# ---------------------------------------------------------------------------
-# 2. Data-layer S3 bucket — one-time transfer of the 130 MB product data
-#    layer to the host, and the deploy-time handoff point for the compose
-#    file (uploaded under compose/ by the `publish` GitHub Actions job).
-#    Not a runtime dependency of the app itself — see docker-compose.deploy.yml.
-# ---------------------------------------------------------------------------
 DATA_BUCKET="${PROJECT}-data-${ACCOUNT_ID}"
 if aws s3api head-bucket --bucket "$DATA_BUCKET" >/dev/null 2>&1; then
     echo "[ ok ] data bucket already exists: $DATA_BUCKET"
@@ -75,9 +39,6 @@ else
     echo "       aws s3 cp backend/data/ s3://${DATA_BUCKET}/ --recursive --exclude '*' --include '*.duckdb' --include '*.parquet'"
 fi
 
-# ---------------------------------------------------------------------------
-# 3. GitHub OIDC identity provider (one per AWS account, shared across repos)
-# ---------------------------------------------------------------------------
 OIDC_ARN="arn:aws:iam::${ACCOUNT_ID}:oidc-provider/token.actions.githubusercontent.com"
 if aws iam get-open-id-connect-provider --open-id-connect-provider-arn "$OIDC_ARN" >/dev/null 2>&1; then
     echo "[ ok ] GitHub OIDC provider already exists"
@@ -90,9 +51,6 @@ else
     echo "[ + ]  created GitHub OIDC provider"
 fi
 
-# ---------------------------------------------------------------------------
-# 4. IAM role GitHub Actions assumes — scoped to this repo, main branch only
-# ---------------------------------------------------------------------------
 GHA_ROLE_NAME="${PROJECT}-github-deploy"
 TRUST_POLICY=$(cat <<EOF
 {
@@ -121,8 +79,6 @@ else
     echo "[ + ]  created IAM role: $GHA_ROLE_NAME"
 fi
 
-# Least-privilege inline policy: push to these two repos, and run SSM
-# commands only against instances tagged for this project — not "*".
 GHA_POLICY=$(cat <<EOF
 {
   "Version": "2012-10-17",
@@ -183,9 +139,6 @@ aws iam put-role-policy --role-name "$GHA_ROLE_NAME" \
 echo "[ ok ] deploy policy attached to $GHA_ROLE_NAME"
 GHA_ROLE_ARN=$(aws iam get-role --role-name "$GHA_ROLE_NAME" --query 'Role.Arn' --output text)
 
-# ---------------------------------------------------------------------------
-# 5. IAM role + instance profile for the EC2 host — SSM + ECR pull only
-# ---------------------------------------------------------------------------
 EC2_ROLE_NAME="${PROJECT}-ec2-role"
 EC2_TRUST_POLICY='{
   "Version": "2012-10-17",
@@ -206,10 +159,6 @@ for policy in AmazonSSMManagedInstanceCore AmazonEC2ContainerRegistryReadOnly; d
 done
 echo "[ ok ] SSM + ECR-readonly policies attached to $EC2_ROLE_NAME"
 
-# Inline: read-only access to exactly the data bucket (for the one-time data
-# transfer and the compose-file handoff) and exactly the Gemini SSM
-# parameter (fetched at deploy time to populate the container's environment
-# — never written to disk, never in an image layer).
 EC2_INLINE_POLICY=$(cat <<EOF
 {
   "Version": "2012-10-17",
@@ -252,9 +201,6 @@ else
     echo "       (IAM propagation can take ~10s before EC2 will accept it)"
 fi
 
-# ---------------------------------------------------------------------------
-# 6. Security group — inbound 8080 only, no SSH
-# ---------------------------------------------------------------------------
 VPC_ID=$(aws ec2 describe-vpcs --filters "Name=is-default,Values=true" \
     --query 'Vpcs[0].VpcId' --output text)
 SG_NAME="${PROJECT}-sg"
@@ -274,9 +220,6 @@ else
     echo "[ ok ] security group already exists: $SG_ID"
 fi
 
-# ---------------------------------------------------------------------------
-# 7. GEMINI_API_KEY placeholder in SSM Parameter Store (SecureString)
-# ---------------------------------------------------------------------------
 PARAM_NAME="/${PROJECT}/gemini-api-key"
 if aws ssm get-parameter --name "$PARAM_NAME" >/dev/null 2>&1; then
     echo "[ ok ] SSM parameter already exists: $PARAM_NAME (value untouched)"
@@ -287,9 +230,6 @@ else
     echo "       aws ssm put-parameter --name $PARAM_NAME --type SecureString --overwrite --value <key>)"
 fi
 
-# ---------------------------------------------------------------------------
-# Summary — feed these into the GitHub Actions workflow / EC2 launch step
-# ---------------------------------------------------------------------------
 echo
 echo "== done =="
 echo "ECR_REGISTRY        = ${ECR_REGISTRY}"

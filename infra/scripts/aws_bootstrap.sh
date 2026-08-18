@@ -60,6 +60,10 @@ else
 fi
 
 GHA_ROLE_NAME="${PROJECT}-github-deploy"
+# GitHub's sub claim is repo:{owner}@{owner_id}/{repo}@{repo_id}:ref:...
+# for accounts/repos GitHub has assigned immutable numeric IDs to (its
+# rename-hijack protection), not the plain owner/repo string most examples
+# assume -- both forms are matched here so this keeps working either way.
 TRUST_POLICY=$(cat <<EOF
 {
   "Version": "2012-10-17",
@@ -69,7 +73,12 @@ TRUST_POLICY=$(cat <<EOF
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {
       "StringEquals": {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
-      "StringLike": {"token.actions.githubusercontent.com:sub": "repo:${GITHUB_REPO}:ref:refs/heads/main"}
+      "StringLike": {
+        "token.actions.githubusercontent.com:sub": [
+          "repo:${GITHUB_REPO}:ref:refs/heads/main",
+          "repo:${GITHUB_REPO%%/*}@*/${GITHUB_REPO##*/}@*:ref:refs/heads/main"
+        ]
+      }
     }
   }]
 }
